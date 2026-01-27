@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+// @ts-ignore
 import { Resend } from 'resend';
 import crypto from 'crypto';
 
+// @ts-ignore
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
