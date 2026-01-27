@@ -27,7 +27,7 @@ export async function POST(req: Request) {
             data: {
                 username,
                 password: password, // Plain text as requested to view later
-                balance: isAdmin ? 1000000 : 100, // Admin gets more money, users get 100
+                balance: isAdmin ? 1000000 : 0, // Admin gets money, regular users start at 0
                 isAdmin,
             },
         });
