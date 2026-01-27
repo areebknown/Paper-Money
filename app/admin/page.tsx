@@ -25,12 +25,17 @@ export default function AdminPage() {
     };
 
     const deleteUser = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+        if (!confirm('Are you sure you want to delete this user? All their transaction history will also be removed. Continue?')) return;
         try {
-            await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
-            mutate('/api/admin/users');
+            const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                mutate('/api/admin/users');
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.error || 'Failed to delete user'}`);
+            }
         } catch (e) {
-            alert('Failed to delete');
+            alert('Failed to delete: Network error');
         }
     };
 

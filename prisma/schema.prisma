@@ -31,8 +31,8 @@ model Transaction {
   createdAt   DateTime @default(now())
 
   senderId    String
-  sender      User     @relation("SentTransactions", fields: [senderId], references: [id])
+  sender      User     @relation("SentTransactions", fields: [senderId], references: [id], onDelete: Cascade)
 
   receiverId  String
-  receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id], onDelete: Cascade)
 }
