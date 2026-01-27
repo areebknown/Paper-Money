@@ -18,6 +18,7 @@ export default function DashboardPage() {
 
     if (error) return <div className="p-8 text-center text-red-500">Failed to load data</div>;
     if (isLoading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+    if (!data || !data.user) return <div className="p-8 text-center text-gray-500">Loading user data...</div>;
 
     const { user, history } = data;
 
