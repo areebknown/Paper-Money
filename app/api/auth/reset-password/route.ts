@@ -9,8 +9,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Token and new password are required' }, { status: 400 });
         }
 
-        // Find user with valid token
-        const user = await prisma.user.findFirst({
+        // Find user with valid token - casting to any to bypass Prisma build-time type lag
+        const user = await (prisma.user as any).findFirst({
             where: {
                 resetToken: token,
                 resetTokenExpiry: {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         }
 
         // Update password and clear token
-        await prisma.user.update({
+        await (prisma.user as any).update({
             where: { id: user.id },
             data: {
                 password: newPassword, // Plain text as requested

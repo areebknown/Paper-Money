@@ -85,16 +85,18 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-                    >
-                        Login
-                    </button>
-                    <div className="text-center">
-                        <Link href="/forgot-password" className="text-indigo-600 font-semibold hover:underline text-sm">
-                            Forgot password?
-                        </Link>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            type="submit"
+                            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                        >
+                            Login
+                        </button>
+                        <div className="text-center">
+                            <Link href="/forgot-password" data-testid="forgot-password-link" className="text-indigo-600 font-semibold hover:underline text-sm">
+                                Forgot password?
+                            </Link>
+                        </div>
                     </div>
                 </form>
 

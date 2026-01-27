@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-// @ts-ignore
-import { Resend } from 'resend';
 import crypto from 'crypto';
-
-// @ts-ignore
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
     try {
@@ -15,8 +10,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
-        // Find user by email
-        const user = await prisma.user.findFirst({
+        // Find user by email - using findFirst and casting to any to bypass Prisma build-time type lag
+        const user = await (prisma.user as any).findFirst({
             where: { email },
         });
 
@@ -30,7 +25,7 @@ export async function POST(req: Request) {
         const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 
         // Save token to database
-        await prisma.user.update({
+        await (prisma.user as any).update({
             where: { id: user.id },
             data: {
                 resetToken,
@@ -38,26 +33,40 @@ export async function POST(req: Request) {
             },
         });
 
-        // Send email
+        // Send email using Resend REST API (No library needed!)
         const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
-        await resend.emails.send({
-            from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
-            to: email,
-            subject: 'Reset Your Password - PaperPay',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #4F46E5;">Reset Your Password</h2>
-                    <p>You requested a password reset for your PaperPay account.</p>
-                    <p>Click the button below to reset your password:</p>
-                    <a href="${resetUrl}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">Reset Password</a>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p style="color: #6B7280; word-break: break-all;">${resetUrl}</p>
-                    <p style="color: #EF4444; margin-top: 24px;">This link will expire in 1 hour.</p>
-                    <p style="color: #6B7280; font-size: 14px;">If you didn't request this, please ignore this email.</p>
-                </div>
-            `,
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+                from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+                to: [email],
+                subject: 'Reset Your Password - PaperPay',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+                        <h2 style="color: #4F46E5;">Reset Your Password</h2>
+                        <p>You requested a password reset for your PaperPay account.</p>
+                        <p>Click the button below to reset your password:</p>
+                        <a href="${resetUrl}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0; font-weight: bold;">Reset Password</a>
+                        <p>Or copy and paste this link into your browser:</p>
+                        <p style="color: #6B7280; word-break: break-all; font-size: 14px;">${resetUrl}</p>
+                        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+                        <p style="color: #EF4444; font-size: 14px;">This link will expire in 1 hour.</p>
+                        <p style="color: #6B7280; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+                    </div>
+                `,
+            }),
         });
+
+        if (!resendResponse.ok) {
+            const errorData = await resendResponse.json();
+            console.error('Resend API Error:', errorData);
+            // We still return success to the user for security, but log the error
+        }
 
         return NextResponse.json({ message: 'If that email exists, a reset link has been sent' });
 
