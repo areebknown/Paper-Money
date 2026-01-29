@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -12,18 +12,68 @@ import { QRCodeSVG } from 'qrcode.react';
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function DashboardPage() {
-    const { data, error, isLoading } = useSWR('/api/user', fetcher);
+    const { data, error, isLoading } = useSWR('/api/user', fetcher, {
+        refreshInterval: 5000, // Poll every 5 seconds
+    });
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
+    const [newReceipt, setNewReceipt] = useState<any>(null);
+    const lastTransactionId = useRef<string | null>(null);
+
+    // Notification Logic
+    useEffect(() => {
+        if (data?.history && data.history.length > 0) {
+            const latest = data.history[0];
+
+            // If it's a new "RECEIVED" transaction that we haven't acknowledged yet
+            if (
+                lastTransactionId.current &&
+                latest.id !== lastTransactionId.current &&
+                latest.type === 'RECEIVED'
+            ) {
+                setNewReceipt(latest);
+                // Auto-dismiss after 5 seconds
+                const timer = setTimeout(() => setNewReceipt(null), 5000);
+                return () => clearTimeout(timer);
+            }
+
+            // Initialize or update the stable reference
+            if (!lastTransactionId.current) {
+                lastTransactionId.current = latest.id;
+            } else if (latest.id !== lastTransactionId.current) {
+                lastTransactionId.current = latest.id;
+            }
+        }
+    }, [data?.history]);
 
     if (error) return <div className="p-8 text-center text-red-500">Failed to load data</div>;
-    if (isLoading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+    if (isLoading && !data) return <div className="p-8 text-center text-gray-500">Loading...</div>;
     if (!data || !data.user) return <div className="p-8 text-center text-gray-500">Loading user data...</div>;
 
     const { user, history } = data;
 
     return (
         <div className="flex flex-col h-full relative">
+            {/* Receipt Notification Toast */}
+            {newReceipt && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-sm animate-in slide-in-from-top-4 duration-300">
+                    <div className="bg-emerald-600 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between border border-emerald-500/50 backdrop-blur-md bg-opacity-95">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <Bell size={20} className="animate-bounce" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium opacity-80">Money Received!</p>
+                                <p className="font-bold">₹{newReceipt.amount.toFixed(2)} from {newReceipt.otherUser}</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setNewReceipt(null)} className="p-1 hover:bg-white/10 rounded-full">
+                            <X size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* QR Modal */}
             {showQR && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
