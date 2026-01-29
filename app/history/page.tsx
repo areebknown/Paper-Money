@@ -22,7 +22,7 @@ export default function HistoryPage() {
                 <Link href="/dashboard" className="text-gray-600">
                     <ArrowLeft size={24} />
                 </Link>
-                <h1 className="text-lg font-semibold">Transaction History</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Transaction History</h1>
             </div>
 
             <div className="p-4 space-y-4">

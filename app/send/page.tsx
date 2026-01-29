@@ -72,7 +72,7 @@ function SendPageContent() {
                 <Link href="/dashboard" className="text-gray-600">
                     <ArrowLeft size={24} />
                 </Link>
-                <h1 className="text-lg font-semibold">Send Money</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Send Money</h1>
             </div>
 
             <div className="p-6 flex-1">
