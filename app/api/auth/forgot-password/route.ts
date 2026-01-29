@@ -4,11 +4,15 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
     try {
-        const { email } = await req.json();
+        console.log('Forgot password request for:', email);
 
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
+
+        // Check env vars
+        if (!process.env.RESEND_API_KEY) console.error('MISSING RESEND_API_KEY');
+        if (!process.env.FROM_EMAIL) console.error('MISSING FROM_EMAIL');
 
         // Find user by email - using findFirst and casting to any to bypass Prisma build-time type lag
         const user = await (prisma.user as any).findFirst({
@@ -16,9 +20,12 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
-            // Don't reveal if email exists for security
-            return NextResponse.json({ message: 'If that email exists, a reset link has been sent' });
+            console.log('User not found with email:', email);
+            // In a real app we keep it vague, but for debugging let's be explicit if needed
+            return NextResponse.json({ message: 'User with this email was not found. Please link your email in Profile first.' });
         }
+
+        console.log('User found, generating token...');
 
         // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
