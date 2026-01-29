@@ -4,6 +4,7 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
     try {
+        const { email } = await req.json();
         console.log('Forgot password request for:', email);
 
         if (!email) {
@@ -21,8 +22,10 @@ export async function POST(req: Request) {
 
         if (!user) {
             console.log('User not found with email:', email);
-            // In a real app we keep it vague, but for debugging let's be explicit if needed
-            return NextResponse.json({ message: 'User with this email was not found. Please link your email in Profile first.' });
+            return NextResponse.json({
+                error: 'USER_NOT_FOUND',
+                message: 'No user found with this email. Have you linked your email in the Profile page?'
+            }, { status: 404 });
         }
 
         console.log('User found, generating token...');
@@ -42,6 +45,8 @@ export async function POST(req: Request) {
 
         // Send email using Resend REST API (No library needed!)
         const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+        console.log('Attempting to send email via Resend to:', email);
 
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -69,13 +74,18 @@ export async function POST(req: Request) {
             }),
         });
 
+        const resendData = await resendResponse.json();
+
         if (!resendResponse.ok) {
-            const errorData = await resendResponse.json();
-            console.error('Resend API Error:', errorData);
-            // We still return success to the user for security, but log the error
+            console.error('Resend API Error:', resendData);
+            return NextResponse.json({
+                error: 'RESEND_ERROR',
+                message: resendData.message || 'Resend API failed to send email.'
+            }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'If that email exists, a reset link has been sent' });
+        console.log('Resend Success:', resendData);
+        return NextResponse.json({ message: 'Success! Please check your email inbox (and spam folder).' });
 
     } catch (error) {
         console.error('Forgot password error:', error);
