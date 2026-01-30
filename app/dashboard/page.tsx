@@ -10,7 +10,7 @@ export default async function DashboardPage() {
         redirect('/login');
     }
 
-    // Fetch user and initial history on the server to prevent flicker
+    // Fetch ONLY user and initial info on the server to prevent flicker
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -19,29 +19,13 @@ export default async function DashboardPage() {
             balance: true,
             isAdmin: true,
             email: true,
-            sentTransactions: {
-                orderBy: { createdAt: 'desc' },
-                take: 10,
-                include: { receiver: { select: { username: true } } }
-            },
-            receivedTransactions: {
-                orderBy: { createdAt: 'desc' },
-                take: 10,
-                include: { sender: { select: { username: true } } }
-            }
+            // We NO LONGER fetch transactions on the server to ensure instant navigation
         }
     });
 
     if (!user) {
         redirect('/login');
     }
-
-    // Format history the same way as the API
-    const history = [
-        ...user.sentTransactions.map(t => ({ ...t, type: 'SENT', otherUser: t.receiver.username })),
-        ...user.receivedTransactions.map(t => ({ ...t, type: 'RECEIVED', otherUser: t.sender.username }))
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
 
     const fallbackData = {
         user: {
@@ -51,7 +35,7 @@ export default async function DashboardPage() {
             isAdmin: user.isAdmin,
             email: user.email,
         },
-        history
+        history: [] // Start with empty history so the UI doesn't crash, SWR will fill this in 100ms
     };
 
     return <DashboardClient fallbackData={fallbackData} />;

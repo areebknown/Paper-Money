@@ -163,7 +163,15 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
 
                 <div className="space-y-4 overflow-y-auto pb-20 no-scrollbar">
                     {history.length === 0 ? (
-                        <p className="text-gray-400 text-center py-8">No transactions yet</p>
+                        isLoading ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-xl"></div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-center py-8">No transactions yet</p>
+                        )
                     ) : (
                         history.map((t: any) => (
                             <div
