@@ -36,12 +36,12 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Combine and sort transactions for a unified history, limited to 50
+        // Combine and sort transactions for a unified history, limited to 10 for dashboard speed
         const history = [
             ...user.sentTransactions.map(t => ({ ...t, type: 'SENT', otherUser: t.receiver.username })),
             ...user.receivedTransactions.map(t => ({ ...t, type: 'RECEIVED', otherUser: t.sender.username }))
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 50);
+            .slice(0, 10);
 
         return NextResponse.json({
             user: {
