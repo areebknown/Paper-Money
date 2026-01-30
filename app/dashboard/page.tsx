@@ -18,6 +18,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
     const [newReceipt, setNewReceipt] = useState<any>(null);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
     const lastTransactionId = useRef<string | null>(null);
 
     // Notification Logic
@@ -159,28 +160,50 @@ export default function DashboardPage() {
                         <p className="text-gray-400 text-center py-8">No transactions yet</p>
                     ) : (
                         history.map((t: any) => (
-                            <div key={t.id} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                                <div className="flex items-center gap-4">
-                                    <div className={cn(
-                                        "w-10 h-10 rounded-full flex items-center justify-center",
-                                        t.type === 'RECEIVED' ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
-                                    )}>
-                                        {t.type === 'RECEIVED' ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+                            <div
+                                key={t.id}
+                                onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
+                                className={cn(
+                                    "flex flex-col p-4 bg-white rounded-xl shadow-sm border border-gray-100 transition-all cursor-pointer",
+                                    expandedId === t.id ? "ring-2 ring-indigo-500 shadow-md transform scale-[1.02]" : "hover:bg-gray-50"
+                                )}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full flex items-center justify-center",
+                                            t.type === 'RECEIVED' ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
+                                        )}>
+                                            {t.type === 'RECEIVED' ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">{t.otherUser}</p>
+                                            <p className="text-xs text-gray-500">{new Date(t.createdAt).toLocaleDateString()}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{t.otherUser}</p>
-                                        <p className="text-xs text-gray-500">{new Date(t.createdAt).toLocaleDateString()}</p>
+                                    <div className="text-right">
+                                        <p className={cn(
+                                            "font-bold",
+                                            t.type === 'RECEIVED' ? "text-emerald-600" : "text-gray-900"
+                                        )}>
+                                            {t.type === 'RECEIVED' ? '+' : '-'} ₹{t.amount.toFixed(2)}
+                                        </p>
+                                        <p className="text-xs text-gray-400 capitalize">{t.status.toLowerCase()}</p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className={cn(
-                                        "font-bold",
-                                        t.type === 'RECEIVED' ? "text-emerald-600" : "text-gray-900"
-                                    )}>
-                                        {t.type === 'RECEIVED' ? '+' : '-'} ₹{t.amount.toFixed(2)}
-                                    </p>
-                                    <p className="text-xs text-gray-400 capitalize">{t.status.toLowerCase()}</p>
-                                </div>
+
+                                {/* Pay Again Action */}
+                                {expandedId === t.id && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <Link
+                                            href={`/send?to=${t.otherUser}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-100"
+                                        >
+                                            <Send size={14} /> Pay Again
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
