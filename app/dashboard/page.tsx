@@ -13,7 +13,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function DashboardPage() {
     const { data, error, isLoading } = useSWR('/api/user', fetcher, {
-        refreshInterval: 5000, // Poll every 5 seconds
+        refreshInterval: 2000, // Poll every 2 seconds
     });
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
