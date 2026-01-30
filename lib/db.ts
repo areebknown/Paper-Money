@@ -7,9 +7,13 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 const connectionString = `${process.env.DATABASE_URL}`
 
-// Use neon serverless only in production/edge context
-// For local development, standard prisma client is often easier
-const pool = new Pool({ connectionString });
+// Use neon serverless for high-performance connection pooling
+const pool = new Pool({
+    connectionString,
+    max: 20, // Keep up to 20 connections ready to go
+    idleTimeoutMillis: 30000, // Close idle connections after 30s
+    connectionTimeoutMillis: 2000, // Fail fast if DB is busy
+});
 const adapter = new PrismaNeon(pool as any);
 
 export const prisma = globalForPrisma.prisma || new PrismaClient({
