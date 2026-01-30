@@ -20,6 +20,8 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
         fallbackData,
         revalidateOnFocus: true,
         revalidateIfStale: true,
+        shouldRetryOnError: true,
+        errorRetryInterval: 3000,
     });
 
     const router = useRouter();
@@ -54,10 +56,12 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
         }
     }, [data?.history]);
 
-    if (error) return <div className="p-8 text-center text-red-500">Failed to load data</div>;
-    // Note: With fallbackData, isLoading will be false initially if data is present
-    if (isLoading && !data) return <div className="p-8 text-center text-gray-500">Loading...</div>;
-    if (!data || !data.user) return <div className="p-8 text-center text-gray-500">Loading user data...</div>;
+    // ONLY show full-screen error if we have NO data at all
+    if (error && !data) return <div className="p-8 text-center text-red-500">Failed to load data. Please check your connection.</div>;
+
+    // Note: With fallbackData and cache, we prioritize showing the UI
+    if (isLoading && !data) return <div className="p-8 text-center text-gray-500">Loading your profile...</div>;
+    if (!data || !data.user) return <div className="p-8 text-center text-gray-500">Connecting to secure server...</div>;
 
     const { user, history } = data;
 
