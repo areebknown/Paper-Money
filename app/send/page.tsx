@@ -24,7 +24,7 @@ function SendPageContent() {
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        
+
         const sendAmount = parseFloat(amount);
         if (isNaN(sendAmount) || sendAmount <= 0) {
             setError('Please enter a valid amount');
@@ -46,13 +46,13 @@ function SendPageContent() {
             const res = await fetch('/api/transfer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    receiverUsername: receiverUsername.trim(), 
-                    amount: sendAmount 
+                body: JSON.stringify({
+                    receiverUsername: receiverUsername.trim(),
+                    amount: sendAmount
                 }),
             });
             const data = await res.json();
-            
+
             if (res.ok) {
                 // Confirmed by server
                 setIsOptimistic(false);
@@ -82,7 +82,7 @@ function SendPageContent() {
                     {/* Ring animation */}
                     <div className="absolute inset-0 w-24 h-24 border-4 border-emerald-500 rounded-full animate-ping opacity-20"></div>
                 </div>
-                
+
                 <h2 className="text-3xl font-black text-gray-900 mb-2">Money Sent!</h2>
                 <div className="flex items-center gap-2 mb-8 bg-emerald-50 px-4 py-2 rounded-full">
                     <span className="text-emerald-700 font-bold text-xl">₹{parseFloat(amount).toFixed(2)}</span>
@@ -92,7 +92,7 @@ function SendPageContent() {
 
                 {isOptimistic ? (
                     <div className="flex items-center gap-2 text-gray-400 text-sm italic animate-pulse">
-                         Securing transaction...
+                        Securing transaction...
                     </div>
                 ) : (
                     <div className="flex flex-col items-center gap-4">
@@ -161,13 +161,12 @@ function SendPageContent() {
                         <button
                             type="submit"
                             className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-indigo-200 flex items-center justify-center gap-3 text-xl group"
-                         black py-5 rounded-2xl hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-indigo-200 flex items-center justify-center gap-3 text-xl group"
                         >
                             Pay Securely <Send size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </button>
                     </form>
                 </div>
-                
+
                 <p className="text-center text-xs text-gray-400 font-medium px-4">
                     Your payments are encrypted and protected by PaperPay Security.
                 </p>
