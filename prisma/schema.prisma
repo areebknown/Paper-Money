@@ -35,4 +35,8 @@ model Transaction {
 
   receiverId  String
   receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
 }
