@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
 
-export const runtime = 'edge';
-
 export async function POST(req: Request) {
     const userId = await getUserIdFromRequest();
 
