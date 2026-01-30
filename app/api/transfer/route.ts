@@ -30,7 +30,7 @@ export async function POST(req: Request) {
             }
 
             if (sender.isSuspended) {
-                throw new Error('your account is temporily suspended because of your past activites...');
+                throw new Error('Your account has been temporarily suspended due to suspicious activity. Please contact support for assistance.');
             }
 
             // 2. Get Receiver
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
             }
 
             if (receiver.isSuspended) {
-                throw new Error("ths user's account is temporarily suspended becuse...");
+                throw new Error("This user's account is currently suspended and cannot receive transfers at this time.");
             }
 
             // 3. Decrement Sender Balance
