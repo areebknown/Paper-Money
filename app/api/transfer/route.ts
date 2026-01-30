@@ -29,12 +29,20 @@ export async function POST(req: Request) {
                 throw new Error('Insufficient balance');
             }
 
+            if (sender.isSuspended) {
+                throw new Error('your account is temporily suspended because of your past activites...');
+            }
+
             // 2. Get Receiver
             const receiver = await tx.user.findUnique({ where: { username: receiverUsername } });
             if (!receiver) throw new Error('Receiver not found');
 
             if (receiver.id === sender.id) {
                 throw new Error('Cannot send money to yourself');
+            }
+
+            if (receiver.isSuspended) {
+                throw new Error("ths user's account is temporarily suspended becuse...");
             }
 
             // 3. Decrement Sender Balance
@@ -67,7 +75,12 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error('Transfer error:', error);
         const message = error.message || 'Internal server error';
-        if (message === 'Insufficient balance' || message === 'Receiver not found' || message === 'Cannot send money to yourself') {
+        if (
+            message === 'Insufficient balance' ||
+            message === 'Receiver not found' ||
+            message === 'Cannot send money to yourself' ||
+            message.includes('suspended')
+        ) {
             return NextResponse.json({ error: message }, { status: 400 });
         }
         return NextResponse.json({ error: 'Transaction failed' }, { status: 500 });

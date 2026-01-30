@@ -36,7 +36,7 @@ export async function PUT(req: Request) {
     }
 
     try {
-        const { id, balance, amountToAdd, broadcast } = await req.json();
+        const { id, balance, amountToAdd, broadcast, isSuspended } = await req.json();
 
         // Bulk Allocation
         if (broadcast && amountToAdd) {
@@ -57,9 +57,10 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
         }
 
-        let data = {};
-        if (balance !== undefined) data = { balance: parseFloat(balance) };
-        if (amountToAdd !== undefined) data = { balance: { increment: parseFloat(amountToAdd) } };
+        let data: any = {};
+        if (balance !== undefined) data.balance = parseFloat(balance);
+        if (amountToAdd !== undefined) data.balance = { increment: parseFloat(amountToAdd) };
+        if (isSuspended !== undefined) data.isSuspended = isSuspended;
 
         const user = await prisma.user.update({
             where: { id },
