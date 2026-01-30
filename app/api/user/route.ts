@@ -18,6 +18,7 @@ export async function GET(req: Request) {
                 username: true,
                 balance: true,
                 isAdmin: true,
+                isSuspended: true,
                 email: true,
                 sentTransactions: {
                     orderBy: { createdAt: 'desc' },
@@ -49,6 +50,7 @@ export async function GET(req: Request) {
                 username: user.username,
                 balance: user.balance,
                 isAdmin: user.isAdmin,
+                isSuspended: user.isSuspended,
                 email: user.email,
             },
             history

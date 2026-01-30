@@ -53,7 +53,7 @@ export async function PUT(req: Request) {
         }
 
         // Individual Update
-        if (!id || (balance === undefined && amountToAdd === undefined)) {
+        if (!id || (balance === undefined && amountToAdd === undefined && isSuspended === undefined)) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
         }
 

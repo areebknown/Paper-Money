@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight, Bell } from 'lucide-react';
+import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight, Bell, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -135,6 +135,16 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
                     </div>
                     <p className="text-sm text-indigo-200">Hello, {user.username}</p>
                 </div>
+
+                {/* Suspension Badge */}
+                {user.isSuspended && (
+                    <div className="absolute bottom-4 right-4 animate-in slide-in-from-right-4 duration-500">
+                        <div className="bg-red-500/20 backdrop-blur-md border border-red-400/30 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
+                            <ShieldAlert size={14} className="text-red-300" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-red-100">Account Restricted</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Decorative circles */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
