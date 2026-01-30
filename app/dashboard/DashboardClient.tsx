@@ -11,13 +11,15 @@ import { QRCodeSVG } from 'qrcode.react';
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface DashboardClientProps {
-    fallbackData: any;
+    fallbackData?: any;
 }
 
 export default function DashboardClient({ fallbackData }: DashboardClientProps) {
     const { data, error, isLoading } = useSWR('/api/user', fetcher, {
         refreshInterval: 2000, // Poll every 2 seconds
-        fallbackData, // Use server-provided data as initial state
+        fallbackData,
+        revalidateOnFocus: true,
+        revalidateIfStale: true,
     });
 
     const router = useRouter();
