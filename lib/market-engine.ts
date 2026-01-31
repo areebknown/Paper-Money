@@ -20,7 +20,7 @@ export async function initAssets() {
                 username: systemUsername,
                 password: 'SYSTEM_ACCOUNT_LOCKED', // Non-loginable
                 isAdmin: true,
-                balance: 1000000000 // Infinite-like pool for market side
+                balance: 10000000 // Infinite-like pool for market side (within Decimal 10,2 limit)
             }
         });
 
