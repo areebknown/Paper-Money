@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, TrendingUp, TrendingDown, Info, ShoppingCart, DollarSign } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Info, ShoppingCart, DollarSign, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import {
