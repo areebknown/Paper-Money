@@ -31,8 +31,9 @@ function SendPageContent() {
             return;
         }
 
-        if (userData?.user?.balance < sendAmount) {
-            setError(`Insufficient balance. You have ₹${userData.user.balance}`);
+        const currentBalance = Number(userData?.user?.balance);
+        if (currentBalance < sendAmount) {
+            setError(`Insufficient balance. You have ₹${currentBalance.toFixed(2)}`);
             return;
         }
 
@@ -119,7 +120,7 @@ function SendPageContent() {
                 <div className="bg-white rounded-3xl shadow-xl shadow-indigo-100/50 p-8 mb-6 border border-indigo-50/50">
                     <div className="flex justify-between items-center mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/20">
                         <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Available Balance</span>
-                        <span className="font-black text-indigo-900 text-xl">₹{userData?.user?.balance?.toFixed(2) || '...'}</span>
+                        <span className="font-black text-indigo-900 text-xl">₹{Number(userData?.user?.balance).toFixed(2) || '...'}</span>
                     </div>
 
                     <form onSubmit={handleSend} className="space-y-8">
