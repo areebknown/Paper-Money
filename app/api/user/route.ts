@@ -29,6 +29,9 @@ export async function GET(req: Request) {
                     orderBy: { createdAt: 'desc' },
                     take: 50,
                     include: { sender: { select: { username: true } } }
+                },
+                portfolios: {
+                    include: { asset: true }
                 }
             }
         });
@@ -44,14 +47,18 @@ export async function GET(req: Request) {
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 10);
 
+        const totalInvested = user.portfolios.reduce((sum, p) => sum + (p.units * p.asset.currentPrice), 0);
+
         return NextResponse.json({
             user: {
                 id: user.id,
                 username: user.username,
                 balance: user.balance,
                 isAdmin: user.isAdmin,
-                isSuspended: user.isSuspended,
                 email: user.email,
+                isSuspended: user.isSuspended,
+                totalInvested,
+                portfolios: user.portfolios
             },
             history
         });

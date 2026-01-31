@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight, Bell, ShieldAlert } from 'lucide-react';
+import { QrCode, Send, X, ArrowDownLeft, ArrowUpRight, Bell, ShieldAlert, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -154,18 +154,24 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
             {/* Quick Actions */}
             <div className="p-6">
                 <h2 className="text-gray-800 font-semibold mb-4 text-sm uppercase tracking-wider">Quick Actions</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                     <Link href="/send" className="flex flex-col items-center gap-2 group p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all">
-                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Send size={24} />
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Send size={20} />
                         </div>
-                        <span className="text-sm text-gray-600 font-medium">Send to User</span>
+                        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Send</span>
                     </Link>
                     <Link href="/scan" className="flex flex-col items-center gap-2 group p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-purple-100 hover:shadow-md transition-all">
-                        <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <QrCode size={24} />
+                        <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <QrCode size={20} />
                         </div>
-                        <span className="text-sm text-gray-600 font-medium">Scan QR</span>
+                        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Scan</span>
+                    </Link>
+                    <Link href="/market" className="flex flex-col items-center gap-2 group p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-100 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingUp size={20} />
+                        </div>
+                        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Market</span>
                     </Link>
                 </div>
             </div>

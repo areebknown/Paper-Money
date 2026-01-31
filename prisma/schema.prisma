@@ -23,6 +23,7 @@ model User {
   
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
+  portfolios           Portfolio[]
 }
 
 model Transaction {
@@ -40,4 +41,36 @@ model Transaction {
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+}
+
+model Asset {
+  id           String             @id
+  name         String
+  unit         String
+  currentPrice Float
+  change24h    Float              @default(0)
+  history      AssetPriceHistory[]
+  portfolios   Portfolio[]
+}
+
+model AssetPriceHistory {
+  id        String   @id @default(cuid())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  price     Float
+  timestamp DateTime @default(now())
+
+  @@index([assetId])
+  @@index([timestamp])
+}
+
+model Portfolio {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  units   Float  @default(0)
+
+  @@unique([userId, assetId])
 }
