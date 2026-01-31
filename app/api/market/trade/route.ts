@@ -15,6 +15,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
         }
 
+        // Enforce whole units (except for cashing out everything)
+        if (!all && !Number.isInteger(units)) {
+            return NextResponse.json({ error: 'You can only trade in whole units (complete packets/barrels/biscuits).' }, { status: 400 });
+        }
+
         const asset = await prisma.asset.findUnique({ where: { id: assetId } });
         if (!asset) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
 

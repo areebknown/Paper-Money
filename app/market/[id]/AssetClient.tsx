@@ -51,7 +51,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                 body: JSON.stringify({
                     assetId: asset.id,
                     type,
-                    units: all ? userUnits : parseFloat(tradeAmount),
+                    units: all ? userUnits : Math.floor(parseFloat(tradeAmount)),
                     all
                 })
             });
@@ -226,11 +226,11 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                             value={tradeAmount}
                                             onChange={(e) => setTradeAmount(e.target.value)}
                                             className="w-full bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl p-4 text-2xl font-black outline-none transition-all text-center"
-                                            min="0.1"
-                                            step="0.1"
+                                            min="1"
+                                            step="1"
                                         />
                                         <button
-                                            onClick={() => setTradeAmount(isInvesting ? (userBalance / asset.currentPrice).toFixed(1) : userUnits.toString())}
+                                            onClick={() => setTradeAmount(isInvesting ? Math.floor(userBalance / asset.currentPrice).toString() : Math.floor(userUnits).toString())}
                                             className="bg-indigo-50 text-indigo-600 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition whitespace-nowrap"
                                         >
                                             MAX
