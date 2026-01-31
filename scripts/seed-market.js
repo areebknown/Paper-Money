@@ -7,7 +7,7 @@ const ASSETS = [
     { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', currentPrice: 2000 },
     { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', currentPrice: 4000 },
     { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', currentPrice: 80000 },
-    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', currentPrice: 50000 },
+    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', currentPrice: 10000 },
 ];
 
 async function seed() {
