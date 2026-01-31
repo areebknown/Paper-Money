@@ -3,11 +3,14 @@ import { getUserIdFromRequest } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AssetClient from './AssetClient';
 
-export default async function AssetPage({ params }: { params: { id: string } }) {
+export default async function AssetPage({ params }: { params: Promise<{ id: string }> }) {
     const userId = await getUserIdFromRequest();
     if (!userId) redirect('/login');
 
-    const assetId = params.id;
+    const resolvedParams = await params;
+    const assetId = resolvedParams?.id;
+
+    if (!assetId) redirect('/market');
 
     const asset = await prisma.asset.findUnique({
         where: { id: assetId },
