@@ -51,12 +51,12 @@ export async function GET(req: Request) {
             ...user.sentTransactions.map(t => ({
                 ...t,
                 type: 'SENT',
-                otherUser: t.receiver.username
+                otherUser: (t as any).asset ? (t as any).asset.name : t.receiver.username
             })),
             ...user.receivedTransactions.map(t => ({
                 ...t,
                 type: 'RECEIVED',
-                otherUser: t.sender.username
+                otherUser: (t as any).asset ? (t as any).asset.name : t.sender.username
             }))
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 10);
