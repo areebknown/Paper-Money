@@ -230,35 +230,49 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                             {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
                             <div className="space-y-3">
-                                <button
-                                    onClick={() => handleTrade(isInvesting ? 'BUY' : 'SELL')}
-                                    disabled={loading}
-                                    className={cn(
-                                        "w-full py-5 rounded-3xl font-black text-xl shadow-xl transition-all active:scale-95",
-                                        isInvesting
-                                            ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
-                                            : "bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700"
-                                    )}
-                                >
-                                    {loading ? 'Processing...' : isInvesting ? 'Confirm Purchase' : 'Confirm Cash Out'}
-                                </button>
+                                {loading ? (
+                                    <div className="w-full py-5 flex items-center justify-center bg-gray-100 rounded-3xl animate-pulse">
+                                        <Activity className="animate-spin text-indigo-600" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => handleTrade(isInvesting ? 'BUY' : 'SELL')}
+                                            className={cn(
+                                                "w-full py-5 rounded-3xl font-black text-xl shadow-xl transition-all active:scale-95",
+                                                isInvesting
+                                                    ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
+                                                    : "bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700"
+                                            )}
+                                        >
+                                            {isInvesting ? 'Confirm Purchase' : 'Confirm Cash Out'}
+                                        </button>
 
-                                {isCashingOut && (
-                                    <button
-                                        onClick={() => {
-                                            if (confirm(`Are you sure you want to sell ALL your ${asset.name} holdings?`)) {
-                                                handleTrade('SELL', true);
-                                            }
-                                        }}
-                                        disabled={loading || userUnits <= 0}
-                                        className="w-full py-3 text-red-600 font-bold hover:bg-red-50 rounded-2xl transition"
-                                    >
-                                        Cash Out All
-                                    </button>
+                                        {isCashingOut && (
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm(`Are you sure you want to sell ALL your ${asset.name} holdings?`)) {
+                                                        handleTrade('SELL', true);
+                                                    }
+                                                }}
+                                                disabled={userUnits <= 0}
+                                                className="w-full py-3 text-red-600 font-bold hover:bg-red-50 rounded-2xl transition"
+                                            >
+                                                Cash Out All
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Success Overlay */}
+            {loading === false && error === '' && (isInvesting === false && isCashingOut === false) && (
+                <div className="fixed inset-0 z-[200] pointer-events-none flex items-center justify-center">
+                    {/* Tiny pulse logic would go here if we tracked success state separately */}
                 </div>
             )}
         </div>
