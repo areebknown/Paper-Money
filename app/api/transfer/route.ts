@@ -12,8 +12,7 @@ export async function POST(req: Request) {
 
     try {
         const { receiverUsername, amount } = await req.json();
-
-        const transferAmount = parseFloat(amount);
+        const transferAmount = Math.round(parseFloat(amount) * 100) / 100;
 
         if (isNaN(transferAmount) || transferAmount <= 0) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
@@ -25,7 +24,7 @@ export async function POST(req: Request) {
             const sender = await tx.user.findUnique({ where: { id: userId } });
             if (!sender) throw new Error('Sender not found');
 
-            if (sender.balance < transferAmount) {
+            if (Number(sender.balance) < transferAmount) {
                 throw new Error('Insufficient balance');
             }
 

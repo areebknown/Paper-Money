@@ -15,7 +15,7 @@ model User {
   email     String?  @unique
   isAdmin   Boolean  @default(false)
   isSuspended Boolean @default(false)
-  balance   Float    @default(0)
+  balance   Decimal  @default(0) @db.Decimal(10, 2)
   createdAt DateTime @default(now())
   
   resetToken       String?
@@ -28,7 +28,7 @@ model User {
 
 model Transaction {
   id          String   @id @default(cuid())
-  amount      Float
+  amount      Decimal  @db.Decimal(10, 2)
   status      String   @default("COMPLETED") // COMPLETED, FAILED
   category    String   @default("TRANSFER") // TRANSFER, MARKET_BUY, MARKET_SELL
   description String?
@@ -53,7 +53,7 @@ model Asset {
   id           String             @id
   name         String
   unit         String
-  currentPrice Float
+  currentPrice Decimal            @db.Decimal(10, 2)
   change24h    Float              @default(0)
   history      AssetPriceHistory[]
   portfolios   Portfolio[]
@@ -64,7 +64,7 @@ model AssetPriceHistory {
   id        String   @id @default(cuid())
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  price     Float
+  price     Decimal  @db.Decimal(10, 2)
   timestamp DateTime @default(now())
 
   @@index([assetId])
@@ -78,7 +78,7 @@ model Portfolio {
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
   units     Float    @default(0)
-  totalCost Float    @default(0) // Tracks cost basis for P/L
+  totalCost Decimal  @default(0) @db.Decimal(10, 2) // Tracks cost basis for P/L
 
   @@unique([userId, assetId])
 }

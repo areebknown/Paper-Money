@@ -30,8 +30,8 @@ export async function GET(req: Request) {
             }
         });
 
-        const users = usersRaw.map(user => {
-            const rawInvested = user.portfolios.reduce((sum, p) => sum + (p.units * p.asset.currentPrice), 0);
+        const users = (usersRaw as any[]).map(user => {
+            const rawInvested = user.portfolios.reduce((sum: number, p: any) => sum + (p.units * Number(p.asset.currentPrice)), 0);
             const totalInvested = Math.round(rawInvested * 100) / 100;
             return {
                 ...user,

@@ -49,16 +49,17 @@ export async function updateMarketPrices() {
         const direction = isUp ? 1 : -1;
 
         const changePercent = direction * magnitude;
-        const newPrice = asset.currentPrice * (1 + changePercent);
+        const rawNewPrice = Number(asset.currentPrice) * (1 + changePercent);
+        const newPrice = Math.max(1, Math.round(rawNewPrice * 100) / 100);
 
         await prisma.asset.update({
             where: { id: asset.id },
             data: {
-                currentPrice: Math.max(1, newPrice), // Ensure price doesn't drop to 0
+                currentPrice: newPrice,
                 change24h: changePercent * 100,
                 history: {
                     create: {
-                        price: Math.max(1, newPrice),
+                        price: newPrice,
                         timestamp: now
                     }
                 }

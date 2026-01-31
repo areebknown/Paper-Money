@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 
         return await prisma.$transaction(async (tx) => {
             if (type === 'BUY') {
-                const rawPrice = units * asset.currentPrice;
+                const rawPrice = units * Number(asset.currentPrice);
                 const totalPrice = Math.round(rawPrice * 100) / 100;
 
-                if (user.balance < totalPrice) {
+                if (Number(user.balance) < totalPrice) {
                     throw new Error('Insufficient balance');
                 }
 
@@ -82,11 +82,11 @@ export async function POST(req: Request) {
                     throw new Error('Insufficient units to sell');
                 }
 
-                const rawSaleValue = unitsToSell * asset.currentPrice;
+                const rawSaleValue = unitsToSell * Number(asset.currentPrice);
                 const saleValue = Math.round(rawSaleValue * 100) / 100;
 
                 // Calculate cost to deduct (proportionally)
-                const rawCostToDeduct = (portfolio.totalCost * unitsToSell) / portfolio.units;
+                const rawCostToDeduct = (Number(portfolio.totalCost) * unitsToSell) / portfolio.units;
                 const costToDeduct = Math.round(rawCostToDeduct * 100) / 100;
 
                 // Update Portfolio
