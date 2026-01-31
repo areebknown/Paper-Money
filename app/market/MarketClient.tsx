@@ -52,23 +52,52 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
             </div>
 
             {/* Portfolio Summary Section */}
-            {user?.portfolios?.length > 0 && (
+            {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
                 <div className="px-4 py-6">
-                    <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2 px-1">
                         <Briefcase size={16} className="text-indigo-600" /> Your Portfolio
                     </h2>
-                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                        {user.portfolios.map((p: any) => (
-                            <Link
-                                href={`/market/${p.assetId}`}
-                                key={p.id}
-                                className="min-w-[160px] bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-1 active:scale-95 transition-transform"
-                            >
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{p.asset.name}</p>
-                                <p className="text-sm font-black text-gray-900">{p.units} <span className="text-[8px] opacity-40 uppercase">{p.asset.unit.split(' ')[1]}s</span></p>
-                                <p className="text-xs font-bold text-emerald-600 mt-1">₹{(p.units * p.asset.currentPrice).toLocaleString()}</p>
-                            </Link>
-                        ))}
+                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar px-1">
+                        {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {
+                            const currentValue = p.units * p.asset.currentPrice;
+                            const profit = currentValue - p.totalCost;
+                            const isProfit = profit >= 0;
+
+                            return (
+                                <Link
+                                    href={`/market/${p.assetId}`}
+                                    key={p.id}
+                                    className="min-w-[170px] bg-white p-5 rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-2 active:scale-95 transition-transform group"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{p.asset.name}</p>
+                                        <div className={cn(
+                                            "text-[8px] font-black px-1.5 py-0.5 rounded-full",
+                                            isProfit ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                        )}>
+                                            {isProfit ? 'PROFIT' : 'LOSS'}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <p className="text-sm font-black text-gray-900">{p.units.toLocaleString()} <span className="text-[8px] opacity-40 uppercase">{p.asset.unit.split(' ')[1]}s</span></p>
+                                            <p className="text-xs font-bold text-emerald-600">₹{currentValue.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-2 pt-2 border-t border-dashed border-gray-100 flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-gray-400">P/L</span>
+                                        <span className={cn(
+                                            "text-[11px] font-black",
+                                            isProfit ? "text-emerald-700" : "text-red-600"
+                                        )}>
+                                            {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </Link>
+                            )
+                        })}
                     </div>
                 </div>
             )}

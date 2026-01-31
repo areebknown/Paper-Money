@@ -53,7 +53,7 @@ export async function POST(req: Request) {
                     data: {
                         amount: totalPrice,
                         category: 'MARKET_BUY',
-                        description: `Invested in ${asset.name} (${units} ${units === 1 ? 'unit' : 'units'})`,
+                        description: `You invested ₹${totalPrice.toLocaleString()} in ${asset.name}`,
                         senderId: userId,
                         receiverId: adminUser.id,
                         assetId: asset.id,
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
                     data: {
                         amount: saleValue,
                         category: 'MARKET_SELL',
-                        description: `Sold ${asset.name} (${unitsToSell} ${unitsToSell === 1 ? 'unit' : 'units'})`,
+                        description: `You cashed out ₹${saleValue.toLocaleString()} from ${asset.name}`,
                         senderId: adminUser.id,
                         receiverId: userId,
                         assetId: asset.id,

@@ -20,13 +20,19 @@ export async function GET(req: Request) {
             select: {
                 sentTransactions: {
                     orderBy: { createdAt: 'desc' },
-                    take: skip + limit, // We need to fetch enough to skip accurately across two lists
-                    include: { receiver: { select: { username: true } } }
+                    take: skip + limit,
+                    include: {
+                        receiver: { select: { username: true } },
+                        asset: true
+                    }
                 },
                 receivedTransactions: {
                     orderBy: { createdAt: 'desc' },
                     take: skip + limit,
-                    include: { sender: { select: { username: true } } }
+                    include: {
+                        sender: { select: { username: true } },
+                        asset: true
+                    }
                 }
             }
         });
@@ -37,8 +43,22 @@ export async function GET(req: Request) {
 
         // Combine and sort with stable logic
         const allTransactions = [
-            ...user.sentTransactions.map(t => ({ ...t, type: 'SENT', otherUser: t.receiver.username })),
-            ...user.receivedTransactions.map(t => ({ ...t, type: 'RECEIVED', otherUser: t.sender.username }))
+            ...user.sentTransactions.map(t => ({
+                ...t,
+                type: 'SENT',
+                otherUser: t.receiver.username,
+                category: t.category,
+                description: t.description,
+                asset: t.asset
+            })),
+            ...user.receivedTransactions.map(t => ({
+                ...t,
+                type: 'RECEIVED',
+                otherUser: t.sender.username,
+                category: t.category,
+                description: t.description,
+                asset: t.asset
+            }))
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         // Slice for the actual page
