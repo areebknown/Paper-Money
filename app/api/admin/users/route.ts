@@ -31,7 +31,8 @@ export async function GET(req: Request) {
         });
 
         const users = usersRaw.map(user => {
-            const totalInvested = user.portfolios.reduce((sum, p) => sum + (p.units * p.asset.currentPrice), 0);
+            const rawInvested = user.portfolios.reduce((sum, p) => sum + (p.units * p.asset.currentPrice), 0);
+            const totalInvested = Math.round(rawInvested * 100) / 100;
             return {
                 ...user,
                 totalInvested
@@ -55,12 +56,13 @@ export async function PUT(req: Request) {
         // Bulk Allocation
         if (broadcast && amountToAdd) {
             try {
+                const amount = Math.round(parseFloat(amountToAdd) * 100) / 100;
                 await prisma.user.updateMany({
                     data: {
-                        balance: { increment: parseFloat(amountToAdd) }
+                        balance: { increment: amount }
                     }
                 });
-                return NextResponse.json({ success: true, message: `Added ${amountToAdd} to all users` });
+                return NextResponse.json({ success: true, message: `Added ${amount.toFixed(2)} to all users` });
             } catch (e) {
                 throw new Error("Bulk update failed");
             }
@@ -72,8 +74,11 @@ export async function PUT(req: Request) {
         }
 
         let data: any = {};
-        if (balance !== undefined) data.balance = parseFloat(balance);
-        if (amountToAdd !== undefined) data.balance = { increment: parseFloat(amountToAdd) };
+        if (balance !== undefined) data.balance = Math.round(parseFloat(balance) * 100) / 100;
+        if (amountToAdd !== undefined) {
+            const amount = Math.round(parseFloat(amountToAdd) * 100) / 100;
+            data.balance = { increment: amount };
+        }
         if (isSuspended !== undefined) data.isSuspended = isSuspended;
 
         const user = await prisma.user.update({

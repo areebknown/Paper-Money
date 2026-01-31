@@ -247,11 +247,11 @@ export default function AdminPage() {
                                                 <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={18} /></button>
                                             </div>
                                         ) : (
-                                            <span>₹{user.balance.toLocaleString()}</span>
+                                            <span>₹{user.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         )}
                                     </td>
                                     <td className="p-4 font-semibold text-indigo-600">
-                                        ₹{user.totalInvested?.toLocaleString() || '0'}
+                                        ₹{user.totalInvested?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                                     </td>
                                     <td className="p-4">
                                         <div className="flex justify-center gap-4">
