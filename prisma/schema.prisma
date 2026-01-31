@@ -52,6 +52,7 @@ model Transaction {
 model Asset {
   id           String             @id
   name         String
+  description  String?
   unit         String
   currentPrice Decimal            @db.Decimal(10, 2)
   change24h    Float              @default(0)

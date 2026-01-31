@@ -178,7 +178,8 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                     <div>
                         <h4 className="text-sm font-bold text-indigo-900 mb-1">Market Insight</h4>
                         <p className="text-xs text-indigo-800/70 leading-relaxed font-medium">
-                            {asset.id === 'OIL' ? "High volatility asset. Prices can swing wildly based on global demand." : "Steady growth asset with historically low volatility."} Current price is set at 12:00 AM daily.
+                            {asset.description || "Steady growth asset with historically low volatility."} <br />
+                            <span className="text-[10px] opacity-60 italic mt-1 block">Current price is set at 12:00 AM daily.</span>
                         </p>
                     </div>
                 </div>

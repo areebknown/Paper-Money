@@ -1,12 +1,12 @@
 import { prisma } from './db';
 
 export const ASSETS = [
-    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.74, magMin: 0.005, magMax: 0.04 },
-    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.70, magMin: 0.02, magMax: 0.03 },
-    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.60, magMin: 0.01, magMax: 0.045 },
-    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.90, magMin: 0.015, magMax: 0.025 },
-    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.55, magMin: 0.03, magMax: 0.06 },
-    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 10000, upProb: 0.50, magMin: 0.05, magMax: 0.12 },
+    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.74, magMin: 0.005, magMax: 0.04, description: 'Safest asset, anti-loss hedge' },
+    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.70, magMin: 0.02, magMax: 0.03, description: 'Low risk, slow growth' },
+    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.60, magMin: 0.01, magMax: 0.045, description: 'Balanced trading metal' },
+    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.90, magMin: 0.015, magMax: 0.025, description: 'Wealth preservation' },
+    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.55, magMin: 0.03, magMax: 0.06, description: 'Growth + volatility' },
+    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 10000, upProb: 0.50, magMin: 0.05, magMax: 0.12, description: 'Adrenaline button 😭' },
 ];
 
 export async function initAssets() {
@@ -25,25 +25,29 @@ export async function initAssets() {
         });
 
         // 2. Ensure Asset exists
-        const existing = await prisma.asset.findUnique({ where: { id: assetConfig.id } });
-        if (!existing) {
-            await prisma.asset.create({
-                data: {
-                    id: assetConfig.id,
-                    name: assetConfig.name,
-                    unit: assetConfig.unit,
-                    currentPrice: assetConfig.startPrice,
-                    change24h: 0,
-                    history: {
-                        create: {
-                            price: assetConfig.startPrice,
-                            timestamp: new Date()
-                        }
+        await prisma.asset.upsert({
+            where: { id: assetConfig.id },
+            update: {
+                name: assetConfig.name,
+                unit: assetConfig.unit,
+                description: assetConfig.description
+            },
+            create: {
+                id: assetConfig.id,
+                name: assetConfig.name,
+                unit: assetConfig.unit,
+                description: assetConfig.description,
+                currentPrice: assetConfig.startPrice,
+                change24h: 0,
+                history: {
+                    create: {
+                        price: assetConfig.startPrice,
+                        timestamp: new Date()
                     }
                 }
-            });
-            console.log(`Initialized asset and market account for: ${assetConfig.name}`);
-        }
+            }
+        });
+        console.log(`Initialized asset and market account for: ${assetConfig.name}`);
     }
 }
 
