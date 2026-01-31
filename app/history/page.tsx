@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Send, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HistoryPage() {
@@ -75,42 +75,61 @@ export default function HistoryPage() {
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
                                             "w-12 h-12 rounded-full flex items-center justify-center",
-                                            t.type === 'RECEIVED' ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
+                                            t.category === 'MARKET_BUY' ? "bg-indigo-100 text-indigo-600" :
+                                                t.category === 'MARKET_SELL' ? "bg-emerald-100 text-emerald-600" :
+                                                    t.type === 'RECEIVED' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                                         )}>
-                                            {t.type === 'RECEIVED' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                                            {t.category === 'MARKET_BUY' ? <TrendingUp size={24} /> :
+                                                t.category === 'MARKET_SELL' ? <TrendingDown size={24} /> :
+                                                    t.type === 'RECEIVED' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-900">{t.otherUser}</p>
-                                            <p className="text-xs text-gray-500">{new Date(t.createdAt).toLocaleString()}</p>
+                                            <p className="font-bold text-gray-900 leading-tight">
+                                                {t.description || t.otherUser}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                                {t.category === 'MARKET_BUY' || t.category === 'MARKET_SELL' ? 'Market Trade' : t.type === 'SENT' ? `Sent to ${t.otherUser}` : `Received from ${t.otherUser}`}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 font-medium">
+                                                {new Date(t.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className={cn(
-                                            "font-bold text-lg",
-                                            t.type === 'RECEIVED' ? "text-emerald-600" : "text-gray-900"
+                                            "font-black text-lg tracking-tight",
+                                            t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? "text-emerald-600" : "text-gray-900"
                                         )}>
-                                            {t.type === 'RECEIVED' ? '+' : '-'} ₹{t.amount.toFixed(2)}
+                                            {t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? '+' : '-'}₹{t.amount.toLocaleString()}
                                         </p>
                                         <span className={cn(
-                                            "text-xs px-2 py-1 rounded-full capitalize",
-                                            t.status === 'COMPLETED' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                            "text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter border",
+                                            t.status === 'COMPLETED' ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"
                                         )}>
-                                            {t.status.toLowerCase()}
+                                            {t.status}
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* Pay Again Action */}
-                                {expandedId === t.id && (
+                                {/* Pay Again Action (Only for Transfers) */}
+                                {expandedId === t.id && t.category === 'TRANSFER' && (
                                     <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <p className="text-xs text-gray-400 font-mono">ID: {t.id.slice(0, 12)}...</p>
+                                        <p className="text-[10px] text-gray-400 font-mono">ID: {t.id}</p>
                                         <Link
                                             href={`/send?to=${t.otherUser}`}
                                             onClick={(e) => e.stopPropagation()}
-                                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-100"
+                                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-indigo-700 transition shadow-lg shadow-indigo-100"
                                         >
                                             <Send size={14} /> Pay Again
                                         </Link>
+                                    </div>
+                                )}
+                                {expandedId === t.id && (t.category === 'MARKET_BUY' || t.category === 'MARKET_SELL') && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase">System Confirmed Trade</span>
+                                            <span className="text-[10px] font-mono text-gray-400"># {t.id.slice(-8)}</span>
+                                        </div>
                                     </div>
                                 )}
                             </div>

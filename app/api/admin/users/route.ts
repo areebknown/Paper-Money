@@ -21,9 +21,23 @@ export async function GET(req: Request) {
     }
 
     try {
-        const users = await prisma.user.findMany({
+        const usersRaw = await prisma.user.findMany({
             orderBy: { createdAt: 'desc' },
+            include: {
+                portfolios: {
+                    include: { asset: true }
+                }
+            }
         });
+
+        const users = usersRaw.map(user => {
+            const totalInvested = user.portfolios.reduce((sum, p) => sum + (p.units * p.asset.currentPrice), 0);
+            return {
+                ...user,
+                totalInvested
+            };
+        });
+
         return NextResponse.json({ users });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });

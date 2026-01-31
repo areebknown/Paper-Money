@@ -30,6 +30,8 @@ model Transaction {
   id          String   @id @default(cuid())
   amount      Float
   status      String   @default("COMPLETED") // COMPLETED, FAILED
+  category    String   @default("TRANSFER") // TRANSFER, MARKET_BUY, MARKET_SELL
+  description String?
   createdAt   DateTime @default(now())
 
   senderId    String
@@ -38,9 +40,13 @@ model Transaction {
   receiverId  String
   receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id], onDelete: Cascade)
 
+  assetId     String? // For market transactions
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+  @@index([assetId])
 }
 
 model Asset {
@@ -51,6 +57,7 @@ model Asset {
   change24h    Float              @default(0)
   history      AssetPriceHistory[]
   portfolios   Portfolio[]
+  transactions Transaction[]
 }
 
 model AssetPriceHistory {
@@ -65,12 +72,13 @@ model AssetPriceHistory {
 }
 
 model Portfolio {
-  id      String @id @default(cuid())
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assetId String
-  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  units   Float  @default(0)
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  units     Float    @default(0)
+  totalCost Float    @default(0) // Tracks cost basis for P/L
 
   @@unique([userId, assetId])
 }

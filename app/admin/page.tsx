@@ -201,7 +201,8 @@ export default function AdminPage() {
                                 <th className="p-4 font-semibold text-gray-600">Password</th>
                                 <th className="p-4 font-semibold text-gray-600">Role</th>
                                 <th className="p-4 font-semibold text-gray-600 text-center">Status</th>
-                                <th className="p-4 font-semibold text-gray-600 text-right">Balance</th>
+                                <th className="p-4 font-semibold text-gray-600">Balance</th>
+                                <th className="p-4 font-semibold text-gray-600">Invested</th>
                                 <th className="p-4 font-semibold text-gray-600 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -233,9 +234,9 @@ export default function AdminPage() {
                                             <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-emerald-200">Active</span>
                                         )}
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-4 font-semibold text-gray-900">
                                         {editingId === user.id ? (
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center gap-2">
                                                 <input
                                                     type="number"
                                                     value={editBalance}
@@ -246,8 +247,11 @@ export default function AdminPage() {
                                                 <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={18} /></button>
                                             </div>
                                         ) : (
-                                            <span className="font-semibold text-gray-900">₹{user.balance.toFixed(2)}</span>
+                                            <span>₹{user.balance.toLocaleString()}</span>
                                         )}
+                                    </td>
+                                    <td className="p-4 font-semibold text-indigo-600">
+                                        ₹{user.totalInvested?.toLocaleString() || '0'}
                                     </td>
                                     <td className="p-4">
                                         <div className="flex justify-center gap-4">

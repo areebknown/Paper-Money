@@ -23,12 +23,18 @@ export async function GET(req: Request) {
                 sentTransactions: {
                     orderBy: { createdAt: 'desc' },
                     take: 50,
-                    include: { receiver: { select: { username: true } } }
+                    include: {
+                        receiver: { select: { username: true } },
+                        asset: true
+                    }
                 },
                 receivedTransactions: {
                     orderBy: { createdAt: 'desc' },
                     take: 50,
-                    include: { sender: { select: { username: true } } }
+                    include: {
+                        sender: { select: { username: true } },
+                        asset: true
+                    }
                 },
                 portfolios: {
                     include: { asset: true }
@@ -42,8 +48,16 @@ export async function GET(req: Request) {
 
         // Combine and sort transactions for a unified history, limited to 10 for dashboard speed
         const history = [
-            ...user.sentTransactions.map(t => ({ ...t, type: 'SENT', otherUser: t.receiver.username })),
-            ...user.receivedTransactions.map(t => ({ ...t, type: 'RECEIVED', otherUser: t.sender.username }))
+            ...user.sentTransactions.map(t => ({
+                ...t,
+                type: 'SENT',
+                otherUser: t.receiver.username
+            })),
+            ...user.receivedTransactions.map(t => ({
+                ...t,
+                type: 'RECEIVED',
+                otherUser: t.sender.username
+            }))
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 10);
 

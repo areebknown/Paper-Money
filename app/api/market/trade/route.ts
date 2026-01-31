@@ -21,10 +21,13 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        const totalPrice = units * asset.currentPrice;
+        // Get admin user for the "Market" side of transactions
+        const adminUser = await prisma.user.findFirst({ where: { isAdmin: true } });
+        if (!adminUser) return NextResponse.json({ error: 'Market system error' }, { status: 500 });
 
         return await prisma.$transaction(async (tx) => {
             if (type === 'BUY') {
+                const totalPrice = units * asset.currentPrice;
                 if (user.balance < totalPrice) {
                     throw new Error('Insufficient balance');
                 }
@@ -35,11 +38,27 @@ export async function POST(req: Request) {
                     data: { balance: { decrement: totalPrice } }
                 });
 
-                // Add to portfolio
+                // Update Portfolio - add units and increment totalCost
                 await tx.portfolio.upsert({
                     where: { userId_assetId: { userId, assetId } },
-                    update: { units: { increment: units } },
-                    create: { userId, assetId, units }
+                    update: {
+                        units: { increment: units },
+                        totalCost: { increment: totalPrice }
+                    },
+                    create: { userId, assetId, units, totalCost: totalPrice }
+                });
+
+                // Create Transaction record
+                await tx.transaction.create({
+                    data: {
+                        amount: totalPrice,
+                        category: 'MARKET_BUY',
+                        description: `Invested in ${asset.name} (${units} ${units === 1 ? 'unit' : 'units'})`,
+                        senderId: userId,
+                        receiverId: adminUser.id,
+                        assetId: asset.id,
+                        status: 'COMPLETED'
+                    }
                 });
 
                 return NextResponse.json({ success: true, message: 'Purchase successful' });
@@ -48,23 +67,46 @@ export async function POST(req: Request) {
                     where: { userId_assetId: { userId, assetId } }
                 });
 
-                if (!portfolio || portfolio.units < (all ? portfolio.units : units)) {
-                    throw new Error('Insufficient units to sell');
+                if (!portfolio || portfolio.units <= 0) {
+                    throw new Error('No units to sell');
                 }
 
                 const unitsToSell = all ? portfolio.units : units;
+                if (unitsToSell > portfolio.units) {
+                    throw new Error('Insufficient units to sell');
+                }
+
                 const saleValue = unitsToSell * asset.currentPrice;
 
-                // Deduct units
+                // Calculate cost to deduct (proportionally)
+                const costToDeduct = (portfolio.totalCost * unitsToSell) / portfolio.units;
+
+                // Update Portfolio
                 await tx.portfolio.update({
                     where: { userId_assetId: { userId, assetId } },
-                    data: { units: { decrement: unitsToSell } }
+                    data: {
+                        units: { decrement: unitsToSell },
+                        totalCost: { decrement: all ? portfolio.totalCost : costToDeduct }
+                    }
                 });
 
                 // Add to balance
                 await tx.user.update({
                     where: { id: userId },
                     data: { balance: { increment: saleValue } }
+                });
+
+                // Create Transaction record
+                await tx.transaction.create({
+                    data: {
+                        amount: saleValue,
+                        category: 'MARKET_SELL',
+                        description: `Sold ${asset.name} (${unitsToSell} ${unitsToSell === 1 ? 'unit' : 'units'})`,
+                        senderId: adminUser.id,
+                        receiverId: userId,
+                        assetId: asset.id,
+                        status: 'COMPLETED'
+                    }
                 });
 
                 return NextResponse.json({ success: true, message: 'Sale successful' });
