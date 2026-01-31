@@ -1,10 +1,10 @@
 
 'use client';
-
+import React from 'react';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import { useRouter } from 'next/navigation';
-import { Trash2, Edit2, Check, X, Eye, EyeOff, LogOut, Users, DollarSign, ShieldAlert, RefreshCcw } from 'lucide-react';
+import { Trash2, Edit2, Check, X, Eye, EyeOff, LogOut, Users, DollarSign, ShieldAlert, RefreshCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -19,6 +19,7 @@ export default function AdminPage() {
     const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
     const [broadcastAmount, setBroadcastAmount] = useState('');
     const [broadcastLoading, setBroadcastLoading] = useState(false);
+    const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
     const handleLogout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -208,78 +209,138 @@ export default function AdminPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {data?.users?.map((user: any) => (
-                                <tr key={user.id} className="hover:bg-gray-50 transition">
-                                    <td className="p-4 font-medium text-gray-900">{user.username}</td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">
-                                                {showPasswords[user.id] ? user.password : '••••••••'}
-                                            </span>
-                                            <button onClick={() => togglePassword(user.id)} className="text-gray-400 hover:text-indigo-600">
-                                                {showPasswords[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        {user.isAdmin ? (
-                                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">Admin</span>
-                                        ) : (
-                                            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">User</span>
-                                        )}
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        {user.isSuspended ? (
-                                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-red-200">Suspended</span>
-                                        ) : (
-                                            <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-emerald-200">Active</span>
-                                        )}
-                                    </td>
-                                    <td className="p-4 font-semibold text-gray-900">
-                                        {editingId === user.id ? (
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    value={editBalance}
-                                                    onChange={(e) => setEditBalance(e.target.value)}
-                                                    className="w-24 px-2 py-1 border rounded text-right text-gray-900"
-                                                />
-                                                <button onClick={() => saveEdit(user.id)} className="text-green-600"><Check size={18} /></button>
-                                                <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={18} /></button>
-                                            </div>
-                                        ) : (
-                                            <span>₹{Number(user.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        )}
-                                    </td>
-                                    <td className="p-4 font-semibold text-indigo-600">
-                                        ₹{user.totalInvested?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex justify-center gap-4">
-                                            {!user.isAdmin && (
+                                <React.Fragment key={user.id}>
+                                    <tr className="hover:bg-gray-50 transition border-b border-gray-100 last:border-0">
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-3">
                                                 <button
-                                                    onClick={() => toggleSuspension(user.id, user.isSuspended)}
-                                                    className={cn(
-                                                        "p-2 rounded-full transition-all border",
-                                                        user.isSuspended
-                                                            ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white"
-                                                            : "bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white"
-                                                    )}
-                                                    title={user.isSuspended ? "Reactivate User" : "Suspend User"}
+                                                    onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
+                                                    className="p-1 hover:bg-gray-200 rounded-md transition text-gray-400"
                                                 >
-                                                    {user.isSuspended ? <Check size={18} /> : <EyeOff size={18} />}
+                                                    {expandedUserId === user.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                                 </button>
-                                            )}
-                                            <button onClick={() => startEdit(user)} className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition">
-                                                <Edit2 size={18} />
-                                            </button>
-                                            {!user.isAdmin && (
-                                                <button onClick={() => deleteUser(user.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-full transition">
-                                                    <Trash2 size={18} />
+                                                <span className="font-medium text-gray-900">{user.username}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm">
+                                                    {showPasswords[user.id] ? user.password : '••••••••'}
+                                                </span>
+                                                <button onClick={() => togglePassword(user.id)} className="text-gray-400 hover:text-indigo-600">
+                                                    {showPasswords[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                                                 </button>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            {user.isAdmin ? (
+                                                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">Admin</span>
+                                            ) : (
+                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">User</span>
                                             )}
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            {user.isSuspended ? (
+                                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-red-200">Suspended</span>
+                                            ) : (
+                                                <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-emerald-200">Active</span>
+                                            )}
+                                        </td>
+                                        <td className="p-4 font-semibold text-gray-900">
+                                            {editingId === user.id ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        value={editBalance}
+                                                        onChange={(e) => setEditBalance(e.target.value)}
+                                                        className="w-24 px-2 py-1 border rounded text-right text-gray-900"
+                                                    />
+                                                    <button onClick={() => saveEdit(user.id)} className="text-green-600"><Check size={18} /></button>
+                                                    <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={18} /></button>
+                                                </div>
+                                            ) : (
+                                                <span>₹{Number(user.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            )}
+                                        </td>
+                                        <td className="p-4 font-semibold text-indigo-600">
+                                            ₹{user.totalInvested?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex justify-center gap-4">
+                                                {!user.isAdmin && (
+                                                    <button
+                                                        onClick={() => toggleSuspension(user.id, user.isSuspended)}
+                                                        className={cn(
+                                                            "p-2 rounded-full transition-all border",
+                                                            user.isSuspended
+                                                                ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white"
+                                                                : "bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white"
+                                                        )}
+                                                        title={user.isSuspended ? "Reactivate User" : "Suspend User"}
+                                                    >
+                                                        {user.isSuspended ? <Check size={18} /> : <EyeOff size={18} />}
+                                                    </button>
+                                                )}
+                                                <button onClick={() => startEdit(user)} className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition">
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                {!user.isAdmin && (
+                                                    <button onClick={() => deleteUser(user.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-full transition">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {expandedUserId === user.id && (
+                                        <tr className="bg-indigo-50/30">
+                                            <td colSpan={7} className="p-0">
+                                                <div className="px-14 py-6 animate-in slide-in-from-top-2 duration-300">
+                                                    <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+                                                        <div className="bg-indigo-50/50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">
+                                                            <span className="text-xs font-black text-indigo-900 uppercase tracking-widest">User Portfolio Snapshot</span>
+                                                            <span className="text-[10px] font-bold text-indigo-400 uppercase">Holdings as of Today</span>
+                                                        </div>
+                                                        <table className="w-full text-left text-sm">
+                                                            <thead>
+                                                                <tr className="border-b border-gray-50">
+                                                                    <th className="px-4 py-3 font-bold text-gray-400 uppercase text-[10px]">Asset Name</th>
+                                                                    <th className="px-4 py-3 font-bold text-gray-400 uppercase text-[10px]">Units Owned</th>
+                                                                    <th className="px-4 py-3 font-bold text-gray-400 uppercase text-[10px]">Avg Cost</th>
+                                                                    <th className="px-4 py-3 font-bold text-gray-400 uppercase text-[10px]">Market Price</th>
+                                                                    <th className="px-4 py-3 text-right font-bold text-gray-400 uppercase text-[10px]">Current Value</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-gray-50 font-medium">
+                                                                {user.portfolios && user.portfolios.length > 0 ? (
+                                                                    user.portfolios.map((p: any) => {
+                                                                        const currentValue = p.units * Number(p.asset.currentPrice);
+                                                                        const avgCost = Number(p.totalCost) / p.units;
+                                                                        return (
+                                                                            <tr key={p.id} className="hover:bg-gray-50/50">
+                                                                                <td className="px-4 py-3 text-gray-900 font-bold">{p.asset.name}</td>
+                                                                                <td className="px-4 py-3 text-gray-600">{p.units.toLocaleString()} <span className="text-[10px] opacity-60 lowercase">{p.asset.unit.split(' ')[1]}s</span></td>
+                                                                                <td className="px-4 py-3 text-gray-500">₹{avgCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                                <td className="px-4 py-3 text-gray-500">₹{Number(p.asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                                <td className="px-4 py-3 text-right font-bold text-indigo-600">₹{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                            </tr>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <tr>
+                                                                        <td colSpan={5} className="px-4 py-8 text-center text-gray-400 italic font-medium">
+                                                                            No active investments found for this user.
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
                             ))}
                         </tbody>
                     </table>
