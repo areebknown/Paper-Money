@@ -97,9 +97,9 @@ export default function HistoryPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right flex-shrink-0 min-w-fit ml-4">
                                         <p className={cn(
-                                            "font-black text-lg tracking-tight",
+                                            "font-black text-lg tracking-tight whitespace-nowrap",
                                             t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? "text-emerald-600" : "text-gray-900"
                                         )}>
                                             {t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? '+' : '-'}₹{Number(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

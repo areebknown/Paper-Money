@@ -219,21 +219,23 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                         <div className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Amount of {asset.unit.split(' ')[1]}s</label>
-                                <div className="flex items-center gap-4">
-                                    <input
-                                        type="number"
-                                        value={tradeAmount}
-                                        onChange={(e) => setTradeAmount(e.target.value)}
-                                        className="flex-1 bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl p-4 text-2xl font-black outline-none transition-all"
-                                        min="0.1"
-                                        step="0.1"
-                                    />
-                                    <button
-                                        onClick={() => setTradeAmount(isInvesting ? (userBalance / asset.currentPrice).toFixed(1) : userUnits.toString())}
-                                        className="bg-indigo-50 text-indigo-600 px-4 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition"
-                                    >
-                                        MAX
-                                    </button>
+                                <div className="flex justify-center">
+                                    <div className="flex items-center gap-4 w-full max-w-xs">
+                                        <input
+                                            type="number"
+                                            value={tradeAmount}
+                                            onChange={(e) => setTradeAmount(e.target.value)}
+                                            className="w-full bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl p-4 text-2xl font-black outline-none transition-all text-center"
+                                            min="0.1"
+                                            step="0.1"
+                                        />
+                                        <button
+                                            onClick={() => setTradeAmount(isInvesting ? (userBalance / asset.currentPrice).toFixed(1) : userUnits.toString())}
+                                            className="bg-indigo-50 text-indigo-600 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition whitespace-nowrap"
+                                        >
+                                            MAX
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

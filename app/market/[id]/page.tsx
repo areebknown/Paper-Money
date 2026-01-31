@@ -16,7 +16,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
         where: { id: assetId },
         include: {
             history: {
-                orderBy: { timestamp: 'asc' },
+                orderBy: { timestamp: 'desc' },
                 take: 7
             }
         }
@@ -45,7 +45,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
         history: asset.history.map(h => ({
             ...h,
             price: Number(h.price)
-        }))
+        })).reverse()
     };
 
     return (
