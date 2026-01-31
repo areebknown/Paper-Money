@@ -39,14 +39,14 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                             <Wallet size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Wallet Balance</span>
                         </div>
-                        <p className="text-xl font-black text-indigo-900">₹{user?.balance?.toLocaleString() || '...'}</p>
+                        <p className="text-xl font-black text-indigo-900">₹{user?.balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}</p>
                     </div>
                     <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
                         <div className="flex items-center gap-2 text-emerald-600/70 mb-1">
                             <Briefcase size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Invested Value</span>
                         </div>
-                        <p className="text-xl font-black text-emerald-900">₹{user?.totalInvested?.toLocaleString() || '0'}</p>
+                        <p className="text-xl font-black text-emerald-900">₹{user?.totalInvested?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
                     </div>
                 </div>
             </div>
@@ -81,8 +81,8 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
 
                                     <div className="flex justify-between items-end">
                                         <div>
-                                            <p className="text-sm font-black text-gray-900">{p.units.toLocaleString()} <span className="text-[8px] opacity-40 uppercase">{p.asset.unit.split(' ')[1]}s</span></p>
-                                            <p className="text-xs font-bold text-emerald-600">₹{currentValue.toLocaleString()}</p>
+                                            <p className="text-sm font-black text-gray-900">{p.units.toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-[8px] opacity-40 uppercase">{p.asset.unit.split(' ')[1]}s</span></p>
+                                            <p className="text-xs font-bold text-emerald-600">₹{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                         </div>
                                     </div>
 
@@ -92,7 +92,7 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                                             "text-[11px] font-black",
                                             isProfit ? "text-emerald-700" : "text-red-600"
                                         )}>
-                                            {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString()}
+                                            {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                 </Link>
@@ -137,7 +137,7 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                                 </div>
 
                                 <div className="mt-auto">
-                                    <p className="text-lg font-black text-gray-900">₹{asset.currentPrice.toLocaleString()}</p>
+                                    <p className="text-lg font-black text-gray-900">₹{asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </Link>
                         )

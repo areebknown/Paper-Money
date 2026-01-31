@@ -21,13 +21,19 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+        if (user.isSuspended) {
+            return NextResponse.json({ error: 'Your account is suspended. Contact admin for support.' }, { status: 403 });
+        }
+
         // Get admin user for the "Market" side of transactions
         const adminUser = await prisma.user.findFirst({ where: { isAdmin: true } });
         if (!adminUser) return NextResponse.json({ error: 'Market system error' }, { status: 500 });
 
         return await prisma.$transaction(async (tx) => {
             if (type === 'BUY') {
-                const totalPrice = units * asset.currentPrice;
+                const rawPrice = units * asset.currentPrice;
+                const totalPrice = Math.round(rawPrice * 100) / 100;
+
                 if (user.balance < totalPrice) {
                     throw new Error('Insufficient balance');
                 }
@@ -53,7 +59,7 @@ export async function POST(req: Request) {
                     data: {
                         amount: totalPrice,
                         category: 'MARKET_BUY',
-                        description: `You invested ₹${totalPrice.toLocaleString()} in ${asset.name}`,
+                        description: `You invested ₹${totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} in ${asset.name}`,
                         senderId: userId,
                         receiverId: adminUser.id,
                         assetId: asset.id,
@@ -76,10 +82,12 @@ export async function POST(req: Request) {
                     throw new Error('Insufficient units to sell');
                 }
 
-                const saleValue = unitsToSell * asset.currentPrice;
+                const rawSaleValue = unitsToSell * asset.currentPrice;
+                const saleValue = Math.round(rawSaleValue * 100) / 100;
 
                 // Calculate cost to deduct (proportionally)
-                const costToDeduct = (portfolio.totalCost * unitsToSell) / portfolio.units;
+                const rawCostToDeduct = (portfolio.totalCost * unitsToSell) / portfolio.units;
+                const costToDeduct = Math.round(rawCostToDeduct * 100) / 100;
 
                 // Update Portfolio
                 await tx.portfolio.update({
@@ -101,7 +109,7 @@ export async function POST(req: Request) {
                     data: {
                         amount: saleValue,
                         category: 'MARKET_SELL',
-                        description: `You cashed out ₹${saleValue.toLocaleString()} from ${asset.name}`,
+                        description: `You cashed out ₹${saleValue.toLocaleString(undefined, { minimumFractionDigits: 2 })} from ${asset.name}`,
                         senderId: adminUser.id,
                         receiverId: userId,
                         assetId: asset.id,

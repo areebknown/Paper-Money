@@ -35,7 +35,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
 
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { balance: true }
+        select: { balance: true, isSuspended: true }
     });
 
     return (
@@ -43,6 +43,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             asset={asset}
             userUnits={portfolio?.units || 0}
             userBalance={user?.balance || 0}
+            isSuspended={user?.isSuspended || false}
         />
     );
 }

@@ -102,7 +102,7 @@ export default function HistoryPage() {
                                             "font-black text-lg tracking-tight",
                                             t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? "text-emerald-600" : "text-gray-900"
                                         )}>
-                                            {t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? '+' : '-'}₹{t.amount.toLocaleString()}
+                                            {t.type === 'RECEIVED' || t.category === 'MARKET_SELL' ? '+' : '-'}₹{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                         <span className={cn(
                                             "text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter border",

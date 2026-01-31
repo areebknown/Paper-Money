@@ -21,12 +21,14 @@ interface AssetClientProps {
     asset: any;
     userUnits: number;
     userBalance: number;
+    isSuspended: boolean;
 }
 
-export default function AssetClient({ asset, userUnits, userBalance }: AssetClientProps) {
+export default function AssetClient({ asset, userUnits, userBalance, isSuspended }: AssetClientProps) {
     const router = useRouter();
     const [isInvesting, setIsInvesting] = useState(false);
     const [isCashingOut, setIsCashingOut] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [tradeAmount, setTradeAmount] = useState('1');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -59,6 +61,7 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                 router.refresh();
                 setIsInvesting(false);
                 setIsCashingOut(false);
+                setShowConfirm(false);
                 setTradeAmount('1');
             } else {
                 setError(data.error || 'Transaction failed');
@@ -92,16 +95,29 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                 </div>
             </div>
 
-            <div className="p-6 space-y-6 flex-1">
+            <div className="p-6 space-y-6 flex-1 relative">
+                {/* Suspension Warning */}
+                {isSuspended && (
+                    <div className="absolute inset-x-6 top-0 z-10 bg-red-50 border border-red-200 p-4 rounded-3xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                            <Activity size={20} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-red-900 leading-none">Account Suspended</p>
+                            <p className="text-[10px] font-bold text-red-600/70 mt-1 uppercase tracking-tighter">Market access is restricted. Contact admin.</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Stats Summary */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Your Holdings</p>
-                        <p className="text-xl font-black text-gray-900">{userUnits} <span className="text-[10px] font-medium text-gray-400 capitalize">{asset.unit.split(' ')[1]}s</span></p>
+                        <p className="text-xl font-black text-gray-900">{userUnits.toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-[10px] font-medium text-gray-400 capitalize">{asset.unit.split(' ')[1]}s</span></p>
                     </div>
                     <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Current Value</p>
-                        <p className="text-xl font-black text-indigo-600">₹{(userUnits * asset.currentPrice).toLocaleString()}</p>
+                        <p className="text-xl font-black text-indigo-600">₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
                 </div>
 
@@ -111,7 +127,7 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                         <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                             <TrendingUp size={16} className="text-indigo-600" /> 7-Day Performance
                         </h2>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Price: ₹{asset.currentPrice}</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Price: ₹{asset.currentPrice.toFixed(2)}</p>
                     </div>
 
                     <div className="flex-1 w-full mt-2">
@@ -137,6 +153,7 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                                 <Tooltip
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     labelStyle={{ fontWeight: 800, color: '#4b5563' }}
+                                    formatter={(value: any) => [`₹${parseFloat(value).toFixed(2)}`, 'Price']}
                                 />
                                 <Area
                                     type="monotone"
@@ -154,7 +171,9 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                 {/* Information Card */}
                 <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex gap-4">
                     <div className="bg-indigo-100/50 p-2 rounded-xl h-fit">
-                        <Info size={20} className="text-indigo-600" />
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600">
+                            <Info size={20} />
+                        </div>
                     </div>
                     <div>
                         <h4 className="text-sm font-bold text-indigo-900 mb-1">Market Insight</h4>
@@ -170,14 +189,15 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                 <div className="grid grid-cols-2 gap-4">
                     <button
                         onClick={() => setIsInvesting(true)}
-                        className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
+                        disabled={isSuspended}
+                        className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:grayscale"
                     >
                         <ShoppingCart size={18} /> Invest
                     </button>
                     <button
                         onClick={() => setIsCashingOut(true)}
-                        disabled={userUnits <= 0}
-                        className="flex items-center justify-center gap-2 bg-white text-gray-900 border-2 border-gray-100 font-bold py-4 rounded-2xl hover:bg-gray-50 transition disabled:opacity-50"
+                        disabled={userUnits <= 0 || isSuspended}
+                        className="flex items-center justify-center gap-2 bg-white text-gray-900 border-2 border-gray-100 font-bold py-4 rounded-2xl hover:bg-gray-50 transition disabled:opacity-50 disabled:grayscale"
                     >
                         <DollarSign size={18} /> Cash Out
                     </button>
@@ -219,11 +239,11 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                             <div className="bg-gray-50 p-6 rounded-3xl space-y-3">
                                 <div className="flex justify-between text-sm font-bold">
                                     <span className="text-gray-400">Rate per {asset.unit.split(' ')[1]}</span>
-                                    <span className="text-gray-900">₹{asset.currentPrice.toLocaleString()}</span>
+                                    <span className="text-gray-900">₹{asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-black pt-3 border-t border-gray-200">
                                     <span className="text-gray-900">Total {isInvesting ? 'Cost' : 'Value'}</span>
-                                    <span className={isInvesting ? "text-indigo-600" : "text-emerald-600"}>₹{(parseFloat(tradeAmount || '0') * asset.currentPrice).toLocaleString()}</span>
+                                    <span className={isInvesting ? "text-indigo-600" : "text-emerald-600"}>₹{(parseFloat(tradeAmount || '0') * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
 
@@ -250,13 +270,9 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
 
                                         {isCashingOut && (
                                             <button
-                                                onClick={() => {
-                                                    if (confirm(`Are you sure you want to sell ALL your ${asset.name} holdings?`)) {
-                                                        handleTrade('SELL', true);
-                                                    }
-                                                }}
+                                                onClick={() => setShowConfirm(true)}
                                                 disabled={userUnits <= 0}
-                                                className="w-full py-3 text-red-600 font-bold hover:bg-red-50 rounded-2xl transition"
+                                                className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-100 transition shadow-sm border border-red-100"
                                             >
                                                 Cash Out All
                                             </button>
@@ -269,10 +285,33 @@ export default function AssetClient({ asset, userUnits, userBalance }: AssetClie
                 </div>
             )}
 
-            {/* Success Overlay */}
-            {loading === false && error === '' && (isInvesting === false && isCashingOut === false) && (
-                <div className="fixed inset-0 z-[200] pointer-events-none flex items-center justify-center">
-                    {/* Tiny pulse logic would go here if we tracked success state separately */}
+            {/* Custom Confirmation Modal */}
+            {showConfirm && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-md p-6 animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col items-center text-center">
+                        <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-6">
+                            <Activity size={40} className="animate-pulse" />
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2">Are you sure?</h3>
+                        <p className="text-gray-500 text-sm font-medium mb-8">
+                            You are about to sell all your <b>{asset.name}</b> holdings. This action cannot be undone.
+                        </p>
+
+                        <div className="w-full space-y-3">
+                            <button
+                                onClick={() => handleTrade('SELL', true)}
+                                className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition shadow-xl shadow-red-100"
+                            >
+                                Yes, Cash Out All
+                            </button>
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="w-full py-4 bg-gray-50 text-gray-900 font-bold rounded-2xl hover:bg-gray-100 transition"
+                            >
+                                Keep My Investment
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

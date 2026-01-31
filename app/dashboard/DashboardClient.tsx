@@ -124,7 +124,7 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
                     <div className="flex justify-between items-start mb-6">
                         <div>
                             <p className="text-indigo-100 text-sm font-medium mb-1">Total Balance</p>
-                            <h1 className="text-4xl font-bold">₹ {user.balance.toFixed(2)}</h1>
+                            <h1 className="text-4xl font-bold">₹ {user.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>
                         </div>
                         <button
                             onClick={() => setShowQR(true)}
@@ -222,7 +222,7 @@ export default function DashboardClient({ fallbackData }: DashboardClientProps) 
                                             "font-bold",
                                             t.type === 'RECEIVED' ? "text-emerald-600" : "text-gray-900"
                                         )}>
-                                            {t.type === 'RECEIVED' ? '+' : '-'} ₹{t.amount.toFixed(2)}
+                                            {t.type === 'RECEIVED' ? '+' : '-'} ₹{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                         <p className="text-xs text-gray-400 capitalize">{t.status.toLowerCase()}</p>
                                     </div>
