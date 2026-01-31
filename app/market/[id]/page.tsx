@@ -38,11 +38,21 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
         select: { balance: true, isSuspended: true }
     });
 
+    // Convert Decimal fields to number for Client Component serialization
+    const normalizedAsset = {
+        ...asset,
+        currentPrice: Number(asset.currentPrice),
+        history: asset.history.map(h => ({
+            ...h,
+            price: Number(h.price)
+        }))
+    };
+
     return (
         <AssetClient
-            asset={asset}
+            asset={normalizedAsset}
             userUnits={portfolio?.units || 0}
-            userBalance={user?.balance || 0}
+            userBalance={Number(user?.balance) || 0}
             isSuspended={user?.isSuspended || false}
         />
     );

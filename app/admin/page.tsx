@@ -247,7 +247,7 @@ export default function AdminPage() {
                                                 <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={18} /></button>
                                             </div>
                                         ) : (
-                                            <span>₹{user.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            <span>₹{Number(user.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         )}
                                     </td>
                                     <td className="p-4 font-semibold text-indigo-600">

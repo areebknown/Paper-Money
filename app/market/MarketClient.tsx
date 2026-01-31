@@ -39,14 +39,14 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                             <Wallet size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Wallet Balance</span>
                         </div>
-                        <p className="text-xl font-black text-indigo-900">₹{user?.balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}</p>
+                        <p className="text-xl font-black text-indigo-900">₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}</p>
                     </div>
                     <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
                         <div className="flex items-center gap-2 text-emerald-600/70 mb-1">
                             <Briefcase size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Invested Value</span>
                         </div>
-                        <p className="text-xl font-black text-emerald-900">₹{user?.totalInvested?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
+                        <p className="text-xl font-black text-emerald-900">₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
                     </div>
                 </div>
             </div>
@@ -59,8 +59,8 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                     </h2>
                     <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar px-1">
                         {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {
-                            const currentValue = p.units * p.asset.currentPrice;
-                            const profit = currentValue - p.totalCost;
+                            const currentValue = p.units * Number(p.asset.currentPrice);
+                            const profit = currentValue - Number(p.totalCost);
                             const isProfit = profit >= 0;
 
                             return (
@@ -137,7 +137,7 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
                                 </div>
 
                                 <div className="mt-auto">
-                                    <p className="text-lg font-black text-gray-900">₹{asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    <p className="text-lg font-black text-gray-900">₹{Number(asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             </Link>
                         )
