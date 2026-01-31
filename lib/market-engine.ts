@@ -11,6 +11,20 @@ export const ASSETS = [
 
 export async function initAssets() {
     for (const assetConfig of ASSETS) {
+        // 1. Ensure the Market System account for this asset exists
+        const systemUsername = `MARKET_${assetConfig.id}`;
+        await prisma.user.upsert({
+            where: { username: systemUsername },
+            update: {},
+            create: {
+                username: systemUsername,
+                password: 'SYSTEM_ACCOUNT_LOCKED', // Non-loginable
+                isAdmin: true,
+                balance: 1000000000 // Infinite-like pool for market side
+            }
+        });
+
+        // 2. Ensure Asset exists
         const existing = await prisma.asset.findUnique({ where: { id: assetConfig.id } });
         if (!existing) {
             await prisma.asset.create({
@@ -28,7 +42,7 @@ export async function initAssets() {
                     }
                 }
             });
-            console.log(`Initialized asset: ${assetConfig.name}`);
+            console.log(`Initialized asset and market account for: ${assetConfig.name}`);
         }
     }
 }

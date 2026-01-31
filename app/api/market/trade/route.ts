@@ -25,9 +25,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Your account is suspended. Contact admin for support.' }, { status: 403 });
         }
 
-        // Get admin user for the "Market" side of transactions
-        const adminUser = await prisma.user.findFirst({ where: { isAdmin: true } });
-        if (!adminUser) return NextResponse.json({ error: 'Market system error' }, { status: 500 });
+        // Get specific market account for this asset
+        const marketUsername = `MARKET_${assetId}`;
+        let marketUser = await prisma.user.findUnique({ where: { username: marketUsername } });
+
+        // Fallback to first admin if specific market account not found (for safety)
+        if (!marketUser) {
+            marketUser = await prisma.user.findFirst({ where: { isAdmin: true } });
+        }
+
+        if (!marketUser) return NextResponse.json({ error: 'Market system error' }, { status: 500 });
 
         return await prisma.$transaction(async (tx) => {
             if (type === 'BUY') {
@@ -61,7 +68,7 @@ export async function POST(req: Request) {
                         category: 'MARKET_BUY',
                         description: `You invested ₹${totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} in ${asset.name}`,
                         senderId: userId,
-                        receiverId: adminUser.id,
+                        receiverId: marketUser.id,
                         assetId: asset.id,
                         status: 'COMPLETED'
                     }
@@ -110,7 +117,7 @@ export async function POST(req: Request) {
                         amount: saleValue,
                         category: 'MARKET_SELL',
                         description: `You cashed out ₹${saleValue.toLocaleString(undefined, { minimumFractionDigits: 2 })} from ${asset.name}`,
-                        senderId: adminUser.id,
+                        senderId: marketUser.id,
                         receiverId: userId,
                         assetId: asset.id,
                         status: 'COMPLETED'

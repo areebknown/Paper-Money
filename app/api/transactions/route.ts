@@ -46,7 +46,7 @@ export async function GET(req: Request) {
             ...user.sentTransactions.map(t => ({
                 ...t,
                 type: 'SENT',
-                otherUser: t.receiver.username,
+                otherUser: t.asset ? t.asset.name : t.receiver.username,
                 category: t.category,
                 description: t.description,
                 asset: t.asset
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             ...user.receivedTransactions.map(t => ({
                 ...t,
                 type: 'RECEIVED',
-                otherUser: t.sender.username,
+                otherUser: t.asset ? t.asset.name : t.sender.username,
                 category: t.category,
                 description: t.description,
                 asset: t.asset
