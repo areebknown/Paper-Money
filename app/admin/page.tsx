@@ -157,21 +157,38 @@ export default function AdminPage() {
                                 Manually trigger the 12:00 AM market update. Roll the dice for all assets.
                             </p>
                         </div>
-                        <button
-                            onClick={async () => {
-                                if (!confirm('Force a market update? This will change all prices and add to history.')) return;
-                                try {
-                                    const res = await fetch('/api/market/sync', { method: 'POST' });
-                                    if (res.ok) {
-                                        alert('Market updated successfully!');
-                                        router.refresh();
-                                    }
-                                } catch (e) { alert('Sync failed'); }
-                            }}
-                            className="bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-black transition w-full mt-auto"
-                        >
-                            Trigger Next Day
-                        </button>
+                        <div className="grid grid-cols-2 gap-3 mt-auto">
+                            <button
+                                onClick={async () => {
+                                    if (!confirm('Force a market update? This will change all prices and add to history.')) return;
+                                    try {
+                                        const res = await fetch('/api/market/sync', { method: 'POST' });
+                                        if (res.ok) {
+                                            alert('Market updated successfully!');
+                                            router.refresh();
+                                        }
+                                    } catch (e) { alert('Sync failed'); }
+                                }}
+                                className="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-black transition flex items-center justify-center gap-2"
+                            >
+                                <RefreshCcw size={16} /> Next Day
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!confirm('EXTREME WARNING: This will reset all prices to Day 1 AND DELETE ALL USER PORTFOLIOS. Continue?')) return;
+                                    try {
+                                        const res = await fetch('/api/market/reset', { method: 'POST' });
+                                        if (res.ok) {
+                                            alert('Market reset to Day 1 successfully!');
+                                            router.refresh();
+                                        }
+                                    } catch (e) { alert('Reset failed'); }
+                                }}
+                                className="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg font-medium hover:bg-red-600 hover:text-white transition flex items-center justify-center gap-2"
+                            >
+                                <X size={16} /> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
 
