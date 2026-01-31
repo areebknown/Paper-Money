@@ -1,12 +1,12 @@
 import { prisma } from './db';
 
 export const ASSETS = [
-    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.8, magMin: 0.005, magMax: 0.025 },
-    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.7, magMin: 0.01, magMax: 0.03 },
-    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.65, magMin: 0.03, magMax: 0.08 },
-    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.6, magMin: 0.01, magMax: 0.04 },
-    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.55, magMin: 0.005, magMax: 0.02 },
-    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 50000, upProb: 0.5, magMin: 0.05, magMax: 0.12 },
+    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.70, magMin: 0.005, magMax: 0.02 },
+    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.67, magMin: 0.01, magMax: 0.03 },
+    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.60, magMin: 0.005, magMax: 0.04 },
+    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.85, magMin: 0.01, magMax: 0.015 },
+    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.55, magMin: 0.03, magMax: 0.06 },
+    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 10000, upProb: 0.50, magMin: 0.05, magMax: 0.12 },
 ];
 
 export async function initAssets() {
