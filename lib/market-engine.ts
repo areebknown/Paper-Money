@@ -58,17 +58,28 @@ export async function updateMarketPrices() {
     const assets = await prisma.asset.findMany();
     const now = new Date();
 
+    // Fetch all pending market events
+    const pendingEvents = await (prisma as any).marketEvent.findMany({
+        where: { status: 'PENDING' }
+    }) as any[];
+
     for (const asset of assets) {
         const config = ASSETS.find(a => a.id === asset.id);
         if (!config) continue;
 
         let changePercent: number;
 
-        if (asset.scheduledCrashMagnitude !== null) {
-            // EXECUTE SCHEDULED CRASH
-            const crashMag = Number(asset.scheduledCrashMagnitude);
-            changePercent = -crashMag; // Guaranteed drop
-            console.log(`[MARKET CRASH] Executing scheduled crash for ${asset.name}: -${(crashMag * 100).toFixed(2)}%`);
+        // Find if there's a specific event for this asset or a global event
+        const event = pendingEvents.find((e: any) => e.assetId === asset.id) || pendingEvents.find((e: any) => e.assetId === 'ALL');
+
+        if (event) {
+            // EXECUTE SCHEDULED EVENT (BOOM or CRASH)
+            const magnitude = Number(event.magnitude);
+            const isBoom = event.type === 'BOOM';
+
+            changePercent = isBoom ? magnitude : -magnitude;
+
+            console.log(`[MARKET ${event.type}] Executing scheduled event for ${asset.name}: ${isBoom ? '+' : '-'}${(magnitude * 100).toFixed(2)}%`);
         } else {
             // NORMAL MARKET MATH
             const isUp = Math.random() < config.upProb;
@@ -85,13 +96,23 @@ export async function updateMarketPrices() {
             data: {
                 currentPrice: newPrice,
                 change24h: changePercent * 100,
-                scheduledCrashMagnitude: null, // Reset after execution
                 history: {
                     create: {
                         price: newPrice,
                         timestamp: now
                     }
                 }
+            }
+        });
+    }
+
+    // Mark all utilized pending events as EXECUTED
+    if (pendingEvents.length > 0) {
+        await (prisma as any).marketEvent.updateMany({
+            where: { id: { in: pendingEvents.map((e: any) => e.id) } },
+            data: {
+                status: 'EXECUTED',
+                executedAt: now
             }
         });
     }

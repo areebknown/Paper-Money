@@ -56,7 +56,6 @@ model Asset {
   unit         String
   currentPrice Decimal            @db.Decimal(10, 2)
   change24h    Float              @default(0)
-  scheduledCrashMagnitude Decimal? @db.Decimal(10, 2)
   history      AssetPriceHistory[]
   portfolios   Portfolio[]
   transactions Transaction[]
@@ -71,6 +70,19 @@ model AssetPriceHistory {
 
   @@index([assetId])
   @@index([timestamp])
+}
+
+model MarketEvent {
+  id          String   @id @default(cuid())
+  assetId     String   @default("ALL") // Specific asset ID or "ALL"
+  type        String   // BOOM or CRASH
+  magnitude   Decimal  @db.Decimal(10, 2) // e.g. 0.20 for 20%
+  status      String   @default("PENDING") // PENDING, EXECUTED, CANCELLED
+  createdAt   DateTime @default(now())
+  executedAt  DateTime?
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Portfolio {

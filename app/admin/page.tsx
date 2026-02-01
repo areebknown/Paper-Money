@@ -23,39 +23,67 @@ export default function AdminPage() {
     const [selectedAssetId, setSelectedAssetId] = useState('ALL');
     const [crashMagnitude, setCrashMagnitude] = useState('20');
     const [crashLoading, setCrashLoading] = useState(false);
+    const [marketEventHistory, setMarketEventHistory] = useState<any[]>([]);
+    const [eventType, setEventType] = useState('CRASH');
 
-    const handleLogout = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        router.push('/login');
+    const fetchEventHistory = async () => {
+        try {
+            const res = await fetch('/api/admin/market/events');
+            if (res.ok) {
+                const data = await res.json();
+                setMarketEventHistory(data.events);
+            }
+        } catch (e) { console.error('Failed to fetch events'); }
     };
 
-    const handleScheduleCrash = async () => {
+    // Initialize events on load
+    React.useEffect(() => {
+        fetchEventHistory();
+    }, []);
+
+    const handleScheduleEvent = async () => {
         if (!crashMagnitude || isNaN(parseFloat(crashMagnitude))) return;
         const mag = parseFloat(crashMagnitude);
         if (mag < 0 || mag > 100) return alert('Enter a value between 0-100');
 
         const assetName = selectedAssetId === 'ALL' ? 'the ENTIRE market' : selectedAssetId;
-        if (!confirm(`Schedule a ${mag}% crash for ${assetName}? This will execute at the next 12:00 AM update.`)) return;
+        if (!confirm(`Schedule a ${mag}% ${eventType} for ${assetName}? This will execute at the next 12:00 AM update.`)) return;
 
         setCrashLoading(true);
         try {
-            const res = await fetch('/api/admin/market/crash', {
+            const res = await fetch('/api/admin/market/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assetId: selectedAssetId, magnitude: mag }),
+                body: JSON.stringify({ assetId: selectedAssetId, magnitude: mag, type: eventType }),
             });
             const result = await res.json();
             if (res.ok) {
                 alert(result.message);
                 setCrashMagnitude('20');
+                fetchEventHistory(); // Refresh history
             } else {
-                alert(result.error || 'Failed to schedule crash');
+                alert(result.error || 'Failed to schedule event');
             }
         } catch (e) {
             alert('Scheduling failed');
         } finally {
             setCrashLoading(false);
         }
+    };
+
+    const cancelEvent = async (id: string) => {
+        if (!confirm('Cancel this scheduled event?')) return;
+        try {
+            const res = await fetch(`/api/admin/market/events?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchEventHistory();
+            }
+        } catch (e) { alert('Failed to cancel'); }
+    };
+
+    const handleLogout = async () => {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        router.push('/login');
     };
 
     const deleteUser = async (id: string) => {
@@ -179,21 +207,35 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Market Crash Scheduler Section */}
+                    {/* Market Event Scheduler Section */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
                         <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                            <ShieldAlert size={20} className="text-red-500" /> Market Control
+                            <ShieldAlert size={20} className={cn(eventType === 'CRASH' ? "text-red-500" : "text-emerald-500")} /> Market Control
                         </h2>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Schedule Next Day Crash</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Schedule Next Day Event</p>
 
                         <div className="space-y-4 mt-auto">
+                            <div className="flex gap-2 mb-2">
+                                <button
+                                    onClick={() => setEventType('CRASH')}
+                                    className={cn("flex-1 py-1 rounded text-[10px] font-black uppercase transition-all", eventType === 'CRASH' ? "bg-red-600 text-white shadow-md shadow-red-100" : "bg-gray-100 text-gray-400 hover:bg-gray-200")}
+                                >
+                                    Crash
+                                </button>
+                                <button
+                                    onClick={() => setEventType('BOOM')}
+                                    className={cn("flex-1 py-1 rounded text-[10px] font-black uppercase transition-all", eventType === 'BOOM' ? "bg-emerald-600 text-white shadow-md shadow-emerald-100" : "bg-gray-100 text-gray-400 hover:bg-gray-200")}
+                                >
+                                    Boom
+                                </button>
+                            </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="block text-[8px] font-black text-gray-400 uppercase mb-1">Asset</label>
                                     <select
                                         value={selectedAssetId}
                                         onChange={(e) => setSelectedAssetId(e.target.value)}
-                                        className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold text-gray-900 outline-none focus:ring-2 ring-red-100"
+                                        className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold text-gray-900 outline-none focus:ring-2 ring-indigo-100"
                                     >
                                         <option value="ALL">ALL MINERALS</option>
                                         <option value="IRON">IRON</option>
@@ -205,13 +247,13 @@ export default function AdminPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[8px] font-black text-gray-400 uppercase mb-1">Loss %</label>
+                                    <label className="block text-[8px] font-black text-gray-400 uppercase mb-1">Change %</label>
                                     <div className="relative">
                                         <input
                                             type="number"
                                             value={crashMagnitude}
                                             onChange={(e) => setCrashMagnitude(e.target.value)}
-                                            className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-black text-gray-900 outline-none focus:ring-2 ring-red-100"
+                                            className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-black text-gray-900 outline-none focus:ring-2 ring-indigo-100"
                                             placeholder="20"
                                         />
                                         <span className="absolute right-2 top-1.5 text-[10px] font-black text-gray-400">%</span>
@@ -219,11 +261,14 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             <button
-                                onClick={handleScheduleCrash}
+                                onClick={handleScheduleEvent}
                                 disabled={crashLoading}
-                                className="w-full bg-red-600 text-white py-2 rounded-lg font-black text-xs uppercase tracking-widest hover:bg-red-700 transition shadow-lg shadow-red-100 disabled:opacity-50"
+                                className={cn(
+                                    "w-full py-2 rounded-lg font-black text-xs uppercase tracking-widest transition shadow-lg disabled:opacity-50 text-white",
+                                    eventType === 'CRASH' ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                                )}
                             >
-                                {crashLoading ? 'Scheduling...' : 'Schedule Crash'}
+                                {crashLoading ? 'Scheduling...' : `Schedule ${eventType}`}
                             </button>
                         </div>
                     </div>
@@ -425,6 +470,86 @@ export default function AdminPage() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Market Event History Table */}
+            <div className="max-w-6xl mx-auto mt-8">
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8 border border-gray-100">
+                    <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                        <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                            Scheduled Events & History
+                        </h2>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Showing Last 50 Items</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-white border-b border-gray-100">
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase">Timestamp</th>
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase">Event Type</th>
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase">Target Asset</th>
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase">Magnitude</th>
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase text-center">Status</th>
+                                    <th className="p-4 text-[10px] font-black text-gray-400 uppercase text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {marketEventHistory.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="p-8 text-center text-sm text-gray-400 italic">No market events recorded yet.</td>
+                                    </tr>
+                                ) : (
+                                    marketEventHistory.map((event) => (
+                                        <tr key={event.id} className="hover:bg-gray-50/50 transition duration-200">
+                                            <td className="p-4">
+                                                <div className="text-xs font-bold text-gray-900">{new Date(event.createdAt).toLocaleDateString()}</div>
+                                                <div className="text-[10px] text-gray-400">{new Date(event.createdAt).toLocaleTimeString()}</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={cn(
+                                                    "px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter",
+                                                    event.type === 'BOOM' ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                                                )}>
+                                                    {event.type}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 font-bold text-gray-600 text-xs">
+                                                {event.assetId === 'ALL' ? 'GLOBAL MARKET' : event.assetId}
+                                            </td>
+                                            <td className="p-4 font-black text-gray-900 text-xs">
+                                                {(Number(event.magnitude) * 100).toFixed(0)}%
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest",
+                                                    event.status === 'PENDING' ? "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200" :
+                                                        event.status === 'EXECUTED' ? "bg-gray-100 text-gray-500" : "bg-orange-50 text-orange-600 ring-1 ring-orange-200"
+                                                )}>
+                                                    {event.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                {event.status === 'PENDING' && (
+                                                    <button
+                                                        onClick={() => cancelEvent(event.id)}
+                                                        className="text-[10px] font-black text-red-600 hover:text-red-700 uppercase tracking-tighter"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                {event.status === 'EXECUTED' && (
+                                                    <div className="text-[10px] text-gray-300 font-medium italic">
+                                                        Synced {new Date(event.executedAt).toLocaleDateString()}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
