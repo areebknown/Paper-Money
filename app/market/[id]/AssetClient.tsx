@@ -231,12 +231,14 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                             min="1"
                                             step="1"
                                         />
-                                        <button
-                                            onClick={() => setTradeAmount(isInvesting ? Math.floor(userBalance / asset.currentPrice).toString() : Math.floor(userUnits).toString())}
-                                            className="bg-indigo-50 text-indigo-600 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition whitespace-nowrap"
-                                        >
-                                            MAX
-                                        </button>
+                                        {isInvesting && (
+                                            <button
+                                                onClick={() => setTradeAmount(Math.floor(userBalance / asset.currentPrice).toString())}
+                                                className="bg-indigo-50 text-indigo-600 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-100 transition whitespace-nowrap"
+                                            >
+                                                MAX
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
