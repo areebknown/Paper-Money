@@ -20,10 +20,42 @@ export default function AdminPage() {
     const [broadcastAmount, setBroadcastAmount] = useState('');
     const [broadcastLoading, setBroadcastLoading] = useState(false);
     const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+    const [selectedAssetId, setSelectedAssetId] = useState('ALL');
+    const [crashMagnitude, setCrashMagnitude] = useState('20');
+    const [crashLoading, setCrashLoading] = useState(false);
 
     const handleLogout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
         router.push('/login');
+    };
+
+    const handleScheduleCrash = async () => {
+        if (!crashMagnitude || isNaN(parseFloat(crashMagnitude))) return;
+        const mag = parseFloat(crashMagnitude);
+        if (mag < 0 || mag > 100) return alert('Enter a value between 0-100');
+
+        const assetName = selectedAssetId === 'ALL' ? 'the ENTIRE market' : selectedAssetId;
+        if (!confirm(`Schedule a ${mag}% crash for ${assetName}? This will execute at the next 12:00 AM update.`)) return;
+
+        setCrashLoading(true);
+        try {
+            const res = await fetch('/api/admin/market/crash', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assetId: selectedAssetId, magnitude: mag }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message);
+                setCrashMagnitude('20');
+            } else {
+                alert(result.error || 'Failed to schedule crash');
+            }
+        } catch (e) {
+            alert('Scheduling failed');
+        } finally {
+            setCrashLoading(false);
+        }
     };
 
     const deleteUser = async (id: string) => {
@@ -119,8 +151,8 @@ export default function AdminPage() {
                     </button>
                 </div>
 
-                {/* Global Actions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* Market Control & Actions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Airdrop Section */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
                         <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
@@ -147,15 +179,64 @@ export default function AdminPage() {
                         </div>
                     </div>
 
+                    {/* Market Crash Scheduler Section */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                            <ShieldAlert size={20} className="text-red-500" /> Market Control
+                        </h2>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Schedule Next Day Crash</p>
+
+                        <div className="space-y-4 mt-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-[8px] font-black text-gray-400 uppercase mb-1">Asset</label>
+                                    <select
+                                        value={selectedAssetId}
+                                        onChange={(e) => setSelectedAssetId(e.target.value)}
+                                        className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold text-gray-900 outline-none focus:ring-2 ring-red-100"
+                                    >
+                                        <option value="ALL">ALL MINERALS</option>
+                                        <option value="IRON">IRON</option>
+                                        <option value="COPPER">COPPER</option>
+                                        <option value="SILVER">SILVER</option>
+                                        <option value="GOLD">GOLD</option>
+                                        <option value="LITHIUM">LITHIUM</option>
+                                        <option value="OIL">CRUDE OIL</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[8px] font-black text-gray-400 uppercase mb-1">Loss %</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={crashMagnitude}
+                                            onChange={(e) => setCrashMagnitude(e.target.value)}
+                                            className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-black text-gray-900 outline-none focus:ring-2 ring-red-100"
+                                            placeholder="20"
+                                        />
+                                        <span className="absolute right-2 top-1.5 text-[10px] font-black text-gray-400">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleScheduleCrash}
+                                disabled={crashLoading}
+                                className="w-full bg-red-600 text-white py-2 rounded-lg font-black text-xs uppercase tracking-widest hover:bg-red-700 transition shadow-lg shadow-red-100 disabled:opacity-50"
+                            >
+                                {crashLoading ? 'Scheduling...' : 'Schedule Crash'}
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Market Management Section */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
                         <div className="mb-4">
                             <div className="flex items-center gap-2 mb-2">
                                 <RefreshCcw size={20} className="text-emerald-600" />
-                                <h2 className="text-lg font-semibold text-gray-800 tracking-tight">Market Management</h2>
+                                <h2 className="text-lg font-semibold text-gray-800 tracking-tight">Market Sync</h2>
                             </div>
                             <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                                Manually trigger the 12:00 AM market update. Roll the dice for all assets.
+                                Force trigger 12:00 AM update. Execute any scheduled crashes now.
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mt-auto">
@@ -170,9 +251,9 @@ export default function AdminPage() {
                                         }
                                     } catch (e) { alert('Sync failed'); }
                                 }}
-                                className="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-black transition flex items-center justify-center gap-2"
+                                className="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-black transition flex items-center justify-center gap-2 text-xs"
                             >
-                                <RefreshCcw size={16} /> Next Day
+                                <RefreshCcw size={14} /> Next Day
                             </button>
                             <button
                                 onClick={async () => {
@@ -185,9 +266,9 @@ export default function AdminPage() {
                                         }
                                     } catch (e) { alert('Reset failed'); }
                                 }}
-                                className="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg font-medium hover:bg-red-600 hover:text-white transition flex items-center justify-center gap-2"
+                                className="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg font-medium hover:bg-red-600 hover:text-white transition flex items-center justify-center gap-2 text-xs"
                             >
-                                <X size={16} /> Reset
+                                <X size={14} /> Reset
                             </button>
                         </div>
                     </div>
@@ -349,3 +430,4 @@ export default function AdminPage() {
         </div>
     );
 }
+

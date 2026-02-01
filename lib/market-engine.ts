@@ -62,11 +62,21 @@ export async function updateMarketPrices() {
         const config = ASSETS.find(a => a.id === asset.id);
         if (!config) continue;
 
-        const isUp = Math.random() < config.upProb;
-        const magnitude = config.magMin + (Math.random() * (config.magMax - config.magMin));
-        const direction = isUp ? 1 : -1;
+        let changePercent: number;
 
-        const changePercent = direction * magnitude;
+        if (asset.scheduledCrashMagnitude !== null) {
+            // EXECUTE SCHEDULED CRASH
+            const crashMag = Number(asset.scheduledCrashMagnitude);
+            changePercent = -crashMag; // Guaranteed drop
+            console.log(`[MARKET CRASH] Executing scheduled crash for ${asset.name}: -${(crashMag * 100).toFixed(2)}%`);
+        } else {
+            // NORMAL MARKET MATH
+            const isUp = Math.random() < config.upProb;
+            const magnitude = config.magMin + (Math.random() * (config.magMax - config.magMin));
+            const direction = isUp ? 1 : -1;
+            changePercent = direction * magnitude;
+        }
+
         const rawNewPrice = Number(asset.currentPrice) * (1 + changePercent);
         const newPrice = Math.max(1, Math.round(rawNewPrice * 100) / 100);
 
@@ -75,6 +85,7 @@ export async function updateMarketPrices() {
             data: {
                 currentPrice: newPrice,
                 change24h: changePercent * 100,
+                scheduledCrashMagnitude: null, // Reset after execution
                 history: {
                     create: {
                         price: newPrice,
