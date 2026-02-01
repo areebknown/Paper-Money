@@ -1,12 +1,12 @@
 import { prisma } from './db';
 
 export const ASSETS = [
-    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.74, magMin: 0.005, magMax: 0.04, description: 'Safest asset, anti-loss hedge' },
-    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.70, magMin: 0.02, magMax: 0.03, description: 'Low risk, slow growth' },
-    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.60, magMin: 0.01, magMax: 0.045, description: 'Balanced trading metal' },
-    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.90, magMin: 0.015, magMax: 0.025, description: 'Wealth preservation' },
-    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.55, magMin: 0.03, magMax: 0.06, description: 'Growth + volatility' },
-    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 10000, upProb: 0.50, magMin: 0.05, magMax: 0.12, description: 'Adrenaline button 😭' },
+    { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.74, magMin: 0.005, magMax: 0.04, description: 'Iron may see upward movement with relatively lower risk. Price action is likely to stay increasing slowly.' },
+    { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.70, magMin: 0.02, magMax: 0.03, description: 'Copper could experience gradual changes . Upside appears more possible, though profit may remain moderate.' },
+    { id: 'SILVER', name: 'Silver', unit: '10g Biscuit', startPrice: 4000, upProb: 0.60, magMin: 0.01, magMax: 0.045, description: 'Silver may fluctuate gradually. Can be invested as both short term and long term.' },
+    { id: 'GOLD', name: 'Gold', unit: '10g Biscuit', startPrice: 80000, upProb: 0.90, magMin: 0.015, magMax: 0.025, description: 'Gold could hold a positive bias amid uncertainty. However, movements are slow. Good for long term.' },
+    { id: 'LITHIUM', name: 'Lithium', unit: '1kg Packet', startPrice: 2000, upProb: 0.55, magMin: 0.03, magMax: 0.06, description: 'Lithium may deliver sharp moves in either direction. Recommended for short term investing.' },
+    { id: 'OIL', name: 'Crude Oil', unit: '1 Barrel', startPrice: 10000, upProb: 0.50, magMin: 0.05, magMax: 0.12, description: 'Oil prices are likely to remain fluctuating with no clear bias. Highly recommended for short term investing.' },
 ];
 
 export async function initAssets() {
