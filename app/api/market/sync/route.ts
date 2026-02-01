@@ -4,17 +4,23 @@ import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function POST(req: Request) {
-    const userId = await getUserIdFromRequest();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Check for Vercel Cron secret bypass
+    const authHeader = req.headers.get('Authorization');
+    const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
+    if (!isCron) {
+        const userId = await getUserIdFromRequest();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    if (!user?.isAdmin) {
-        return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user?.isAdmin) {
+            return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+        }
     }
 
     try {
