@@ -55,7 +55,7 @@ export default function MarketClient({ initialAssets }: MarketClientProps) {
             {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
                 <div className="px-4 py-6">
                     <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2 px-1">
-                        <Briefcase size={16} className="text-indigo-600" /> Your Portfolio
+                        <Briefcase size={16} className="text-indigo-600" /> {user?.username ? `${user.username}'s Portfolio` : 'Your Portfolio'}
                     </h2>
                     <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar px-1">
                         {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {

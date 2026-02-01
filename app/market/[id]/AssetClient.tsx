@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, TrendingUp, TrendingDown, Info, ShoppingCart, DollarSign, Activity } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Info, ShoppingCart, DollarSign, Activity, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import {
@@ -169,15 +169,17 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                 </div>
 
                 {/* Information Card */}
-                <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex gap-4">
-                    <div className="bg-indigo-100/50 p-2 rounded-xl h-fit">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600">
-                            <Info size={20} />
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 flex gap-4">
+                    <div className="bg-amber-100/50 p-2 rounded-xl h-fit">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-amber-600 shadow-sm">
+                            <Lightbulb size={20} fill="currentColor" fillOpacity={0.1} />
                         </div>
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-indigo-900 mb-1">Market Insight</h4>
-                        <p className="text-xs text-indigo-800/70 leading-relaxed font-medium">
+                        <h4 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+                            Market Insight
+                        </h4>
+                        <p className="text-xs text-amber-800/70 leading-relaxed font-medium">
                             {asset.description || "Steady growth asset with historically low volatility."} <br />
                             <span className="text-[10px] opacity-60 italic mt-1 block">Current price is set at 12:00 AM daily.</span>
                         </p>
