@@ -686,9 +686,7 @@ export default function AdminPage() {
                                             <td className="p-4 font-bold text-gray-600 text-xs">
                                                 {event.assetId === 'ALL' ? 'GLOBAL MARKET' : event.assetId}
                                             </td>
-                                            <td className="p-4 font-black text-gray-900 text-xs">
-                                                {(Number(event.magnitude) * 100).toFixed(0)}%
-                                            </td>
+                                            {(Number(event.magnitude) * 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%
                                             <td className="p-4 text-center">
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest",
