@@ -57,7 +57,14 @@ export async function GET(req: Request) {
 
 // POST method for backward compatibility with admin panel (Manual Trigger)
 export async function POST(req: Request) {
+    console.log('[ADMIN] Manual market sync request received');
+
+    // Debug headers to see if cookies/auth are present
+    console.log('[ADMIN] Headers:', JSON.stringify(Object.fromEntries(req.headers.entries())));
+
     const userId = await getUserIdFromRequest();
+    console.log('[ADMIN] Resolved User ID:', userId);
+
     if (!userId) {
         console.log('[ADMIN] Unauthorized: No user ID found');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -66,6 +73,8 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
     });
+
+    console.log('[ADMIN] Found user:', user?.username, 'Is Admin:', user?.isAdmin);
 
     if (!user?.isAdmin) {
         console.log('[ADMIN] Forbidden: User is not admin');
