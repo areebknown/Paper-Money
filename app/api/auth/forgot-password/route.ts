@@ -11,20 +11,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
-        // Validate environment variables FIRST
-        if (!process.env.RESEND_API_KEY) {
-            console.error('[FORGOT PASSWORD] CRITICAL: RESEND_API_KEY is not set!');
-            return NextResponse.json({
-                error: 'EMAIL_NOT_CONFIGURED',
-                message: 'Email service is not configured. Please contact support.'
-            }, { status: 500 });
-        }
-
-        if (!process.env.FROM_EMAIL) {
-            console.warn('[FORGOT PASSWORD] WARNING: FROM_EMAIL not set, using default onboarding@resend.dev');
-        }
-
-        console.log('[FORGOT PASSWORD] Environment variables validated');
+        // Log environment status but DON'T block execution
+        console.log('[FORGOT PASSWORD] RESEND_API_KEY present:', !!process.env.RESEND_API_KEY);
+        console.log('[FORGOT PASSWORD] FROM_EMAIL present:', !!process.env.FROM_EMAIL);
+        console.log('[FORGOT PASSWORD] RESEND_API_KEY value:', process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'MISSING');
 
         // Find user by email
         const user = await (prisma.user as any).findFirst({
@@ -61,8 +51,12 @@ export async function POST(req: Request) {
         // Send email using Resend REST API
         const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
+        // Use fallback for FROM_EMAIL if not set
+        const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+
         console.log('[FORGOT PASSWORD] Attempting to send email to:', email);
-        console.log('[FORGOT PASSWORD] From address:', process.env.FROM_EMAIL || 'onboarding@resend.dev');
+        console.log('[FORGOT PASSWORD] From address:', fromEmail);
+        console.log('[FORGOT PASSWORD] Reset URL:', resetUrl);
 
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -71,7 +65,7 @@ export async function POST(req: Request) {
                 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-                from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+                from: fromEmail,
                 to: [email],
                 subject: 'Reset Your Password - PaperPay',
                 html: `
@@ -91,11 +85,13 @@ export async function POST(req: Request) {
         });
 
         const resendData = await resendResponse.json();
+        console.log('[FORGOT PASSWORD] Resend status:', resendResponse.status);
+        console.log('[FORGOT PASSWORD] Resend response:', JSON.stringify(resendData, null, 2));
 
         if (!resendResponse.ok) {
-            console.error('[FORGOT PASSWORD] Resend API Error:');
+            console.error('[FORGOT PASSWORD] ❌ Resend API Error:');
             console.error('[FORGOT PASSWORD] Status:', resendResponse.status);
-            console.error('[FORGOT PASSWORD] Response:', JSON.stringify(resendData, null, 2));
+            console.error('[FORGOT PASSWORD] Full response:', JSON.stringify(resendData, null, 2));
 
             // Provide user-friendly error messages based on the error type
             let userMessage = 'Failed to send reset email. ';
@@ -103,11 +99,11 @@ export async function POST(req: Request) {
             if (resendData.message?.toLowerCase().includes('domain')) {
                 userMessage += 'Email domain not configured. Please contact support.';
             } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
-                userMessage += 'Email service authentication error. Please contact support.';
+                userMessage += 'Email service authentication error. Please contact support at sanjeedabed@gmail.com';
             } else if (resendData.message?.toLowerCase().includes('rate limit')) {
                 userMessage += 'Too many requests. Please try again in a few minutes.';
             } else {
-                userMessage += 'Please try again or contact support.';
+                userMessage += `Please contact support. Error: ${resendData.message || 'Unknown error'}`;
             }
 
             return NextResponse.json({
@@ -118,18 +114,21 @@ export async function POST(req: Request) {
         }
 
         console.log('[FORGOT PASSWORD] ✅ Email sent successfully!');
-        console.log('[FORGOT PASSWORD] Resend response:', JSON.stringify(resendData, null, 2));
+        console.log('[FORGOT PASSWORD] Email ID:', resendData.id);
 
         return NextResponse.json({
             message: 'Success! Please check your email inbox (and spam folder).'
         });
 
     } catch (error) {
-        console.error('[FORGOT PASSWORD] Unexpected error:', error);
+        console.error('[FORGOT PASSWORD] ❌ Unexpected error:', error);
+        console.error('[FORGOT PASSWORD] Error type:', error?.constructor?.name);
+        console.error('[FORGOT PASSWORD] Error message:', error instanceof Error ? error.message : 'Unknown');
         console.error('[FORGOT PASSWORD] Error stack:', error instanceof Error ? error.stack : 'No stack');
+
         return NextResponse.json({
             error: 'Internal server error',
-            message: 'Something went wrong. Please try again later.'
+            message: 'Something went wrong. Please contact support at sanjeedabed@gmail.com'
         }, { status: 500 });
     }
 }
