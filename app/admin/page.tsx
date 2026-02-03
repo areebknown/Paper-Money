@@ -325,11 +325,17 @@ export default function AdminPage() {
                                     if (!confirm('Force a market update? This will change all prices and add to history.')) return;
                                     try {
                                         const res = await fetch('/api/market/sync', { method: 'POST' });
+                                        const data = await res.json();
+
                                         if (res.ok) {
                                             alert('Market updated successfully!');
                                             router.refresh();
+                                        } else {
+                                            alert(`Sync failed: ${data.error || 'Unknown error'} \n${JSON.stringify(data.details || '')}`);
                                         }
-                                    } catch (e) { alert('Sync failed'); }
+                                    } catch (e) {
+                                        alert(`Sync failed (Network): ${e instanceof Error ? e.message : String(e)}`);
+                                    }
                                 }}
                                 className="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-black transition flex items-center justify-center gap-2 text-xs"
                             >
