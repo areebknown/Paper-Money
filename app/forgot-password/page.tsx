@@ -29,10 +29,20 @@ export default function ForgotPasswordPage() {
                 setMessage(data.message);
                 setEmail('');
             } else {
-                setError(data.error || 'Failed to send reset email');
+                // Show the user-friendly message from the API
+                const errorMessage = data.message ||
+                    (data.error === 'USER_NOT_FOUND'
+                        ? 'No account found with this email. Check your email or sign up first.'
+                        : data.error === 'EMAIL_NOT_CONFIGURED'
+                            ? 'Email service is not configured. Please contact support.'
+                            : 'Failed to send reset email. Please try again or contact support.');
+
+                setError(errorMessage);
+                console.error('[FORGOT PASSWORD] Error response:', data);
             }
         } catch (err) {
-            setError('Something went wrong');
+            console.error('[FORGOT PASSWORD] Network error:', err);
+            setError('Network error. Please check your connection and try again.');
         } finally {
             setLoading(false);
         }
