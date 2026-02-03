@@ -99,7 +99,7 @@ export async function POST(req: Request) {
             if (resendData.message?.toLowerCase().includes('domain')) {
                 userMessage += 'Email domain not configured. Please contact support.';
             } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
-                userMessage += `Email service authentication error: ${resendData.message}. Please contact support at sanjeedabed@gmail.com`;
+                userMessage += `[DEBUG V3] Email service authentication error: ${resendData.message}. Please contact support at sanjeedabed@gmail.com`;
             } else if (resendData.message?.toLowerCase().includes('rate limit')) {
                 userMessage += 'Too many requests. Please try again in a few minutes.';
             } else {
