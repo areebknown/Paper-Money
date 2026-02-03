@@ -49,14 +49,15 @@ export async function POST(req: Request) {
         console.log('[FORGOT PASSWORD] Token saved to database');
 
         // Send email using Resend REST API
-        const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+        // Prioritize the environment variable, but fallback to the production domain instead of localhost
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://paper-money.vercel.app';
+        const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
 
         // Use fallback for FROM_EMAIL if not set
         const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 
         console.log('[FORGOT PASSWORD] Attempting to send email to:', email);
         console.log('[FORGOT PASSWORD] From address:', fromEmail);
-        console.log('[FORGOT PASSWORD] Reset URL:', resetUrl);
 
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -85,16 +86,27 @@ export async function POST(req: Request) {
         });
 
         const resendData = await resendResponse.json();
-        console.log('[FORGOT PASSWORD] Resend status:', resendResponse.status);
-        console.log('[FORGOT PASSWORD] Resend response:', JSON.stringify(resendData, null, 2));
 
         if (!resendResponse.ok) {
-            console.error('[FORGOT PASSWORD] ❌ RESEND_FAILED', resendData);
+            console.error('[FORGOT PASSWORD] ❌ Resend API Error:', resendData);
+
+            // Provide user-friendly error messages based on the error type
+            let userMessage = 'Failed to send reset email. ';
+
+            if (resendData.message?.toLowerCase().includes('domain')) {
+                userMessage += 'Email domain not configured. Please contact support.';
+            } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
+                userMessage += 'Email service authentication error. Please contact support.';
+            } else if (resendData.message?.toLowerCase().includes('rate limit')) {
+                userMessage += 'Too many requests. Please try again in a few minutes.';
+            } else {
+                userMessage += 'Please contact support.';
+            }
 
             return NextResponse.json({
                 error: 'RESEND_ERROR',
-                message: `[HARD_RESET_V4] status=${resendResponse.status} message=${resendData.message || 'No msg'}. Ensure FROM_EMAIL is onboarding@resend.dev`,
-                details: resendData
+                message: userMessage,
+                details: resendData.message
             }, { status: 500 });
         }
 
