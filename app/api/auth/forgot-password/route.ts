@@ -89,28 +89,12 @@ export async function POST(req: Request) {
         console.log('[FORGOT PASSWORD] Resend response:', JSON.stringify(resendData, null, 2));
 
         if (!resendResponse.ok) {
-            console.error('[FORGOT PASSWORD] ❌ Resend API Error:');
-            console.error('[FORGOT PASSWORD] Status:', resendResponse.status);
-            console.error('[FORGOT PASSWORD] Full response:', JSON.stringify(resendData, null, 2));
-
-            // Provide user-friendly error messages based on the error type
-            let userMessage = 'Failed to send reset email. ';
-
-            if (resendData.message?.toLowerCase().includes('domain')) {
-                userMessage += 'Email domain not configured. Please contact support.';
-            } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
-                userMessage += `[DEBUG V3] Email service authentication error: ${resendData.message}. Please contact support at sanjeedabed@gmail.com`;
-            } else if (resendData.message?.toLowerCase().includes('rate limit')) {
-                userMessage += 'Too many requests. Please try again in a few minutes.';
-            } else {
-                userMessage += `Please contact support. Error: ${resendData.message || 'Unknown error'}`;
-            }
+            console.error('[FORGOT PASSWORD] ❌ RESEND_FAILED', resendData);
 
             return NextResponse.json({
                 error: 'RESEND_ERROR',
-                message: userMessage,
-                details: resendData.message,
-                rawResponse: resendData
+                message: `[HARD_RESET_V4] status=${resendResponse.status} message=${resendData.message || 'No msg'}. Ensure FROM_EMAIL is onboarding@resend.dev`,
+                details: resendData
             }, { status: 500 });
         }
 
