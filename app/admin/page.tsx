@@ -285,6 +285,7 @@ export default function AdminPage() {
                                     <div className="relative">
                                         <input
                                             type="number"
+                                            step="0.0001"
                                             value={crashMagnitude}
                                             onChange={(e) => setCrashMagnitude(e.target.value)}
                                             className="w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-black text-gray-900 outline-none focus:ring-2 ring-indigo-100"

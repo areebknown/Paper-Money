@@ -76,7 +76,7 @@ model MarketEvent {
   id          String   @id @default(cuid())
   assetId     String   @default("ALL") // Specific asset ID or "ALL"
   type        String   // BOOM or CRASH
-  magnitude   Decimal  @db.Decimal(10, 2) // e.g. 0.20 for 20%
+  magnitude   Decimal  @db.Decimal(10, 4) // e.g. 0.2000 for 20%, 0.0050 for 0.5%
   status      String   @default("PENDING") // PENDING, EXECUTED, CANCELLED
   createdAt   DateTime @default(now())
   executedAt  DateTime?
