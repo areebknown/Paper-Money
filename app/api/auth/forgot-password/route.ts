@@ -99,7 +99,7 @@ export async function POST(req: Request) {
             if (resendData.message?.toLowerCase().includes('domain')) {
                 userMessage += 'Email domain not configured. Please contact support.';
             } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
-                userMessage += 'Email service authentication error. Please contact support at sanjeedabed@gmail.com';
+                userMessage += `Email service authentication error: ${resendData.message}. Please contact support at sanjeedabed@gmail.com`;
             } else if (resendData.message?.toLowerCase().includes('rate limit')) {
                 userMessage += 'Too many requests. Please try again in a few minutes.';
             } else {
@@ -109,7 +109,8 @@ export async function POST(req: Request) {
             return NextResponse.json({
                 error: 'RESEND_ERROR',
                 message: userMessage,
-                details: resendData.message // Include technical details for debugging
+                details: resendData.message,
+                rawResponse: resendData
             }, { status: 500 });
         }
 
