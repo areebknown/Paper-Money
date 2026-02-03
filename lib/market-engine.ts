@@ -52,70 +52,97 @@ export async function initAssets() {
 }
 
 export async function updateMarketPrices() {
-    // Ensure assets exist
-    await initAssets();
+    console.log('[MARKET ENGINE] ========================================');
+    console.log('[MARKET ENGINE] Starting price update at:', new Date().toISOString());
 
-    const assets = await prisma.asset.findMany();
-    const now = new Date();
+    try {
+        // Ensure assets exist
+        console.log('[MARKET ENGINE] Initializing assets...');
+        await initAssets();
 
-    // Fetch all pending market events
-    const pendingEvents = await (prisma as any).marketEvent.findMany({
-        where: { status: 'PENDING' }
-    }) as any[];
+        const assets = await prisma.asset.findMany();
+        console.log(`[MARKET ENGINE] Found ${assets.length} assets to update`);
 
-    for (const asset of assets) {
-        const config = ASSETS.find(a => a.id === asset.id);
-        if (!config) continue;
+        const now = new Date();
 
-        let changePercent: number;
+        // Fetch all pending market events
+        const pendingEvents = await (prisma as any).marketEvent.findMany({
+            where: { status: 'PENDING' }
+        }) as any[];
 
-        // Find if there's a specific event for this asset or a global event
-        const event = pendingEvents.find((e: any) => e.assetId === asset.id) || pendingEvents.find((e: any) => e.assetId === 'ALL');
-
-        if (event) {
-            // EXECUTE SCHEDULED EVENT (BOOM or CRASH)
-            const magnitude = Number(event.magnitude);
-            const isBoom = event.type === 'BOOM';
-
-            changePercent = isBoom ? magnitude : -magnitude;
-
-            console.log(`[MARKET ${event.type}] Executing scheduled event for ${asset.name}: ${isBoom ? '+' : '-'}${(magnitude * 100).toFixed(2)}%`);
-        } else {
-            // NORMAL MARKET MATH
-            const isUp = Math.random() < config.upProb;
-            const magnitude = config.magMin + (Math.random() * (config.magMax - config.magMin));
-            const direction = isUp ? 1 : -1;
-            changePercent = direction * magnitude;
+        console.log(`[MARKET ENGINE] Found ${pendingEvents.length} pending market events`);
+        if (pendingEvents.length > 0) {
+            pendingEvents.forEach((event: any) => {
+                console.log(`[MARKET ENGINE] - Event: ${event.type} for ${event.assetId} (${event.magnitude * 100}%)`);
+            });
         }
 
-        const rawNewPrice = Number(asset.currentPrice) * (1 + changePercent);
-        const newPrice = Math.max(1, Math.round(rawNewPrice * 100) / 100);
+        for (const asset of assets) {
+            const config = ASSETS.find(a => a.id === asset.id);
+            if (!config) {
+                console.log(`[MARKET ENGINE] Skipping unknown asset: ${asset.id}`);
+                continue;
+            }
 
-        await prisma.asset.update({
-            where: { id: asset.id },
-            data: {
-                currentPrice: newPrice,
-                change24h: changePercent * 100,
-                history: {
-                    create: {
-                        price: newPrice,
-                        timestamp: now
+            let changePercent: number;
+
+            // Find if there's a specific event for this asset or a global event
+            const event = pendingEvents.find((e: any) => e.assetId === asset.id) || pendingEvents.find((e: any) => e.assetId === 'ALL');
+
+            if (event) {
+                // EXECUTE SCHEDULED EVENT (BOOM or CRASH)
+                const magnitude = Number(event.magnitude);
+                const isBoom = event.type === 'BOOM';
+
+                changePercent = isBoom ? magnitude : -magnitude;
+
+                console.log(`[MARKET ${event.type}] Executing scheduled event for ${asset.name}: ${isBoom ? '+' : '-'}${(magnitude * 100).toFixed(2)}%`);
+            } else {
+                // NORMAL MARKET MATH
+                const isUp = Math.random() < config.upProb;
+                const magnitude = config.magMin + (Math.random() * (config.magMax - config.magMin));
+                const direction = isUp ? 1 : -1;
+                changePercent = direction * magnitude;
+            }
+
+            const oldPrice = Number(asset.currentPrice);
+            const rawNewPrice = oldPrice * (1 + changePercent);
+            const newPrice = Math.max(1, Math.round(rawNewPrice * 100) / 100);
+
+            console.log(`[MARKET ENGINE] ${asset.name}: ₹${oldPrice.toFixed(2)} → ₹${newPrice.toFixed(2)} (${(changePercent * 100).toFixed(2)}%)`);
+
+            await prisma.asset.update({
+                where: { id: asset.id },
+                data: {
+                    currentPrice: newPrice,
+                    change24h: changePercent * 100,
+                    history: {
+                        create: {
+                            price: newPrice,
+                            timestamp: now
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Mark all utilized pending events as EXECUTED
-    if (pendingEvents.length > 0) {
-        await (prisma as any).marketEvent.updateMany({
-            where: { id: { in: pendingEvents.map((e: any) => e.id) } },
-            data: {
-                status: 'EXECUTED',
-                executedAt: now
-            }
-        });
-    }
+        // Mark all utilized pending events as EXECUTED
+        if (pendingEvents.length > 0) {
+            console.log(`[MARKET ENGINE] Marking ${pendingEvents.length} events as EXECUTED`);
+            await (prisma as any).marketEvent.updateMany({
+                where: { id: { in: pendingEvents.map((e: any) => e.id) } },
+                data: {
+                    status: 'EXECUTED',
+                    executedAt: now
+                }
+            });
+        }
 
-    console.log(`Market updated at ${now.toISOString()}`);
+        console.log(`[MARKET ENGINE] Market update completed successfully at ${now.toISOString()}`);
+        console.log('[MARKET ENGINE] ========================================');
+    } catch (error) {
+        console.error('[MARKET ENGINE] FATAL ERROR during price update:', error);
+        console.error('[MARKET ENGINE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        throw error;
+    }
 }
