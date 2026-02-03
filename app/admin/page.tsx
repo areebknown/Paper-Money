@@ -1,12 +1,22 @@
-
 'use client';
 import React from 'react';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import { useRouter } from 'next/navigation';
-import { Trash2, Edit2, Check, X, Eye, EyeOff, LogOut, Users, DollarSign, ShieldAlert, RefreshCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Edit2, Check, X, Eye, EyeOff, LogOut, Users, DollarSign, ShieldAlert, RefreshCcw, ChevronDown, ChevronUp, Activity, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from 'recharts';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -26,6 +36,11 @@ export default function AdminPage() {
     const [marketEventHistory, setMarketEventHistory] = useState<any[]>([]);
     const [eventType, setEventType] = useState('CRASH');
 
+    // Analytics State
+    const [trackerAssetId, setTrackerAssetId] = useState('GOLD');
+    const [analyticsData, setAnalyticsData] = useState<any>(null);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
     const fetchEventHistory = async () => {
         try {
             const res = await fetch('/api/admin/market/events');
@@ -40,6 +55,25 @@ export default function AdminPage() {
     React.useEffect(() => {
         fetchEventHistory();
     }, []);
+
+    const fetchAnalytics = async (id: string) => {
+        setAnalyticsLoading(true);
+        try {
+            const res = await fetch(`/api/admin/market/analytics?assetId=${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setAnalyticsData(data);
+            }
+        } catch (e) {
+            console.error('Failed to fetch analytics');
+        } finally {
+            setAnalyticsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchAnalytics(trackerAssetId);
+    }, [trackerAssetId]);
 
     const handleScheduleEvent = async () => {
         if (!crashMagnitude || isNaN(parseFloat(crashMagnitude))) return;
@@ -315,6 +349,134 @@ export default function AdminPage() {
                             >
                                 <X size={14} /> Reset
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mineral Analytics Dashboard */}
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                                    <Activity size={24} />
+                                </div>
+                                Mineral Analytics
+                            </h2>
+                            <p className="text-sm text-gray-500 font-medium mt-1">Real-time lifetime performance tracking</p>
+                        </div>
+                        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Select Mineral</label>
+                            <select
+                                value={trackerAssetId}
+                                onChange={(e) => setTrackerAssetId(e.target.value)}
+                                className="bg-white border border-gray-100 px-4 py-2 rounded-xl text-sm font-black text-gray-900 outline-none shadow-sm cursor-pointer hover:bg-gray-50 transition"
+                            >
+                                <option value="IRON">IRON</option>
+                                <option value="COPPER">COPPER</option>
+                                <option value="SILVER">SILVER</option>
+                                <option value="GOLD">GOLD</option>
+                                <option value="LITHIUM">LITHIUM</option>
+                                <option value="OIL">CRUDE OIL</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                        {/* Stats Panel */}
+                        <div className="lg:col-span-1 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
+                            <div className="bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100/50 relative overflow-hidden group">
+                                <TrendingUp className="absolute -right-2 -bottom-2 text-emerald-100/30 group-hover:scale-110 transition-transform" size={80} />
+                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 relative z-10">All-Time High</p>
+                                <p className="text-2xl font-black text-emerald-900 relative z-10">
+                                    ₹{analyticsData?.stats?.ath?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}
+                                </p>
+                            </div>
+                            <div className={cn(
+                                "p-5 rounded-3xl border relative overflow-hidden group",
+                                (analyticsData?.stats?.lifetimeGrowth || 0) >= 0
+                                    ? "bg-indigo-50/50 border-indigo-100/50 text-indigo-900"
+                                    : "bg-red-50/50 border-red-100/50 text-red-900"
+                            )}>
+                                <Activity className="absolute -right-2 -bottom-2 opacity-5" size={80} />
+                                <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">Lifetime Growth</p>
+                                <p className="text-2xl font-black">
+                                    {(analyticsData?.stats?.lifetimeGrowth || 0).toFixed(2)}%
+                                </p>
+                            </div>
+                            <div className="bg-gray-50/50 p-5 rounded-3xl border border-gray-100/50 relative overflow-hidden group">
+                                <RefreshCcw className="absolute -right-2 -bottom-2 text-gray-200/30 group-hover:rotate-12 transition-transform" size={80} />
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 relative z-10">Data Snapshots</p>
+                                <p className="text-2xl font-black text-gray-900 relative z-10">
+                                    {analyticsData?.stats?.dataPoints || 0} <span className="text-xs font-bold text-gray-400">Total</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Chart Area */}
+                        <div className="lg:col-span-3 h-[350px] relative bg-gray-50/30 rounded-[32px] p-6 border border-gray-50">
+                            {analyticsLoading && (
+                                <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-[32px]">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                                        <span className="text-xs font-black text-indigo-600 uppercase tracking-widest animate-pulse">Syncing History...</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!analyticsData || analyticsData.history.length === 0 ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center italic text-gray-400 text-sm font-medium gap-2">
+                                    <ShieldAlert size={40} className="opacity-20 mb-2" />
+                                    No historical data available for {trackerAssetId}
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={analyticsData.history.map((h: any) => ({
+                                        time: new Date(h.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                                        price: Number(h.price)
+                                    }))}>
+                                        <defs>
+                                            <linearGradient id="colorPriceAdmin" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
+                                                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" strokeOpacity={0.5} />
+                                        <XAxis
+                                            dataKey="time"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
+                                            tickFormatter={(val) => `₹${val}`}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                borderRadius: '24px',
+                                                border: '1px solid #f3f4f6',
+                                                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                                                padding: '12px 16px'
+                                            }}
+                                            itemStyle={{ fontWeight: 900, fontSize: '14px', color: '#4f46e5' }}
+                                            labelStyle={{ fontWeight: 700, color: '#9ca3af', marginBottom: '4px', fontSize: '10px', textTransform: 'uppercase' }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="price"
+                                            stroke="#4f46e5"
+                                            strokeWidth={4}
+                                            fillOpacity={1}
+                                            fill="url(#colorPriceAdmin)"
+                                            animationDuration={1500}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
                 </div>
