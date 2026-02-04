@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
     try {
         console.log('[ADMIN] Manual market sync triggered by:', user.username);
-        await updateMarketPrices();
+        await updateMarketPrices(true);
         console.log('[ADMIN] Market sync completed successfully');
         return NextResponse.json({
             success: true,

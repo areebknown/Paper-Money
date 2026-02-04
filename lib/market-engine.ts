@@ -51,11 +51,30 @@ export async function initAssets() {
     }
 }
 
-export async function updateMarketPrices() {
+export async function updateMarketPrices(force: boolean = false) {
     console.log('[MARKET ENGINE] ========================================');
     console.log('[MARKET ENGINE] Starting price update at:', new Date().toISOString());
+    console.log('[MARKET ENGINE] Mode:', force ? 'FORCED (Manual)' : 'SCHEDULED (Cron)');
 
     try {
+        // Idempotency Check: Prevent double updates
+        if (!force) {
+            const lastUpdate = await prisma.assetPriceHistory.findFirst({
+                orderBy: { timestamp: 'desc' }
+            });
+
+            if (lastUpdate) {
+                const hoursSinceLastUpdate = (Date.now() - lastUpdate.timestamp.getTime()) / (1000 * 60 * 60);
+                console.log(`[MARKET ENGINE] Hours since last update: ${hoursSinceLastUpdate.toFixed(2)}`);
+
+                // If updated less than 20 hours ago, skip (Daily schedule protection)
+                if (hoursSinceLastUpdate < 20) {
+                    console.log('[MARKET ENGINE] SKIPPING: Market already updated recently.');
+                    return;
+                }
+            }
+        }
+
         // Ensure assets exist
         console.log('[MARKET ENGINE] Initializing assets...');
         await initAssets();
