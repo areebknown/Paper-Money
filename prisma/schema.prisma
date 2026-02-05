@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -14,7 +14,7 @@ model User {
   email     String?  @unique
   isAdmin   Boolean  @default(false)
   isSuspended Boolean @default(false)
-  balance   Float    @default(0)
+  balance   Decimal  @default(0) @db.Decimal(10, 2)
   createdAt DateTime @default(now())
   
   resetToken       String?
@@ -37,7 +37,7 @@ model User {
 
 model Transaction {
   id          String   @id @default(cuid())
-  amount      Float
+  amount      Decimal  @db.Decimal(10, 2)
   status      String   @default("COMPLETED") // COMPLETED, FAILED
   category    String   @default("TRANSFER") // TRANSFER, MARKET_BUY, MARKET_SELL
   description String?
@@ -63,8 +63,8 @@ model Asset {
   name         String
   description  String?
   unit         String
-  currentPrice Float
-  change24h    Float              @default(0)
+  currentPrice Decimal  @db.Decimal(10, 2)
+  change24h    Decimal  @default(0) @db.Decimal(10, 2)
   history      AssetPriceHistory[]
   portfolios   Portfolio[]
   transactions Transaction[]
@@ -74,7 +74,7 @@ model AssetPriceHistory {
   id        String   @id @default(cuid())
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  price     Float
+  price     Decimal  @db.Decimal(10, 2)
   timestamp DateTime @default(now())
 
   @@index([assetId])
@@ -85,7 +85,7 @@ model MarketEvent {
   id          String   @id @default(cuid())
   assetId     String   @default("ALL") // Specific asset ID or "ALL"
   type        String   // BOOM or CRASH
-  magnitude   Float // e.g. 0.20 for 20%
+  magnitude   Decimal  @db.Decimal(5, 4) // e.g. 0.20 for 20%
   status      String   @default("PENDING") // PENDING, EXECUTED, CANCELLED
   createdAt   DateTime @default(now())
   executedAt  DateTime?
@@ -100,8 +100,8 @@ model Portfolio {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  units     Float    @default(0)
-  totalCost Float    @default(0) // Tracks cost basis for P/L
+  units     Decimal  @default(0) @db.Decimal(15, 8)
+  totalCost Decimal  @default(0) @db.Decimal(10, 2) // Tracks cost basis for P/L
 
   @@unique([userId, assetId])
 }
@@ -117,13 +117,13 @@ model Artifact {
   imageUrl    String?
   
   // Valuation
-  basePoints     Float // BP
-  materialComposition String? // JSON string: {"gold": 2.5, "silver": 10} in grams
+  basePoints     Decimal @db.Decimal(10, 2) // BP
+  materialComposition Json? // {"gold": 2.5, "silver": 10} in grams
   
   // Dimensions for visual scaling
-  width  Float? // relative units
-  height Float? // relative units
-  depth  Float? // relative units
+  width  Decimal? @db.Decimal(8, 2) // relative units
+  height Decimal? @db.Decimal(8, 2) // relative units
+  depth  Decimal? @db.Decimal(8, 2) // relative units
   
   // Ownership
   ownerId    String?
@@ -137,7 +137,7 @@ model Artifact {
   // Pawn Shop
   pawnShopId String?
   pawnShop   PawnShop? @relation(fields: [pawnShopId], references: [id])
-  pawnPoints Float   @default(0) // PSP (temporary unless sold)
+  pawnPoints Decimal @default(0) @db.Decimal(10, 2) // PSP (temporary unless sold)
   isPspPermanent Boolean @default(false)
   
   // Relations
@@ -159,8 +159,8 @@ model Auction {
   
   // Rank & Pricing
   rankTier     String  // GOLD, SILVER, BRONZE
-  startingPrice Float
-  currentPrice  Float
+  startingPrice Decimal @db.Decimal(10, 2)
+  currentPrice  Decimal @db.Decimal(10, 2)
   
   // State
   status       String  @default("SCHEDULED") // SCHEDULED, LIVE, REVEALING, BIDDING, COMPLETED, CANCELLED
@@ -200,7 +200,7 @@ model AuctionBid {
   bidderId  String
   bidder    User     @relation(fields: [bidderId], references: [id], onDelete: Cascade)
   
-  amount    Float
+  amount    Decimal  @db.Decimal(10, 2)
   timestamp DateTime @default(now())
   
   @@index([auctionId])
@@ -217,8 +217,8 @@ model PawnShop {
   activatedAt DateTime?
   
   // Admin-controlled
-  activationCost Float @default(0)
-  pspValue       Float @default(0) // PSP assigned to artifacts
+  activationCost Decimal @default(0) @db.Decimal(10, 2)
+  pspValue       Decimal @default(0) @db.Decimal(10, 2) // PSP assigned to artifacts
   
   artifacts Artifact[]
   
@@ -232,7 +232,7 @@ model Contract {
   
   toUserId    String?
   description String
-  terms       String?    // JSON string for flexible contract data
+  terms       Json?    // Flexible contract data
   
   // Verification
   isVerified  Boolean  @default(false)
