@@ -60,43 +60,38 @@ export default function HomePage() {
                         </button>
                     </div>
                 </div>
+            </header>
 
-        </div>
-            </header >
-
-        {/* Content */ }
-        < main className = "px-6 py-4" >
-            {/* Tab Toggle */ }
-            < div className = "flex gap-2 bg-gray-800 p-1 rounded-lg mb-6" >
+            {/* Content */}
+            <main className="px-6 py-4">
+                {/* Tab Toggle */}
+                <div className="flex gap-2 bg-gray-800 p-1 rounded-lg mb-6">
                     <button
                         onClick={() => setActiveTab('bids')}
-                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${
-                            activeTab === 'bids'
+                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'bids'
                                 ? 'bg-cyan-500 text-white shadow-lg'
                                 : 'text-gray-400 hover:text-gray-200'
-                        }`}
+                            }`}
                     >
                         Bids
                     </button>
                     <button
                         onClick={() => setActiveTab('market')}
-                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${
-                            activeTab === 'market'
+                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'market'
                                 ? 'bg-cyan-500 text-white shadow-lg'
                                 : 'text-gray-400 hover:text-gray-200'
-                        }`}
+                            }`}
                     >
                         Market
                     </button>
-                </div >
+                </div>
 
-        { activeTab === 'bids' ? <BidsTab /> : <MarketTab />
-}
-            </main >
+                {activeTab === 'bids' ? <BidsTab /> : <MarketTab />}
+            </main>
 
-    {/* Bottom Navigation */ }
-    < BottomNav />
-        </div >
+            {/* Bottom Navigation */}
+            <BottomNav />
+        </div>
     );
 }
 
