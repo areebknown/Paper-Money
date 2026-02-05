@@ -1,11 +1,10 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -15,20 +14,30 @@ model User {
   email     String?  @unique
   isAdmin   Boolean  @default(false)
   isSuspended Boolean @default(false)
-  balance   Decimal  @default(0) @db.Decimal(10, 2)
+  balance   Float    @default(0)
   createdAt DateTime @default(now())
   
   resetToken       String?
   resetTokenExpiry DateTime?
   
+  // Bid Wars: Rank & Progression
+  rankPoints Int      @default(0)
+  loanTokens Int      @default(1)
+  rankTier   String   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
+  
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
   portfolios           Portfolio[]
+  ownedArtifacts       Artifact[]    @relation("ArtifactOwner")
+  auctionBids          AuctionBid[]
+  pawnShop             PawnShop?
+  contracts            Contract[]
+  wonAuctions          Auction[]     @relation("AuctionWinner")
 }
 
 model Transaction {
   id          String   @id @default(cuid())
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Float
   status      String   @default("COMPLETED") // COMPLETED, FAILED
   category    String   @default("TRANSFER") // TRANSFER, MARKET_BUY, MARKET_SELL
   description String?
@@ -54,7 +63,7 @@ model Asset {
   name         String
   description  String?
   unit         String
-  currentPrice Decimal            @db.Decimal(10, 2)
+  currentPrice Float
   change24h    Float              @default(0)
   history      AssetPriceHistory[]
   portfolios   Portfolio[]
@@ -65,7 +74,7 @@ model AssetPriceHistory {
   id        String   @id @default(cuid())
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  price     Decimal  @db.Decimal(10, 2)
+  price     Float
   timestamp DateTime @default(now())
 
   @@index([assetId])
@@ -76,7 +85,7 @@ model MarketEvent {
   id          String   @id @default(cuid())
   assetId     String   @default("ALL") // Specific asset ID or "ALL"
   type        String   // BOOM or CRASH
-  magnitude   Decimal  @db.Decimal(10, 4) // e.g. 0.2000 for 20%, 0.0050 for 0.5%
+  magnitude   Float // e.g. 0.20 for 20%
   status      String   @default("PENDING") // PENDING, EXECUTED, CANCELLED
   createdAt   DateTime @default(now())
   executedAt  DateTime?
@@ -92,7 +101,146 @@ model Portfolio {
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
   units     Float    @default(0)
-  totalCost Decimal  @default(0) @db.Decimal(10, 2) // Tracks cost basis for P/L
+  totalCost Float    @default(0) // Tracks cost basis for P/L
 
   @@unique([userId, assetId])
+}
+
+// ============================================
+// BID WARS MODELS
+// ============================================
+
+model Artifact {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  
+  // Valuation
+  basePoints     Float // BP
+  materialComposition String? // JSON string: {"gold": 2.5, "silver": 10} in grams
+  
+  // Dimensions for visual scaling
+  width  Float? // relative units
+  height Float? // relative units
+  depth  Float? // relative units
+  
+  // Ownership
+  ownerId    String?
+  owner      User?    @relation("ArtifactOwner", fields: [ownerId], references: [id])
+  
+  // Tracking
+  viewCount  Int      @default(0)
+  lastViewed DateTime?
+  createdAt  DateTime @default(now())
+  
+  // Pawn Shop
+  pawnShopId String?
+  pawnShop   PawnShop? @relation(fields: [pawnShopId], references: [id])
+  pawnPoints Float   @default(0) // PSP (temporary unless sold)
+  isPspPermanent Boolean @default(false)
+  
+  // Relations
+  auctions   AuctionArtifact[]
+  
+  @@index([ownerId])
+  @@index([pawnShopId])
+}
+
+model Auction {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  
+  // Timing
+  scheduledAt DateTime
+  startedAt   DateTime?
+  endedAt     DateTime?
+  
+  // Rank & Pricing
+  rankTier     String  // GOLD, SILVER, BRONZE
+  startingPrice Float
+  currentPrice  Float
+  
+  // State
+  status       String  @default("SCHEDULED") // SCHEDULED, LIVE, REVEALING, BIDDING, COMPLETED, CANCELLED
+  
+  // Winner
+  winnerId     String?
+  winner       User?   @relation("AuctionWinner", fields: [winnerId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  artifacts    AuctionArtifact[]
+  bids         AuctionBid[]
+  
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// Junction table for Auction <-> Artifact (many-to-many)
+model AuctionArtifact {
+  id         String   @id @default(cuid())
+  auctionId  String
+  auction    Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  artifactId String
+  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  
+  @@unique([auctionId, artifactId])
+  @@index([auctionId])
+  @@index([artifactId])
+}
+
+model AuctionBid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  
+  amount    Float
+  timestamp DateTime @default(now())
+  
+  @@index([auctionId])
+  @@index([bidderId])
+  @@index([timestamp])
+}
+
+model PawnShop {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  isActive Boolean  @default(false)
+  activatedAt DateTime?
+  
+  // Admin-controlled
+  activationCost Float @default(0)
+  pspValue       Float @default(0) // PSP assigned to artifacts
+  
+  artifacts Artifact[]
+  
+  createdAt DateTime @default(now())
+}
+
+model Contract {
+  id          String   @id @default(cuid())
+  fromUserId  String
+  fromUser    User     @relation(fields: [fromUserId], references: [id], onDelete: Cascade)
+  
+  toUserId    String?
+  description String
+  terms       String?    // JSON string for flexible contract data
+  
+  // Verification
+  isVerified  Boolean  @default(false)
+  verifiedAt  DateTime?
+  verifiedBy  String?  // Admin username
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([fromUserId])
+  @@index([isVerified])
 }

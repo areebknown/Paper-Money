@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Paper Money",
-  description: "The fast, secure, and modern UPI-style payment platform.",
+  title: "Bid Wars",
+  description: "Strategic bidding economy game. Compete, collect, and conquer.",
 };
 
 export default function RootLayout({

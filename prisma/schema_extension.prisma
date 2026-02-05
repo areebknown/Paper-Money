@@ -1,0 +1,137 @@
+// Bid Wars Schema Extensions
+// This file contains the new models to be added to schema.prisma
+
+model Artifact {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  
+  // Valuation
+  basePoints     Decimal @db.Decimal(10, 2) // BP
+  materialComposition Json? // {"gold": 2.5, "silver": 10} in grams
+  
+  // Dimensions for visual scaling
+  width  Float? // relative units
+  height Float? // relative units
+  depth  Float? // relative units
+  
+  // Ownership
+  ownerId    String?
+  owner      User?    @relation("ArtifactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  
+  // Tracking
+  viewCount  Int      @default(0)
+  lastViewed DateTime?
+  createdAt  DateTime @default(now())
+  
+  // Pawn Shop
+  pawnShopId String?
+  pawnShop   PawnShop? @relation(fields: [pawnShopId], references: [id], onDelete: SetNull)
+  pawnPoints Decimal   @default(0) @db.Decimal(10, 2) // PSP (temporary unless sold)
+  isPspPermanent Boolean @default(false)
+  
+  // Relations
+  auctions   AuctionArtifact[]
+  
+  @@index([ownerId])
+  @@index([pawnShopId])
+}
+
+model Auction {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  
+  // Timing
+  scheduledAt DateTime
+  startedAt   DateTime?
+  endedAt     DateTime?
+  
+  // Rank & Pricing
+  rankTier     String  // GOLD, SILVER, BRONZE
+  startingPrice Decimal @db.Decimal(10, 2)
+  currentPrice  Decimal @db.Decimal(10, 2)
+  
+  // State
+  status       String  @default("SCHEDULED") // SCHEDULED, LIVE, REVEALING, BIDDING, COMPLETED, CANCELLED
+  
+  // Winner
+  winnerId     String?
+  winner       User?   @relation("AuctionWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  artifacts    AuctionArtifact[]
+  bids         AuctionBid[]
+  
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// Junction table for Auction <-> Artifact (many-to-many)
+model AuctionArtifact {
+  id         String   @id @default(cuid())
+  auctionId  String
+  auction    Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  artifactId String
+  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  
+  @@unique([auctionId, artifactId])
+  @@index([auctionId])
+  @@index([artifactId])
+}
+
+model AuctionBid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  
+  amount    Decimal  @db.Decimal(10, 2)
+  timestamp DateTime @default(now())
+  
+  @@index([auctionId])
+  @@index([bidderId])
+  @@index([timestamp])
+}
+
+model PawnShop {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  isActive Boolean  @default(false)
+  activatedAt DateTime?
+  
+  // Admin-controlled
+  activationCost Decimal @default(0) @db.Decimal(10, 2)
+  pspValue       Decimal @default(0) @db.Decimal(10, 2) // PSP assigned to artifacts
+  
+  artifacts Artifact[]
+  
+  createdAt DateTime @default(now())
+}
+
+model Contract {
+  id          String   @id @default(cuid())
+  fromUserId  String
+  fromUser    User     @relation(fields: [fromUserId], references: [id], onDelete: Cascade)
+  
+  toUserId    String?
+  description String
+  terms       Json?    // Flexible contract data
+  
+  // Verification
+  isVerified  Boolean  @default(false)
+  verifiedAt  DateTime?
+  verifiedBy  String?  // Admin username
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([fromUserId])
+  @@index([isVerified])
+}
