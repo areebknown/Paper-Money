@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Bell, User } from 'lucide-react';
 import RankBadge from '@/components/RankBadge';
 import BottomNav from '@/components/BottomNav';
@@ -18,7 +19,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] pb-24">
             {/* Header */}
-            <header className="sticky top-0 z-sticky bg-white border-b border-[var(--color-border-light)] px-4 py-3">
+            <header className="sticky top-0 z-sticky bg-white border-b border-[var(--color-border-light)] px-6 py-4">
                 <div className="flex items-center justify-between">
                     {/* Left: Balance & Rank */}
                     <div className="flex items-center gap-3">
@@ -52,10 +53,15 @@ export default function HomePage() {
                 </div>
 
                 {/* Logo - Centered */}
-                <div className="flex justify-center mt-3 mb-2">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-400 bg-clip-text text-transparent">
-                        Bid Wars
-                    </h1>
+                <div className="flex justify-center mt-4 mb-3">
+                    <Image
+                        src="/bid-wars-logo.png"
+                        alt="Bid Wars"
+                        width={180}
+                        height={80}
+                        priority
+                        className="object-contain"
+                    />
                 </div>
 
                 {/* Tab Toggle */}
@@ -88,7 +94,7 @@ export default function HomePage() {
             </header>
 
             {/* Content */}
-            <main className="container py-6">
+            <main className="px-6 py-6">
                 {activeTab === 'bids' ? <BidsTab /> : <MarketTab />}
             </main>
 
