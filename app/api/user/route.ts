@@ -61,7 +61,7 @@ export async function GET(req: Request) {
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 10);
 
-        const rawInvested = user.portfolios.reduce((sum, p) => sum + (p.units * Number(p.asset.currentPrice)), 0);
+        const rawInvested = user.portfolios.reduce((sum, p) => sum + (Number(p.units) * Number(p.asset.currentPrice)), 0);
         const totalInvested = Math.round(rawInvested * 100) / 100;
 
         return NextResponse.json({
