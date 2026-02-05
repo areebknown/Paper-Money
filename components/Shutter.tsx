@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock } from 'lucide-react';
 
 interface ShutterProps {
-    status: 'locked' | 'revealing' | 'bidding';
+    status: 'locked' | 'revealing' | 'bidding' | 'completed';
     rankTier: 'GOLD' | 'SILVER' | 'BRONZE';
     startingPrice: number;
     currentBid?: number;
@@ -46,7 +46,7 @@ export default function Shutter({
 
             {/* Shutter Body */}
             <AnimatePresence>
-                {status !== 'revealing' && (
+                {status !== 'revealing' && status !== 'completed' && (
                     <motion.div
                         className="absolute inset-0 z-10"
                         initial={false}
