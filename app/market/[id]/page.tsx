@@ -51,7 +51,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
     return (
         <AssetClient
             asset={normalizedAsset}
-            userUnits={portfolio?.units || 0}
+            userUnits={Number(portfolio?.units) || 0}
             userBalance={Number(user?.balance) || 0}
             isSuspended={user?.isSuspended || false}
         />
