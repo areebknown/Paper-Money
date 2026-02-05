@@ -59,12 +59,7 @@ export default function Shutter({
                             duration: 0.8,
                         }}
                         onAnimationComplete={() => {
-                            if (status === 'revealing' && onRevealComplete) {
-                                // After shutter opens, wait 5 seconds, then close
-                                setTimeout(() => {
-                                    onRevealComplete();
-                                }, 5000);
-                            }
+                            // Callback fires when shutter closes - no action needed
                         }}
                         style={{
                             background: `repeating-linear-gradient(
@@ -108,7 +103,7 @@ export default function Shutter({
                             )}
 
                             {/* Lock Shatter Animation */}
-                            {isLockShattered && status === 'revealing' && (
+                            {isLockShattered && (
                                 <>
                                     {[...Array(6)].map((_, i) => (
                                         <motion.div
