@@ -19,67 +19,66 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-slate-950 pb-24">
             {/* Header */}
-            <header className="sticky top-0 z-[200] bg-slate-900 border-b border-gray-800 px-6 py-4">
-                <div className="flex items-center justify-between mb-4">
+            <header className="sticky top-0 z-[200] bg-slate-900 border-b border-gray-800 px-4 py-3">
+                <div className="flex items-center justify-between">
                     {/* Left: Balance & Rank */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 uppercase tracking-wide">Balance</span>
-                            <span className="text-xl font-bold text-gray-100">
-                                ₹{userData.balance.toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="h-10 w-px bg-gray-800" />
-                        <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-xs text-gray-500 uppercase tracking-wide">Balance</span>
+                        <span className="text-lg font-bold text-gray-100">
+                            ₹{userData.balance.toLocaleString()}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
                             <RankBadge tier={userData.rankTier} size="sm" />
-                            <span className="text-sm font-semibold text-gray-300">
-                                {userData.rankPoints}
+                            <span className="text-xs font-semibold text-gray-400">
+                                {userData.rankPoints} pts
                             </span>
                         </div>
                     </div>
 
+                    {/* Center: Logo */}
+                    <div className="absolute left-1/2 -translate-x-1/2">
+                        <Image
+                            src="/bid-wars-logo.png"
+                            alt="Bid Wars"
+                            width={100}
+                            height={45}
+                            priority
+                            className="object-contain"
+                        />
+                    </div>
+
                     {/* Right: Profile & Notifications */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <button className="relative p-2 hover:bg-gray-800 rounded-full transition">
                             <Bell className="w-5 h-5 text-gray-400" />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-cyan-500 rounded-full" />
                         </button>
-                        <button className="p-2 hover:bg-gray-800 rounded-full transition">
+                        <button className="p-1.5 hover:bg-gray-800 rounded-full transition">
                             <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
-                                <User className="w-5 h-5 text-white" />
+                                <User className="w-4 h-4 text-white" />
                             </div>
                         </button>
                     </div>
                 </div>
 
-                {/* Logo */}
-                <div className="flex justify-center mb-4">
-                    <Image
-                        src="/bid-wars-logo.png"
-                        alt="Bid Wars"
-                        width={160}
-                        height={70}
-                        priority
-                        className="object-contain"
-                    />
-                </div>
+
 
                 {/* Tab Toggle */}
-                <div className="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                <div className="flex gap-2 bg-gray-800 p-1 rounded-lg mt-3">
                     <button
                         onClick={() => setActiveTab('bids')}
-                        className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'bids'
-                                ? 'bg-cyan-500 text-white shadow-lg'
-                                : 'text-gray-400 hover:text-gray-200'
+                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'bids'
+                            ? 'bg-cyan-500 text-white shadow-lg'
+                            : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         Bids
                     </button>
                     <button
                         onClick={() => setActiveTab('market')}
-                        className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'market'
-                                ? 'bg-cyan-500 text-white shadow-lg'
-                                : 'text-gray-400 hover:text-gray-200'
+                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'market'
+                            ? 'bg-cyan-500 text-white shadow-lg'
+                            : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         Market
