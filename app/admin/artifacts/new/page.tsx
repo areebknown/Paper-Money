@@ -19,7 +19,7 @@ export default function NewArtifactPage() {
         pawnShopPrice: '',
     });
 
-    const total Value =
+    const totalValue =
         parseFloat(formData.basePrice || '0') +
         parseFloat(formData.marketPrice || '0') +
         parseFloat(formData.displayPrice || '0') +
