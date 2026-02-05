@@ -5,11 +5,13 @@ import { getUserIdFromRequest } from '@/lib/auth';
 // GET /api/artifacts/[id] - Get single artifact with full details
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
+
     try {
         const artifact = await prisma.artifact.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 owner: {
                     select: {
@@ -36,7 +38,7 @@ export async function GET(
 
         // Increment view count
         await prisma.artifact.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 viewCount: { increment: 1 },
                 lastViewed: new Date(),
@@ -88,8 +90,9 @@ export async function GET(
 // PATCH /api/artifacts/[id] - Update artifact (admin only)
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     const userId = await getUserIdFromRequest();
 
     if (!userId) {
@@ -112,7 +115,7 @@ export async function PATCH(
         if (body.ownerId !== undefined) updates.ownerId = body.ownerId;
 
         const artifact = await prisma.artifact.update({
-            where: { id: params.id },
+            where: { id },
             data: updates,
         });
 
