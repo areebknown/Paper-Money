@@ -37,7 +37,7 @@ export async function GET(req: Request) {
                 // Material Points (MP) - get current market prices
                 let materialPoints = 0;
                 if (artifact.materialComposition) {
-                    const materials = JSON.parse(artifact.materialComposition as string);
+                    const materials = artifact.materialComposition as Record<string, number>;
                     // Fetch current market prices for gold, silver, etc.
                     for (const [material, quantity] of Object.entries(materials)) {
                         const asset = await prisma.asset.findUnique({
@@ -114,10 +114,10 @@ export async function POST(req: Request) {
                 description,
                 imageUrl,
                 basePoints: Number(basePoints),
-                materialComposition: materialComposition ? JSON.stringify(materialComposition) : null,
-                width: width ? Number(width) : null,
-                height: height ? Number(height) : null,
-                depth: depth ? Number(depth) : null,
+                materialComposition: materialComposition || undefined,
+                width: width ? Number(width) : undefined,
+                height: height ? Number(height) : undefined,
+                depth: depth ? Number(depth) : undefined,
             },
         });
 

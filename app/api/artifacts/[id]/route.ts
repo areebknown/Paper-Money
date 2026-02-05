@@ -48,7 +48,7 @@ export async function GET(
         // Calculate dynamic values
         let materialPoints = 0;
         if (artifact.materialComposition) {
-            const materials = JSON.parse(artifact.materialComposition as string);
+            const materials = artifact.materialComposition as Record<string, number>;
             for (const [material, quantity] of Object.entries(materials)) {
                 const asset = await prisma.asset.findUnique({
                     where: { id: material },
