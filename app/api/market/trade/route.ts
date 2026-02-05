@@ -85,12 +85,12 @@ export async function POST(req: Request) {
                     where: { userId_assetId: { userId, assetId } }
                 });
 
-                if (!portfolio || portfolio.units <= 0) {
+                if (!portfolio || Number(portfolio.units) <= 0) {
                     throw new Error('No units to sell');
                 }
 
-                const unitsToSell = all ? portfolio.units : units;
-                if (unitsToSell > portfolio.units) {
+                const unitsToSell = all ? Number(portfolio.units) : units;
+                if (unitsToSell > Number(portfolio.units)) {
                     throw new Error('Insufficient units to sell');
                 }
 
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
                 const saleValue = Math.round(rawSaleValue * 100) / 100;
 
                 // Calculate cost to deduct (proportionally)
-                const rawCostToDeduct = (Number(portfolio.totalCost) * unitsToSell) / portfolio.units;
+                const rawCostToDeduct = (Number(portfolio.totalCost) * unitsToSell) / Number(portfolio.units);
                 const costToDeduct = Math.round(rawCostToDeduct * 100) / 100;
 
                 // Update Portfolio
