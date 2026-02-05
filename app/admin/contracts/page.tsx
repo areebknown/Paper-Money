@@ -22,7 +22,7 @@ export default function ContractsPage() {
             amount: 25000,
             status: 'ACTIVE',
             createdAt: new Date('2024-02-01'),
-            expiresAt: new Date('2024-' + '03-01),
+            expiresAt: new Date('2024-03-01'),
         },
     ];
 
@@ -52,8 +52,8 @@ export default function ContractsPage() {
                                     <FileText className="w-5 h-5 text-cyan-400" />
                                     <h3 className="text-lg font-bold text-gray-100">{contract.type} Contract</h3>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${contract.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' :
-                                            contract.status === 'ACTIVE' ? 'bg-green-500/10 text-green-400' :
-                                                'bg-gray-500/10 text-gray-400'
+                                        contract.status === 'ACTIVE' ? 'bg-green-500/10 text-green-400' :
+                                            'bg-gray-500/10 text-gray-400'
                                         }`}>
                                         {contract.status}
                                     </span>
