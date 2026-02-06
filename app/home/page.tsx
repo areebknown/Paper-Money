@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Bell, User, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import RankBadge from '@/components/RankBadge';
 import BottomNav from '@/components/BottomNav';
 
@@ -129,65 +130,104 @@ export default function HomePage() {
 }
 
 function BidsTab() {
-    const scheduledBids = [
-        { id: '1', name: 'Shutter #1', rank: 'GOLD' as const, startTime: '10:00 AM', startingPrice: 5000 },
-        { id: '2', name: 'Shutter #2', rank: 'SILVER' as const, startTime: '2:30 PM', startingPrice: 2000 },
-    ];
+    const [scheduledBids, setScheduledBids] = useState<any[]>([]);
+    const [liveBids, setLiveBids] = useState<any[]>([]); // New state for live auctions
+    const [loading, setLoading] = useState(true);
 
-    const wonBids = [
-        { id: '3', name: 'Shutter #127', status: 'WON', finalPrice: 25000, timestamp: '2 days ago' },
-    ];
+    useEffect(() => {
+        async function fetchAuctions() {
+            try {
+                const res = await fetch('/api/auctions');
+                if (res.ok) {
+                    const data = await res.json();
+                    const auctions = data.auctions || [];
+
+                    setScheduledBids(auctions.filter((a: any) => a.status === 'SCHEDULED'));
+                    setLiveBids(auctions.filter((a: any) => a.status === 'LIVE' || a.status === 'REVEALING' || a.status === 'BIDDING'));
+                }
+            } catch (e) {
+                console.error('Failed to fetch auctions');
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchAuctions();
+    }, []);
+
+    if (loading) {
+        return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
+    }
+
+    // Sort functions
+    const sortByTime = (a: any, b: any) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
 
     return (
         <div className="space-y-6">
+            {/* Live Bids */}
+            {liveBids.length > 0 && (
+                <section>
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                        <h2 className="text-lg font-bold text-gray-100">Live Now</h2>
+                    </div>
+                    <div className="space-y-3">
+                        {liveBids.map((bid) => (
+                            <Link href={`/bid/${bid.id}`} key={bid.id}>
+                                <div className="card hover:shadow-md cursor-pointer group border-l-4 border-red-500 bg-red-900/10 mb-3">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-4xl">🔥</div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
+                                            <p className="text-sm text-red-400 font-bold animate-pulse">
+                                                Current Price: ₹{Number(bid.currentPrice).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="px-4 py-2 bg-red-600 font-bold text-white rounded-lg text-sm">
+                                            JOIN
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* Scheduled Bids */}
             <section>
-                <h2 className="text-lg font-bold text-gray-100 mb-4">Scheduled Bids</h2>
-                <div className="space-y-3">
-                    {scheduledBids.map((bid) => (
-                        <div key={bid.id} className="card hover:shadow-md cursor-pointer group">
-                            <div className="flex items-center gap-4">
-                                <div className="text-4xl">
-                                    {bid.rank === 'GOLD' ? '🥇' : bid.rank === 'SILVER' ? '🥈' : '🥉'}
+                <h2 className="text-lg font-bold text-gray-100 mb-4">Upcoming Auctions</h2>
+                {scheduledBids.length === 0 && liveBids.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-900/50 rounded-lg">
+                        No scheduled auctions. Check back later!
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {scheduledBids.sort(sortByTime).map((bid) => (
+                            <Link href={`/bid/${bid.id}`} key={bid.id}>
+                                <div className="card hover:shadow-md cursor-pointer group hover:bg-gray-800/80 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-4xl">
+                                            {bid.rankTier === 'GOLD' ? '🥇' : bid.rankTier === 'SILVER' ? '🥈' : '🥉'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
+                                            <p className="text-sm text-gray-300 mb-0.5">
+                                                Starts: {new Date(bid.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                            </p>
+                                            <p className="text-sm text-gray-500">
+                                                Starting Price: ₹{Number(bid.startingPrice).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <RankBadge tier={bid.rankTier} size="sm" />
+                                            <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-cyan-500 transition-colors" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
-                                    <p className="text-sm text-gray-300 mb-0.5">Starts at {bid.startTime}</p>
-                                    <p className="text-sm text-gray-500">
-                                        Starting Price: ₹{bid.startingPrice.toLocaleString()}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <RankBadge tier={bid.rank} size="sm" />
-                                    <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-cyan-500 transition-colors" />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Won Bids */}
-            <section>
-                <h2 className="text-lg font-bold text-gray-100 mb-4">Won Shutters</h2>
-                <div className="space-y-3">
-                    {wonBids.map((bid) => (
-                        <div key={bid.id} className="card hover:shadow-md cursor-pointer border-l-4 border-green-500">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
-                                    <p className="text-sm text-gray-300 mb-0.5">
-                                        Final Price: ₹{bid.finalPrice.toLocaleString()}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{bid.timestamp}</p>
-                                </div>
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold">
-                                    WON ✓
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );
