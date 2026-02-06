@@ -433,10 +433,12 @@ export default function LiveBidPage() {
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                         <span className="text-red-200 text-xs font-medium">Reconnecting...</span>
                     </div>
-                    {/* Debug Info */}
-                    <span className="text-[10px] text-red-400 font-mono opacity-50">
-                        {process.env.NEXT_PUBLIC_PUSHER_KEY ? 'KEY_OK' : 'KEY_MISSING'}
-                    </span>
+                    {/* Explicit Debug Info */}
+                    <div className="text-[10px] text-red-400 font-mono opacity-75">
+                        DEBUG: KEY_STATUS={process.env.NEXT_PUBLIC_PUSHER_KEY ? 'PRESENT' : 'MISSING'} |
+                        KEY_VAL={process.env.NEXT_PUBLIC_PUSHER_KEY ? process.env.NEXT_PUBLIC_PUSHER_KEY.substring(0, 5) + '...' : 'NULL'} |
+                        CLUSTER={process.env.NEXT_PUBLIC_PUSHER_CLUSTER}
+                    </div>
                 </div>
             )}
         </div>
