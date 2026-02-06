@@ -2,41 +2,157 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, ArrowLeft } from 'lucide-react';
+import { User, ArrowLeft, Wifi, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Shutter from '@/components/Shutter';
+import { getPusherClient } from '@/lib/pusher-client';
 
 type AuctionStatus = 'locked' | 'revealing' | 'bidding' | 'completed';
+
+interface Bid {
+    id: string;
+    username: string;
+    amount: number;
+    timestamp: Date;
+}
+
+interface AuctionData {
+    id: string;
+    name: string;
+    rankTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+    startingPrice: number;
+    currentBid: number;
+    status: string;
+    startsAt: Date;
+    endsAt: Date;
+}
 
 export default function LiveBidPage() {
     const params = useParams();
     const router = useRouter();
     const [status, setStatus] = useState<AuctionStatus>('locked');
-    const [countdown, setCountdown] = useState(5);
-    const [currentBid, setCurrentBid] = useState(5000);
+    const [countdown, setCountdown] = useState(0);
+    const [currentBid, setCurrentBid] = useState(0);
     const [customBidAmount, setCustomBidAmount] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+    const [bids, setBids] = useState<Bid[]>([]);
+    const [auction, setAuction] = useState<AuctionData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [balance, setBalance] = useState(0);
+    const [isConnected, setIsConnected] = useState(true);
+    const [bidding, setBidding] = useState(false);
 
-    // Mock user data
-    const userData = {
-        balance: 34000,
-        rankPoints: 340,
-    };
+    const auctionId = params.id as string;
 
-    // Mock auction data
-    const auctionData = {
-        id: params.id,
-        name: 'Shutter #1',
-        rankTier: 'GOLD' as const,
-        startingPrice: 5000,
-    };
+    // Fetch auction data
+    useEffect(() => {
+        async function fetchAuction() {
+            try {
+                const res = await fetch(`/api/auctions/${auctionId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setAuction(data.auction);
+                    setCurrentBid(Number(data.auction.currentBid) || Number(data.auction.startingPrice));
 
-    // Mock bid history
-    const [bids, setBids] = useState([
-        { id: '1', username: 'Player1', amount: 5000, timestamp: new Date() },
-    ]);
+                    // Calculate countdown
+                    const endsAt = new Date(data.auction.endsAt);
+                    const now = new Date();
+                    const remaining = Math.max(0, Math.floor((endsAt.getTime() - now.getTime()) / 1000));
+                    setCountdown(remaining);
 
-    // Countdown logic
+                    // Set status based on auction state
+                    if (data.auction.status === 'LIVE') {
+                        setStatus('bidding');
+                    } else if (data.auction.status === 'ENDED') {
+                        setStatus('completed');
+                    }
+
+                    // Fetch bids
+                    const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
+                    if (bidsRes.ok) {
+                        const bidsData = await bidsRes.json();
+                        setBids(bidsData.bids.map((b: any) => ({
+                            id: b.id,
+                            username: b.user.username,
+                            amount: Number(b.amount),
+                            timestamp: new Date(b.createdAt),
+                        })));
+                    }
+                }
+                setLoading(false);
+            } catch (error) {
+                console.error('Failed to fetch auction:', error);
+                setLoading(false);
+            }
+        }
+
+        fetchAuction();
+    }, [auctionId]);
+
+    // Fetch user balance
+    useEffect(() => {
+        async function fetchBalance() {
+            try {
+                const res = await fetch('/api/user');
+                if (res.ok) {
+                    const data = await res.json();
+                    setBalance(Number(data.user.balance));
+                }
+            } catch (error) {
+                console.error('Failed to fetch balance:', error);
+            }
+        }
+        fetchBalance();
+    }, []);
+
+    // Pusher WebSocket subscription
+    useEffect(() => {
+        if (!auctionId) return;
+
+        const pusher = getPusherClient();
+        const channel = pusher.subscribe(`auction-${auctionId}`);
+
+        // Connection state
+        pusher.connection.bind('state_change', (states: any) => {
+            setIsConnected(states.current === 'connected');
+        });
+
+        // New bid event
+        channel.bind('new-bid', (data: any) => {
+            console.log('[Pusher] New bid received:', data);
+            setCurrentBid(data.amount);
+            setBids(prev => [
+                {
+                    id: data.bidId,
+                    username: data.username,
+                    amount: data.amount,
+                    timestamp: new Date(data.timestamp),
+                },
+                ...prev,
+            ]);
+
+            // Extend countdown if needed
+            if (data.timeExtended && countdown < 30) {
+                setCountdown(prev => Math.min(prev + 10, 30));
+            }
+        });
+
+        // Auction status change
+        channel.bind('status-change', (data: any) => {
+            console.log('[Pusher] Status change:', data);
+            if (data.status === 'ENDED') {
+                setStatus('completed');
+                setCountdown(0);
+            }
+        });
+
+        return () => {
+            channel.unbind_all();
+            channel.unsubscribe();
+        };
+    }, [auctionId, countdown]);
+
+    // Client-side countdown
     useEffect(() => {
         if (status === 'bidding' && countdown > 0) {
             const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -46,38 +162,47 @@ export default function LiveBidPage() {
         }
     }, [status, countdown]);
 
-    // Simulate auction start (for demo purposes)
-    useEffect(() => {
-        // Auto-start after 2 seconds
-        const timer = setTimeout(() => {
-            if (status === 'locked') {
-                setStatus('revealing');
-            }
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, [status]);
-
     const handleRevealComplete = () => {
         setStatus('bidding');
-        setCountdown(5);
     };
 
-    const handleBid = (amount?: number) => {
+    const handleBid = async (amount?: number) => {
         const bidAmount = amount || currentBid + 1000;
 
-        if (bidAmount > userData.balance) {
+        if (bidding) return; // Prevent double-click
+
+        if (bidAmount > balance) {
             alert('Insufficient balance!');
             return;
         }
 
-        setCurrentBid(bidAmount);
-        setCountdown(5); // Reset countdown
-        setBids([
-            { id: Date.now().toString(), username: 'You', amount: bidAmount, timestamp: new Date() },
-            ...bids,
-        ]);
-        setShowCustomInput(false);
-        setCustomBidAmount('');
+        setBidding(true);
+
+        try {
+            const res = await fetch('/api/bid/place', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auctionId,
+                    amount: bidAmount,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setBalance(data.newBalance);
+                setShowCustomInput(false);
+                setCustomBidAmount('');
+            } else {
+                alert(data.error || 'Failed to place bid');
+            }
+        } catch (error) {
+            console.error('Bid error:', error);
+            alert('Network error. Please try again.');
+        } finally {
+            setBidding(false);
+        }
     };
 
     const handleCustomBid = () => {
@@ -89,34 +214,53 @@ export default function LiveBidPage() {
         handleBid(amount);
     };
 
-    const winner = status === 'completed' ? bids[0] : null;
+    const winner = status === 'completed' && bids.length > 0 ? bids[0] : null;
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-gray-400">Loading auction...</div>
+            </div>
+        );
+    }
+
+    if (!auction) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-red-400">Auction not found</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[var(--color-bg-primary)] pb-6">
+        <div className="min-h-screen bg-slate-950 pb-6">
             {/* Header */}
-            <header className="sticky top-0 z-sticky bg-white border-b border-[var(--color-border-light)] px-4 py-3">
+            <header className="sticky top-0 z-[200] bg-slate-900 border-b border-gray-800 px-4 py-3">
                 <div className="flex items-center justify-between">
-                    {/* Left: Back + Balance & Rank */}
+                    {/* Left: Back + Balance */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => router.back()}
-                            className="p-2 hover:bg-[var(--color-hover)] rounded-full transition"
+                            className="p-2 hover:bg-gray-800 rounded-full transition"
                         >
-                            <ArrowLeft className="w-5 h-5" />
+                            <ArrowLeft className="w-5 h-5 text-gray-400" />
                         </button>
                         <div className="flex flex-col">
-                            <span className="text-xs text-[var(--color-text-tertiary)]">Balance</span>
-                            <span className="text-base font-bold">₹{userData.balance.toLocaleString()}</span>
-                        </div>
-                        <div className="text-sm">
-                            <span className="text-[var(--color-text-tertiary)]">Rank:</span>
-                            <span className="font-semibold ml-1">{userData.rankPoints}</span>
+                            <span className="text-xs text-gray-500">Balance</span>
+                            <span className="text-base font-bold text-gray-100">₹{balance.toLocaleString()}</span>
                         </div>
                     </div>
 
-                    {/* Right: Profile */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-yellow-900" />
+                    {/* Right: Connection Status */}
+                    <div className="flex items-center gap-3">
+                        {isConnected ? (
+                            <Wifi className="w-5 h-5 text-green-400" />
+                        ) : (
+                            <WifiOff className="w-5 h-5 text-red-400" />
+                        )}
+                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-white" />
+                        </div>
                     </div>
                 </div>
             </header>
@@ -126,8 +270,8 @@ export default function LiveBidPage() {
                 {/* Shutter */}
                 <Shutter
                     status={status}
-                    rankTier={auctionData.rankTier}
-                    startingPrice={auctionData.startingPrice}
+                    rankTier={auction.rankTier}
+                    startingPrice={Number(auction.startingPrice)}
                     currentBid={currentBid}
                     countdown={countdown}
                     onRevealComplete={handleRevealComplete}
@@ -135,44 +279,46 @@ export default function LiveBidPage() {
 
                 {/* Bid Feed */}
                 {status === 'bidding' && (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                        <h3 className="font-bold text-[var(--color-text-primary)]">Live Bids</h3>
-                        <AnimatePresence>
-                            {bids.map((bid, index) => (
-                                <motion.div
-                                    key={bid.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{
-                                        opacity: 1,
-                                        x: 0,
-                                        scale: index === 0 && countdown === 0 ? 1.05 : 1,
-                                    }}
-                                    className={`
-                    flex items-start gap-3 p-3 rounded-lg bg-white
-                    ${index === 0 && countdown === 0 ? 'ring-2 ring-green-500 shadow-lg' : 'shadow-sm'}
-                  `}
-                                >
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                                        <User className="w-6 h-6 text-white" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-semibold text-[var(--color-text-primary)]">
-                                                {bid.username}
-                                            </span>
-                                            {index === 0 && countdown === 0 && (
-                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                                                    WINNER 🎉
-                                                </span>
-                                            )}
+                    <div className="space-y-3">
+                        <h3 className="font-bold text-gray-100">Live Bids</h3>
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                            <AnimatePresence>
+                                {bids.map((bid, index) => (
+                                    <motion.div
+                                        key={bid.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{
+                                            opacity: 1,
+                                            x: 0,
+                                            scale: index === 0 && countdown === 0 ? 1.05 : 1,
+                                        }}
+                                        className={`
+                                            flex items-start gap-3 p-3 rounded-lg bg-gray-800
+                                            ${index === 0 && countdown === 0 ? 'ring-2 ring-green-500 shadow-lg' : 'shadow-sm'}
+                                        `}
+                                    >
+                                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
+                                            <User className="w-6 h-6 text-white" />
                                         </div>
-                                        <p className="text-lg font-bold text-yellow-700">
-                                            ₹{bid.amount.toLocaleString()}
-                                        </p>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-semibold text-gray-100">
+                                                    {bid.username}
+                                                </span>
+                                                {index === 0 && countdown === 0 && (
+                                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">
+                                                        WINNER 🎉
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-lg font-bold text-cyan-400">
+                                                ₹{bid.amount.toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 )}
 
@@ -181,31 +327,31 @@ export default function LiveBidPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="card-elevated text-center py-8"
+                        className="card text-center py-8"
                     >
                         <p className="text-6xl mb-4">🎉</p>
-                        <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                            {winner.username === 'You' ? 'You Won!' : `${winner.username} Wins!`}
+                        <h2 className="text-2xl font-bold text-gray-100 mb-2">
+                            {winner.username} Wins!
                         </h2>
-                        <p className="text-lg text-[var(--color-text-secondary)]">
-                            Final Bid: <span className="font-bold text-yellow-700">₹{winner.amount.toLocaleString()}</span>
+                        <p className="text-lg text-gray-400">
+                            Final Bid: <span className="font-bold text-cyan-400">₹{winner.amount.toLocaleString()}</span>
                         </p>
                     </motion.div>
                 )}
             </main>
 
             {/* Action Buttons (only during bidding) */}
-            {status === 'bidding' && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--color-border)] p-4 pb-safe">
-                    <div className="container">
+            {status === 'bidding' && countdown > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-gray-800 p-4">
+                    <div className="container max-w-lg mx-auto">
                         {showCustomInput ? (
                             <div className="space-y-3">
                                 <input
                                     type="number"
                                     value={customBidAmount}
                                     onChange={(e) => setCustomBidAmount(e.target.value)}
-                                    placeholder={`Min: ₹${currentBid + 1}`}
-                                    className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-lg font-semibold text-lg"
+                                    placeholder={`Min: ₹${currentBid + 100}`}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 font-semibold text-lg outline-none focus:ring-2 focus:ring-cyan-500"
                                     autoFocus
                                 />
                                 <div className="flex gap-3">
@@ -220,9 +366,10 @@ export default function LiveBidPage() {
                                     </button>
                                     <button
                                         onClick={handleCustomBid}
+                                        disabled={bidding}
                                         className="flex-1 btn btn-primary py-3"
                                     >
-                                        Place Bid
+                                        {bidding ? 'Placing...' : 'Place Bid'}
                                     </button>
                                 </div>
                             </div>
@@ -236,9 +383,10 @@ export default function LiveBidPage() {
                                 </button>
                                 <button
                                     onClick={() => handleBid()}
+                                    disabled={bidding}
                                     className="flex-1 btn btn-primary py-4 text-base font-bold"
                                 >
-                                    ₹{(currentBid + 1000).toLocaleString()}
+                                    {bidding ? 'Placing...' : `₹${(currentBid + 1000).toLocaleString()}`}
                                 </button>
                                 <button
                                     onClick={() => setShowCustomInput(true)}
@@ -249,6 +397,13 @@ export default function LiveBidPage() {
                             </div>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Connection Lost Banner */}
+            {!isConnected && (
+                <div className="fixed top-16 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-semibold z-[199]">
+                    ⚠️ Connection lost. Reconnecting...
                 </div>
             )}
         </div>
