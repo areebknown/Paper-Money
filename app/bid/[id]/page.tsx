@@ -110,11 +110,29 @@ export default function LiveBidPage() {
         if (!auctionId) return;
 
         const pusher = getPusherClient();
+        console.log('[Pusher] Initializing connection for auction:', auctionId);
+
+        // Connection state monitoring
+        pusher.connection.bind('state_change', (states: any) => {
+            console.log('[Pusher] State change:', states.current);
+            setIsConnected(states.current === 'connected');
+        });
+
+        pusher.connection.bind('error', (err: any) => {
+            console.error('[Pusher] Connection Error:', err);
+            if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
+                console.error('[Pusher] Missing NEXT_PUBLIC_PUSHER_KEY');
+            }
+        });
+
         const channel = pusher.subscribe(`auction-${auctionId}`);
 
-        // Connection state
-        pusher.connection.bind('state_change', (states: any) => {
-            setIsConnected(states.current === 'connected');
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.log('[Pusher] Successfully subscribed to channel');
+        });
+
+        channel.bind('pusher:subscription_error', (err: any) => {
+            console.error('[Pusher] Subscription Error:', err);
         });
 
         // New bid event
@@ -147,6 +165,7 @@ export default function LiveBidPage() {
         });
 
         return () => {
+            console.log('[Pusher] Cleaning up connection');
             channel.unbind_all();
             channel.unsubscribe();
         };
