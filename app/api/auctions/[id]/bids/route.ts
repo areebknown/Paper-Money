@@ -12,7 +12,7 @@ export async function GET(
         const bids = await prisma.auctionBid.findMany({
             where: { auctionId },
             include: {
-                user: {
+                bidder: {
                     select: {
                         id: true,
                         username: true,
