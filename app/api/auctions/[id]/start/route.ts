@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { pusherServer } from '@/lib/pusher-server';
+import { startAuctionService } from '@/lib/auction-service';
 
 export async function POST(
     req: Request,
@@ -9,31 +8,23 @@ export async function POST(
     try {
         const { id } = await params;
 
-        // 1. Update Auction in DB
-        const auction = await prisma.auction.update({
-            where: { id },
-            data: {
-                status: 'LIVE',
-                startedAt: new Date(),
-            },
-        });
+        console.log(`[ManualStart] Request received for ${id}`);
 
-        // 2. Trigger Pusher Event (for immediate UI update)
-        await pusherServer.trigger(`auction-${id}`, 'status-change', {
-            status: 'LIVE',
-            auctionId: id,
-        });
+        const result = await startAuctionService(id);
 
-        // 3. Trigger Global Event (optional, for home page updates)
-        await pusherServer.trigger('global-auctions', 'auction-started', {
-            id,
-            name: auction.name,
-            status: 'LIVE',
-        });
+        if (!result.success) {
+            return NextResponse.json(
+                { error: result.message, auction: result.auction },
+                { status: 400 }
+            );
+        }
 
-        return NextResponse.json({ success: true, auction });
-    } catch (error) {
+        return NextResponse.json(result);
+    } catch (error: any) {
         console.error('POST /api/auctions/[id]/start error:', error);
-        return NextResponse.json({ error: 'Failed to start auction' }, { status: 500 });
+        return NextResponse.json(
+            { error: error.message || 'Failed to start auction' },
+            { status: 500 }
+        );
     }
 }

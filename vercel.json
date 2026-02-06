@@ -1,8 +1,8 @@
 {
     "crons": [
         {
-            "path": "/api/market/sync",
-            "schedule": "30 18 * * *"
+            "path": "/api/cron/check-auctions",
+            "schedule": "* * * * *"
         }
     ]
 }
