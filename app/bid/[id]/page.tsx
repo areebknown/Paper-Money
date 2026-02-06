@@ -2,445 +2,266 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, ArrowLeft, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Wifi, WifiOff, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Shutter from '@/components/Shutter';
 import { getPusherClient } from '@/lib/pusher-client';
 
-type AuctionStatus = 'locked' | 'revealing' | 'bidding' | 'completed';
+// New Components
+import AuctionShutter from '@/components/auction/AuctionShutter';
+import AuctionLock from '@/components/auction/AuctionLock';
+import BidStream, { BidMessage } from '@/components/auction/BidStream';
 
-interface Bid {
-    id: string;
-    username: string;
-    amount: number;
-    timestamp: Date;
-}
-
-interface AuctionData {
-    id: string;
-    name: string;
-    rankTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
-    startingPrice: number;
-    currentPrice: number;
-    status: string;
-    startsAt: Date;
-    endedAt: Date;
-}
+type AuctionPhase = 'PRE_OPEN' | 'OPENING' | 'REVEAL' | 'CLOSING' | 'BIDDING' | 'COMPLETED';
 
 export default function LiveBidPage() {
     const params = useParams();
     const router = useRouter();
-    const [status, setStatus] = useState<AuctionStatus>('locked');
-    const [countdown, setCountdown] = useState(0);
-    const [currentBid, setCurrentBid] = useState(0);
-    const [customBidAmount, setCustomBidAmount] = useState('');
-    const [showCustomInput, setShowCustomInput] = useState(false);
-    const [bids, setBids] = useState<Bid[]>([]);
-    const [auction, setAuction] = useState<AuctionData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const auctionId = params.id as string;
+
+    // --- State ---
+    const [phase, setPhase] = useState<AuctionPhase>('PRE_OPEN');
     const [balance, setBalance] = useState(0);
+    const [currentPrice, setCurrentPrice] = useState(0);
+    const [bids, setBids] = useState<BidMessage[]>([]);
     const [isConnected, setIsConnected] = useState(true);
     const [bidding, setBidding] = useState(false);
 
-    const auctionId = params.id as string;
+    // Timers
+    const [startCountdown, setStartCountdown] = useState(5); // 0-5s
+    const [shutterCountdown, setShutterCountdown] = useState(5); // 10-15s
+    const [bidCountdown, setBidCountdown] = useState(10); // The "Going once..." timer
 
-    // Fetch auction data
+    // Data
+    const [auctionData, setAuctionData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<{ id: string, username: string } | null>(null);
+
+    // --- 1. Init & Sync ---
     useEffect(() => {
-        async function fetchAuction() {
+        const init = async () => {
             try {
-                const res = await fetch(`/api/auctions/${auctionId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setAuction(data.auction);
-                    setCurrentBid(Number(data.auction.currentPrice) || Number(data.auction.startingPrice));
-
-                    // Calculate countdown
-                    const endedAt = new Date(data.auction.endedAt);
-                    const now = new Date();
-                    const remaining = Math.max(0, Math.floor((endedAt.getTime() - now.getTime()) / 1000));
-                    setCountdown(remaining);
-
-                    // Set status based on auction state
-                    if (data.auction.status === 'LIVE') {
-                        setStatus('bidding');
-                    } else if (data.auction.status === 'ENDED') {
-                        setStatus('completed');
-                    }
-
-                    // Fetch bids
-                    const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
-                    if (bidsRes.ok) {
-                        const bidsData = await bidsRes.json();
-                        setBids(bidsData.bids.map((b: any) => ({
-                            id: b.id,
-                            username: b.user.username,
-                            amount: Number(b.amount),
-                            timestamp: new Date(b.createdAt),
-                        })));
-                    }
+                // Fetch User
+                const userRes = await fetch('/api/user');
+                if (userRes.ok) {
+                    const uData = await userRes.json();
+                    setCurrentUser(uData.user);
+                    setBalance(Number(uData.user.balance));
                 }
+
+                // Fetch Auction
+                const res = await fetch(`/api/auctions/${auctionId}`);
+                if (!res.ok) throw new Error('Auction not found');
+                const data = await res.json();
+                setAuctionData(data.auction);
+                setCurrentPrice(Number(data.auction.currentPrice));
+
+                // Fetch Bids
+                const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
+                if (bidsRes.ok) {
+                    const bData = await bidsRes.json();
+                    // Transform to Chat Messages
+                    const msgs = bData.bids.map((b: any) => ({
+                        id: b.id,
+                        username: b.user.username,
+                        amount: Number(b.amount),
+                        isMine: b.userId === data.auction.winnerId, // Loose check, better is b.userId === currentUser.id
+                        timestamp: new Date(b.createdAt).getTime(),
+                        type: 'QUICK'
+                    }));
+                    setBids(msgs.reverse()); // Newest first
+                }
+
                 setLoading(false);
-            } catch (error) {
-                console.error('Failed to fetch auction:', error);
+            } catch (e) {
+                console.error(e);
                 setLoading(false);
             }
-        }
-
-        fetchAuction();
+        };
+        init();
     }, [auctionId]);
 
-    // Fetch user balance
+    // --- 2. The "Show" Logic (Time Sync) ---
     useEffect(() => {
-        async function fetchBalance() {
-            try {
-                const res = await fetch('/api/user');
-                if (res.ok) {
-                    const data = await res.json();
-                    setBalance(Number(data.user.balance));
-                }
-            } catch (error) {
-                console.error('Failed to fetch balance:', error);
-            }
-        }
-        fetchBalance();
-    }, []);
+        if (!auctionData) return;
 
-    // Pusher WebSocket subscription
-    useEffect(() => {
-        if (!auctionId) return;
-
-        const pusher = getPusherClient();
-        console.log('[Pusher] Initializing connection for auction:', auctionId);
-
-        // Connection state monitoring
-        pusher.connection.bind('state_change', (states: any) => {
-            console.log('[Pusher] State change:', states.current);
-            setIsConnected(states.current === 'connected');
-        });
-
-        pusher.connection.bind('error', (err: any) => {
-            console.error('[Pusher] Connection Error:', err);
-            if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
-                console.error('[Pusher] Missing NEXT_PUBLIC_PUSHER_KEY');
-            }
-        });
-
-        const channel = pusher.subscribe(`auction-${auctionId}`);
-
-        channel.bind('pusher:subscription_succeeded', () => {
-            console.log('[Pusher] Successfully subscribed to channel');
-        });
-
-        channel.bind('pusher:subscription_error', (err: any) => {
-            console.error('[Pusher] Subscription Error:', err);
-        });
-
-        // New bid event
-        channel.bind('new-bid', (data: any) => {
-            console.log('[Pusher] New bid received:', data);
-            setCurrentBid(data.amount);
-            setBids(prev => [
-                {
-                    id: data.bidId,
-                    username: data.username,
-                    amount: data.amount,
-                    timestamp: new Date(data.timestamp),
-                },
-                ...prev,
-            ]);
-
-            // Extend countdown if needed
-            if (data.timeExtended && countdown < 30) {
-                setCountdown(prev => Math.min(prev + 10, 30));
-            }
-        });
-
-        // Auction status change
-        channel.bind('status-change', (data: any) => {
-            console.log('[Pusher] Status change:', data);
-            if (data.status === 'ENDED') {
-                setStatus('completed');
-                setCountdown(0);
-            }
-        });
-
-        return () => {
-            console.log('[Pusher] Cleaning up connection');
-            channel.unbind_all();
-            channel.unsubscribe();
-        };
-    }, [auctionId, countdown]);
-
-    // Client-side countdown
-    useEffect(() => {
-        if (status === 'bidding' && countdown > 0) {
-            const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-            return () => clearTimeout(timer);
-        } else if (status === 'bidding' && countdown === 0) {
-            setStatus('completed');
-        }
-    }, [status, countdown]);
-
-    const handleRevealComplete = () => {
-        setStatus('bidding');
-    };
-
-    const handleBid = async (amount?: number) => {
-        const bidAmount = amount || currentBid + 1000;
-
-        if (bidding) return; // Prevent double-click
-
-        if (bidAmount > balance) {
-            alert('Insufficient balance!');
+        // If completed, just show it
+        if (auctionData.status === 'COMPLETED' || auctionData.status === 'ENDED') {
+            setPhase('COMPLETED');
             return;
         }
 
-        setBidding(true);
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const start = new Date(auctionData.startedAt).getTime();
+            const diff = (now - start) / 1000; // Seconds since start
 
-        try {
-            const res = await fetch('/api/bid/place', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    auctionId,
-                    amount: bidAmount,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                setBalance(data.newBalance);
-                setShowCustomInput(false);
-                setCustomBidAmount('');
+            if (diff < 5) {
+                setPhase('PRE_OPEN');
+                setStartCountdown(Math.max(0, Math.ceil(5 - diff)));
+            } else if (diff >= 5 && diff < 10) {
+                setPhase('OPENING'); // Lock breaks, Shutter opens
+            } else if (diff >= 10 && diff < 15) {
+                setPhase('REVEAL');
+                setShutterCountdown(Math.max(0, Math.ceil(15 - diff)));
+            } else if (diff >= 15 && diff < 16) {
+                setPhase('CLOSING'); // Shutter closes
             } else {
-                alert(data.error || 'Failed to place bid');
+                setPhase('BIDDING');
             }
-        } catch (error) {
-            console.error('Bid error:', error);
-            alert('Network error. Please try again.');
-        } finally {
-            setBidding(false);
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [auctionData]);
+
+    // --- 3. Pusher Events ---
+    useEffect(() => {
+        const client = getPusherClient();
+        const channel = client.subscribe(`auction-${auctionId}`);
+
+        channel.bind('status-change', (data: any) => {
+            if (data.status === 'LIVE' && auctionData) {
+                // Update startedAt to sync animation
+                setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
+            }
+            if (data.status === 'COMPLETED' || data.status === 'ENDED') {
+                setPhase('COMPLETED');
+            }
+        });
+
+        channel.bind('new-bid', (data: any) => {
+            setCurrentPrice(data.amount);
+            setBidCountdown(10); // Reset timer
+
+            // Add chat bubble
+            setBids(prev => [{
+                id: data.bidId || Math.random().toString(),
+                username: data.username,
+                amount: data.amount,
+                isMine: currentUser ? data.userId === currentUser.id : false,
+                timestamp: Date.now(),
+                type: 'QUICK' // or Custom
+            }, ...prev]);
+        });
+
+        return () => channel.unsubscribe();
+    }, [auctionId, auctionData, currentUser]);
+
+    // --- 4. Bidding Countdown (The "Going Once" timer) ---
+    useEffect(() => {
+        if (phase === 'BIDDING' && bidCountdown > 0) {
+            const t = setTimeout(() => setBidCountdown(p => p - 1), 1000);
+            return () => clearTimeout(t);
         }
+    }, [phase, bidCountdown]);
+
+
+    // --- Handlers ---
+    const placeBid = async (amount: number) => {
+        if (bidding || phase !== 'BIDDING') return;
+        setBidding(true);
+        try {
+            await fetch('/api/bid/place', {
+                method: 'POST',
+                body: JSON.stringify({ auctionId, amount })
+            });
+            // Optimistic update handled by Pusher
+        } catch (e) { alert('Error placing bid'); }
+        finally { setBidding(false); }
     };
 
-    const handleCustomBid = () => {
-        const amount = parseInt(customBidAmount);
-        if (isNaN(amount) || amount <= currentBid) {
-            alert('Bid must be higher than current bid!');
-            return;
-        }
-        handleBid(amount);
-    };
-
-    const winner = status === 'completed' && bids.length > 0 ? bids[0] : null;
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-gray-400">Loading auction...</div>
-            </div>
-        );
-    }
-
-    if (!auction) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-red-400">Auction not found</div>
-            </div>
-        );
-    }
+    if (loading) return <div className="bg-black text-white h-screen flex items-center justify-center">Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-6">
-            {/* Header */}
-            <header className="sticky top-0 z-[200] bg-slate-900 border-b border-gray-800 px-4 py-3">
-                <div className="flex items-center justify-between">
-                    {/* Left: Back + Balance */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 hover:bg-gray-800 rounded-full transition"
-                        >
-                            <ArrowLeft className="w-5 h-5 text-gray-400" />
-                        </button>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500">Balance</span>
-                            <span className="text-base font-bold text-gray-100">₹{balance.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    {/* Right: Connection Status */}
-                    <div className="flex items-center gap-3">
-                        {isConnected ? (
-                            <Wifi className="w-5 h-5 text-green-400" />
-                        ) : (
-                            <WifiOff className="w-5 h-5 text-red-400" />
-                        )}
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-full flex items-center justify-center">
-                            <User className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-black text-white font-sans overflow-hidden flex flex-col">
+            {/* Top Bar */}
+            <header className="p-4 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-50">
+                <button onClick={() => router.back()}><ArrowLeft /></button>
+                <div className="font-bold text-green-400">₹{balance.toLocaleString()}</div>
+                <div className="flex gap-2">
+                    {isConnected ? <Wifi className="text-green-500" /> : <WifiOff className="text-red-500" />}
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="container py-6 space-y-6">
-                {/* Shutter */}
-                <Shutter
-                    status={status}
-                    rankTier={auction.rankTier}
-                    startingPrice={Number(auction.startingPrice)}
-                    currentBid={currentBid}
-                    countdown={countdown}
-                    onRevealComplete={handleRevealComplete}
-                />
+            {/* Main Stage */}
+            <main className="flex-1 relative flex flex-col">
 
-                {/* Bid Feed */}
-                {status === 'bidding' && (
-                    <div className="space-y-3">
-                        <h3 className="font-bold text-gray-100">Live Bids</h3>
-                        <div className="max-h-64 overflow-y-auto space-y-2">
-                            <AnimatePresence>
-                                {bids.map((bid, index) => (
-                                    <motion.div
-                                        key={bid.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{
-                                            opacity: 1,
-                                            x: 0,
-                                            scale: index === 0 && countdown === 0 ? 1.05 : 1,
-                                        }}
-                                        className={`
-                                            flex items-start gap-3 p-3 rounded-lg bg-gray-800
-                                            ${index === 0 && countdown === 0 ? 'ring-2 ring-green-500 shadow-lg' : 'shadow-sm'}
-                                        `}
-                                    >
-                                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
-                                            <User className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-semibold text-gray-100">
-                                                    {bid.username}
-                                                </span>
-                                                {index === 0 && countdown === 0 && (
-                                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">
-                                                        WINNER 🎉
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-lg font-bold text-cyan-400">
-                                                ₹{bid.amount.toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </motion.div>
+                {/* 1. The Shutter & Artifacts */}
+                <div className="relative z-10">
+                    <AuctionLock
+                        isLocked={phase === 'PRE_OPEN'}
+                        countdown={startCountdown}
+                    />
+
+                    <AuctionShutter status={phase}>
+                        {/* The Content Inside the Shutter (Brick Wall BG is in component) */}
+                        <div className="text-center p-6 bg-black/50 backdrop-blur-md rounded-xl border border-white/10 m-4">
+                            <div className="text-yellow-400 text-lg font-bold mb-2">
+                                {auctionData?.rankTier} TIER
+                            </div>
+                            <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">
+                                {auctionData?.name}
+                            </h1>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                {auctionData?.artifacts?.map((a: any, i: number) => (
+                                    <span key={i} className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-200 text-sm">
+                                        {a.artifact.name}
+                                    </span>
                                 ))}
-                            </AnimatePresence>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    </AuctionShutter>
+                </div>
 
-                {/* Winner Announcement */}
-                {status === 'completed' && winner && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="card text-center py-8"
-                    >
-                        <p className="text-6xl mb-4">🎉</p>
-                        <h2 className="text-2xl font-bold text-gray-100 mb-2">
-                            {winner.username} Wins!
-                        </h2>
-                        <p className="text-lg text-gray-400">
-                            Final Bid: <span className="font-bold text-cyan-400">₹{winner.amount.toLocaleString()}</span>
-                        </p>
-                    </motion.div>
-                )}
+                {/* 2. Info / Timer Bar */}
+                <div className="bg-gray-900 p-2 text-center text-xs font-mono uppercase tracking-widest text-gray-500 border-y border-gray-800">
+                    {phase === 'PRE_OPEN' && 'Secure Channel Logic Initializing...'}
+                    {phase === 'OPENING' && 'Security Shutter Disengaging...'}
+                    {phase === 'REVEAL' && <span className="text-red-400 animate-pulse">SHUTTER CLOSING IN {shutterCountdown}s</span>}
+                    {phase === 'CLOSING' && 'Engaging Privacy Shields...'}
+                    {phase === 'BIDDING' && (
+                        <span className={bidCountdown < 4 ? 'text-red-500 font-bold' : 'text-green-500'}>
+                            {bidCountdown === 0 ? 'SOLD (Processing...)' : `Time Remaining: ${bidCountdown}s`}
+                        </span>
+                    )}
+                    {phase === 'COMPLETED' && 'Auction Concluded'}
+                </div>
+
+                {/* 3. The Bid Stream (Chat) */}
+                <div className="flex-1 relative bg-gray-950/50 flex flex-col">
+                    <BidStream bids={bids} />
+                </div>
+
+                {/* 4. Controls */}
+                <div className="p-4 bg-gray-900 border-t border-gray-800 pb-safe">
+                    <div className="flex justify-between items-end mb-4 px-2">
+                        <div className="text-gray-400 text-xs uppercase">Current High</div>
+                        <div className="text-4xl font-black text-cyan-400">₹{currentPrice.toLocaleString()}</div>
+                    </div>
+
+                    <div className="flex gap-3 h-16">
+                        <button
+                            disabled={phase !== 'BIDDING'}
+                            onClick={() => alert('Loan coming soon')}
+                            className="w-20 bg-gray-800 rounded-xl flex flex-col items-center justify-center disabled:opacity-30 active:scale-95 transition"
+                        >
+                            <span className="text-xl">💰</span>
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Loan</span>
+                        </button>
+
+                        <button
+                            disabled={phase !== 'BIDDING' || bidCountdown === 0}
+                            onClick={() => placeBid(currentPrice + 1000)}
+                            className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl flex items-center justify-between px-6 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-30 disabled:grayscale transition shadow-lg shadow-cyan-900/20 active:scale-95"
+                        >
+                            <div className="flex flex-col text-left">
+                                <span className="text-[10px] font-bold text-cyan-100/70 uppercase">Quick Bid</span>
+                                <span className="text-xl font-black text-white">+ ₹1000</span>
+                            </div>
+                            <div className="text-3xl font-thin opacity-50">IsMine?</div>
+                        </button>
+                    </div>
+                </div>
             </main>
-
-            {/* Action Buttons (Show if LIVE/BIDDING) */}
-            {(['LIVE', 'BIDDING', 'REVEALING'].includes(status)) && (
-                <div className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-white/10 p-4 pb-safe z-[150]">
-                    <div className="container max-w-lg mx-auto">
-                        {showCustomInput ? (
-                            <div className="space-y-3 animate-in slide-in-from-bottom-5">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs text-gray-400">Enter amount greater than</span>
-                                    <span className="text-xs font-bold text-cyan-400">₹{(currentBid + 100).toLocaleString()}</span>
-                                </div>
-                                <input
-                                    type="number"
-                                    value={customBidAmount}
-                                    onChange={(e) => setCustomBidAmount(e.target.value)}
-                                    placeholder="Enter bid amount..."
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-100 font-bold text-xl outline-none focus:ring-2 focus:ring-cyan-500 transition-all placeholder:text-gray-600 placeholder:text-base placeholder:font-normal"
-                                    autoFocus
-                                />
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => {
-                                            setShowCustomInput(false);
-                                            setCustomBidAmount('');
-                                        }}
-                                        className="flex-1 py-3 font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-xl transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleCustomBid}
-                                        disabled={bidding}
-                                        className="flex-[2] py-3 font-bold text-black bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition shadow-lg shadow-cyan-900/20"
-                                    >
-                                        {bidding ? 'Placing...' : 'Confirm Bid'}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => alert('Loan feature coming soon!')}
-                                    className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition flex flex-col items-center justify-center gap-0.5"
-                                >
-                                    <span className="text-lg">💰</span>
-                                    <span className="text-[10px] uppercase tracking-wide">Loan</span>
-                                </button>
-                                <button
-                                    onClick={() => handleBid()}
-                                    disabled={bidding || !isConnected}
-                                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xl shadow-red-900/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center py-2"
-                                >
-                                    <span className="text-xs font-medium opacity-90 uppercase tracking-widest text-red-100">Quick Bid</span>
-                                    <span className="text-2xl font-black tracking-tight">₹{(currentBid + 1000).toLocaleString()}</span>
-                                </button>
-                                <button
-                                    onClick={() => setShowCustomInput(true)}
-                                    className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition flex flex-col items-center justify-center gap-0.5"
-                                >
-                                    <span className="text-lg">✍️</span>
-                                    <span className="text-[10px] uppercase tracking-wide">Custom</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Connection Lost Banner */}
-            {!isConnected && (
-                <div className="fixed top-20 left-4 right-4 bg-red-500/10 border border-red-500/50 backdrop-blur-md rounded-lg p-3 flex items-center justify-between z-[200]">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <span className="text-red-200 text-xs font-medium">Reconnecting...</span>
-                    </div>
-                    {/* Explicit Debug Info */}
-                    <div className="text-[10px] text-red-400 font-mono opacity-75">
-                        DEBUG: KEY_STATUS={process.env.NEXT_PUBLIC_PUSHER_KEY ? 'PRESENT' : 'MISSING'} |
-                        KEY_VAL={process.env.NEXT_PUBLIC_PUSHER_KEY ? process.env.NEXT_PUBLIC_PUSHER_KEY.substring(0, 5) + '...' : 'NULL'} |
-                        CLUSTER={process.env.NEXT_PUBLIC_PUSHER_CLUSTER}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
