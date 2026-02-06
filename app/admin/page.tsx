@@ -1,103 +1,109 @@
 'use client';
 
 import React from 'react';
-import { Users, Gavel, Package, FileText, TrendingUp } from 'lucide-react';
+import { Users, Gavel, Package, FileText, Plus, TrendingUp, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
-    // Mock stats
-    const stats = {
-        totalUsers: 1247,
-        activeAuctions: 5,
-        totalArtifacts: 38,
-        activeContracts: 12,
-    };
-
-    const recentActivity = [
-        { id: '1', type: 'bid', user: 'user123', message: 'Placed bid on Shutter #127', time: '2 mins ago' },
-        { id: '2', type: 'win', user: 'player456', message: 'Won Ancient Vase', time: '15 mins ago' },
-        { id: '3', type: 'signup', user: 'newbie789', message: 'New user registered', time: '1 hour ago' },
-    ];
-
     return (
-        <div className="px-6 py-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="p-8 max-w-7xl mx-auto">
+            {/* Welcome Section */}
+            <div className="mb-10">
+                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 mb-2">
+                    Command Center
+                </h1>
+                <p className="text-gray-400">Manage your Bid Wars empire.</p>
+            </div>
+
+            {/* Quick Actions Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <QuickActionCard
+                    href="/admin/auctions/new"
+                    icon={<Gavel className="w-8 h-8 text-red-400" />}
+                    title="Create Auction"
+                    description="Schedule a new bidding event."
+                    gradient="from-red-900/40 to-red-900/10"
+                    borderColor="border-red-800/50"
+                />
+                <QuickActionCard
+                    href="/admin/artifacts/new"
+                    icon={<Package className="w-8 h-8 text-purple-400" />}
+                    title="Mint Artifact"
+                    description="Create new rare items."
+                    gradient="from-purple-900/40 to-purple-900/10"
+                    borderColor="border-purple-800/50"
+                />
+                <QuickActionCard
+                    href="/admin/contracts"
+                    icon={<FileText className="w-8 h-8 text-blue-400" />}
+                    title="Manage Contracts"
+                    description="View player agreements."
+                    gradient="from-blue-900/40 to-blue-900/10"
+                    borderColor="border-blue-800/50"
+                />
+            </div>
+
+            {/* Stats Overview */}
+            <h2 className="text-xl font-bold text-gray-200 mb-6 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+                Live Overview
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
-                    icon={<Users className="w-6 h-6 text-blue-400" />}
+                    icon={<Users className="w-5 h-5 text-blue-400" />}
                     label="Total Users"
-                    value={stats.totalUsers.toString()}
-                    bgColor="bg-blue-500/10"
+                    value="1,247"
+                    trend="+12%"
                 />
                 <StatCard
-                    icon={<Gavel className="w-6 h-6 text-green-400" />}
+                    icon={<Gavel className="w-5 h-5 text-green-400" />}
                     label="Active Auctions"
-                    value={stats.activeAuctions.toString()}
-                    bgColor="bg-green-500/10"
+                    value="5"
+                    trend="+2"
                 />
                 <StatCard
-                    icon={<Package className="w-6 h-6 text-purple-400" />}
-                    label="Total Artifacts"
-                    value={stats.totalArtifacts.toString()}
-                    bgColor="bg-purple-500/10"
+                    icon={<Package className="w-5 h-5 text-purple-400" />}
+                    label="Artifacts"
+                    value="38"
+                    trend="+5"
                 />
                 <StatCard
-                    icon={<FileText className="w-6 h-6 text-yellow-400" />}
-                    label="Active Contracts"
-                    value={stats.activeContracts.toString()}
-                    bgColor="bg-yellow-500/10"
+                    icon={<Shield className="w-5 h-5 text-yellow-400" />}
+                    label="Revenue"
+                    value="₹1.2M"
+                    trend="+8%"
                 />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="card mb-8">
-                <h2 className="text-lg font-bold text-gray-100 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    <Link href="/admin/auctions/new" className="btn btn-primary py-4">
-                        <Gavel className="w-5 h-5" />
-                        Create Auction
-                    </Link>
-                    <Link href="/admin/artifacts/new" className="btn btn-secondary py-4">
-                        <Package className="w-5 h-5" />
-                        Add Artifact
-                    </Link>
-                </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="card">
-                <h2 className="text-lg font-bold text-gray-100 mb-4">Recent Activity</h2>
-                <div className="space-y-3">
-                    {recentActivity.map((activity) => (
-                        <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
-                            <div className="w-2 h-2 bg-green-400 rounded-full mt-2" />
-                            <div className="flex-1">
-                                <p className="text-sm text-gray-100">{activity.message}</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {activity.user} •{activity.time}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
             </div>
         </div>
     );
 }
 
-function StatCard({ icon, label, value, bgColor }: {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    bgColor: string;
-}) {
+function QuickActionCard({ href, icon, title, description, gradient, borderColor }: any) {
     return (
-        <div className="card">
-            <div className={`w-12 h-12 rounded-lg ${bgColor} flex items-center justify-center mb-3`}>
+        <Link href={href} className={`group relative p-6 rounded-2xl border ${borderColor} bg-gradient-to-br ${gradient} hover:scale-[1.02] transition-all duration-300 overflow-hidden`}>
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 {icon}
             </div>
-            <div className="text-3xl font-bold text-gray-100 mb-1">{value}</div>
-            <div className="text-sm text-gray-400">{label}</div>
+            <div className="relative z-10">
+                <div className="p-3 bg-gray-950/50 rounded-xl w-fit mb-4 backdrop-blur-sm border border-white/5 group-hover:border-white/20 transition-colors">
+                    {icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-100 mb-1">{title}</h3>
+                <p className="text-sm text-gray-400">{description}</p>
+            </div>
+        </Link>
+    );
+}
+
+function StatCard({ icon, label, value, trend }: any) {
+    return (
+        <div className="p-5 bg-[#0a0a0a] border border-gray-800 rounded-xl hover:border-gray-700 transition-colors">
+            <div className="flex items-start justify-between mb-4">
+                <div className="p-2 bg-gray-900 rounded-lg">{icon}</div>
+                <span className="text-xs font-medium text-green-400 bg-green-900/20 px-2 py-1 rounded-full">{trend}</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-100 mb-1">{value}</div>
+            <div className="text-xs text-gray-500">{label}</div>
         </div>
     );
 }
