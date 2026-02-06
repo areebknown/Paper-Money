@@ -56,3 +56,38 @@ export async function startAuctionService(auctionId: string) {
 
     return { success: true, auction: updatedAuction };
 }
+
+/**
+ * Checks for any SCHEDULED auctions that should be LIVE and starts them.
+ * This is designed to be called "lazily" when users visit the site.
+ */
+export async function checkAndStartDueAuctions() {
+    try {
+        const now = new Date();
+        // Find auctions that are SCHEDULED and past their start time
+        const dueAuctions = await prisma.auction.findMany({
+            where: {
+                status: 'SCHEDULED',
+                scheduledAt: { lte: now }
+            },
+            select: { id: true, name: true }
+        });
+
+        if (dueAuctions.length === 0) return { started: 0 };
+
+        console.log(`[LazyStart] Found ${dueAuctions.length} due auctions. Starting...`);
+
+        // Start them all nicely
+        const results = await Promise.allSettled(
+            dueAuctions.map(a => startAuctionService(a.id))
+        );
+
+        const startedCount = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`[LazyStart] Successfully started ${startedCount}/${dueAuctions.length} auctions.`);
+
+        return { started: startedCount };
+    } catch (error) {
+        console.error('[LazyStart] Error:', error);
+        return { started: 0, error };
+    }
+}

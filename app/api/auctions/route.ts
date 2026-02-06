@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { checkAndStartDueAuctions } from '@/lib/auction-service';
 
 // GET /api/auctions - List auctions with optional status filter
 export async function GET(req: Request) {
     try {
+        // LAZY START TRIGGER: Check if any auctions need to start now
+        await checkAndStartDueAuctions();
+
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status');
 
