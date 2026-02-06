@@ -16,10 +16,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid bid data' }, { status: 400 });
         }
 
-        // Get auction with artifact
+        // Get auction with artifacts
         const auction = await prisma.auction.findUnique({
             where: { id: auctionId },
-            include: { artifact: true },
+            include: {
+                artifacts: {
+                    include: {
+                        artifact: true,
+                    },
+                },
+            },
         });
 
         if (!auction) {
@@ -76,7 +82,7 @@ export async function POST(req: Request) {
         const bid = await prisma.auctionBid.create({
             data: {
                 auctionId,
-                userId: user.userId,
+                bidderId: user.userId,
                 amount,
             },
         });
