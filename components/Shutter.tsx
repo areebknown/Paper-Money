@@ -6,7 +6,7 @@ import { Lock } from 'lucide-react';
 
 interface ShutterProps {
     status: 'locked' | 'revealing' | 'bidding' | 'completed';
-    rankTier: 'GOLD' | 'SILVER' | 'BRONZE';
+    rankTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
     startingPrice: number;
     currentBid?: number;
     countdown?: number;
@@ -32,9 +32,11 @@ export default function Shutter({
     }, [status, isLockShattered]);
 
     const rankConfig = {
-        GOLD: { label: 'Gold', icon: '🥇', gradient: 'from-yellow-400 via-yellow-500 to-yellow-600' },
-        SILVER: { label: 'Silver', icon: '🥈', gradient: 'from-gray-300 via-gray-400 to-gray-500' },
         BRONZE: { label: 'Bronze', icon: '🥉', gradient: 'from-orange-400 via-orange-500 to-orange-600' },
+        SILVER: { label: 'Silver', icon: '🥈', gradient: 'from-gray-300 via-gray-400 to-gray-500' },
+        GOLD: { label: 'Gold', icon: '🥇', gradient: 'from-yellow-400 via-yellow-500 to-yellow-600' },
+        PLATINUM: { label: 'Platinum', icon: '💎', gradient: 'from-cyan-400 via-blue-500 to-purple-600' },
+        DIAMOND: { label: 'Diamond', icon: '💠', gradient: 'from-blue-400 via-cyan-500 to-teal-600' },
     };
 
     const config = rankConfig[rankTier];

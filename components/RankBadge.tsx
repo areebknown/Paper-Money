@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface RankBadgeProps {
-    tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+    tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
     points?: number;
     size?: 'sm' | 'md' | 'lg';
     showPoints?: boolean;
@@ -27,6 +27,11 @@ const TIER_CONFIG = {
         icon: '💎',
         className: 'badge-gold', // Reuse gold styling for now
         label: 'Platinum',
+    },
+    DIAMOND: {
+        icon: '💠',
+        className: 'badge-gold',
+        label: 'Diamond',
     },
 };
 
