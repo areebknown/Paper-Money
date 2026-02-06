@@ -39,6 +39,9 @@ export async function POST(req: Request) {
 
         // Check if auction has ended (server time validation)
         const now = new Date();
+        if (!auction.endedAt) {
+            return NextResponse.json({ error: 'Auction end time not set' }, { status: 400 });
+        }
         const endedAt = new Date(auction.endedAt);
         if (now >= endedAt) {
             return NextResponse.json({ error: 'Auction has ended' }, { status: 400 });
