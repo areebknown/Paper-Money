@@ -21,10 +21,10 @@ interface AuctionData {
     name: string;
     rankTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
     startingPrice: number;
-    currentBid: number;
+    currentPrice: number;
     status: string;
     startsAt: Date;
-    endsAt: Date;
+    endedAt: Date;
 }
 
 export default function LiveBidPage() {
@@ -52,12 +52,12 @@ export default function LiveBidPage() {
                 if (res.ok) {
                     const data = await res.json();
                     setAuction(data.auction);
-                    setCurrentBid(Number(data.auction.currentBid) || Number(data.auction.startingPrice));
+                    setCurrentBid(Number(data.auction.currentPrice) || Number(data.auction.startingPrice));
 
                     // Calculate countdown
-                    const endsAt = new Date(data.auction.endsAt);
+                    const endedAt = new Date(data.auction.endedAt);
                     const now = new Date();
-                    const remaining = Math.max(0, Math.floor((endsAt.getTime() - now.getTime()) / 1000));
+                    const remaining = Math.max(0, Math.floor((endedAt.getTime() - now.getTime()) / 1000));
                     setCountdown(remaining);
 
                     // Set status based on auction state

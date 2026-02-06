@@ -39,8 +39,8 @@ export async function POST(req: Request) {
 
         // Check if auction has ended (server time validation)
         const now = new Date();
-        const endsAt = new Date(auction.endsAt);
-        if (now >= endsAt) {
+        const endedAt = new Date(auction.endedAt);
+        if (now >= endedAt) {
             return NextResponse.json({ error: 'Auction has ended' }, { status: 400 });
         }
 
@@ -101,17 +101,17 @@ export async function POST(req: Request) {
         await prisma.auction.update({
             where: { id: auctionId },
             data: {
-                currentBid: amount,
+                currentPrice: amount,
             },
         });
 
         // Extend countdown if bid placed in last 30 seconds
-        const timeRemaining = endsAt.getTime() - now.getTime();
+        const timeRemaining = endedAt.getTime() - now.getTime();
         if (timeRemaining > 0 && timeRemaining < 30000) {
-            const newEndsAt = new Date(now.getTime() + 10000); // Add 10 seconds
+            const newEndedAt = new Date(now.getTime() + 10000); // Add 10 seconds
             await prisma.auction.update({
                 where: { id: auctionId },
-                data: { endsAt: newEndsAt },
+                data: { endedAt: newEndedAt },
             });
         }
 
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
             userId: user.userId,
             username: currentUser.username,
             amount,
-            timestamp: bid.createdAt,
+            timestamp: bid.timestamp,
             timeExtended: timeRemaining < 30000 && timeRemaining > 0,
         });
 
