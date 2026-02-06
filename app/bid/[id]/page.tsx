@@ -359,18 +359,22 @@ export default function LiveBidPage() {
                 )}
             </main>
 
-            {/* Action Buttons (only during bidding) */}
-            {status === 'bidding' && countdown > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-gray-800 p-4">
+            {/* Action Buttons (Show if LIVE/BIDDING) */}
+            {(['LIVE', 'BIDDING', 'REVEALING'].includes(status)) && (
+                <div className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-white/10 p-4 pb-safe z-[150]">
                     <div className="container max-w-lg mx-auto">
                         {showCustomInput ? (
-                            <div className="space-y-3">
+                            <div className="space-y-3 animate-in slide-in-from-bottom-5">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs text-gray-400">Enter amount greater than</span>
+                                    <span className="text-xs font-bold text-cyan-400">₹{(currentBid + 100).toLocaleString()}</span>
+                                </div>
                                 <input
                                     type="number"
                                     value={customBidAmount}
                                     onChange={(e) => setCustomBidAmount(e.target.value)}
-                                    placeholder={`Min: ₹${currentBid + 100}`}
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 font-semibold text-lg outline-none focus:ring-2 focus:ring-cyan-500"
+                                    placeholder="Enter bid amount..."
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-100 font-bold text-xl outline-none focus:ring-2 focus:ring-cyan-500 transition-all placeholder:text-gray-600 placeholder:text-base placeholder:font-normal"
                                     autoFocus
                                 />
                                 <div className="flex gap-3">
@@ -379,16 +383,16 @@ export default function LiveBidPage() {
                                             setShowCustomInput(false);
                                             setCustomBidAmount('');
                                         }}
-                                        className="flex-1 btn btn-secondary py-3"
+                                        className="flex-1 py-3 font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-xl transition"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleCustomBid}
                                         disabled={bidding}
-                                        className="flex-1 btn btn-primary py-3"
+                                        className="flex-[2] py-3 font-bold text-black bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition shadow-lg shadow-cyan-900/20"
                                     >
-                                        {bidding ? 'Placing...' : 'Place Bid'}
+                                        {bidding ? 'Placing...' : 'Confirm Bid'}
                                     </button>
                                 </div>
                             </div>
@@ -396,22 +400,25 @@ export default function LiveBidPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => alert('Loan feature coming soon!')}
-                                    className="flex-1 btn btn-secondary py-4 text-base"
+                                    className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition flex flex-col items-center justify-center gap-0.5"
                                 >
-                                    💰 Loan
+                                    <span className="text-lg">💰</span>
+                                    <span className="text-[10px] uppercase tracking-wide">Loan</span>
                                 </button>
                                 <button
                                     onClick={() => handleBid()}
-                                    disabled={bidding}
-                                    className="flex-1 btn btn-primary py-4 text-base font-bold"
+                                    disabled={bidding || !isConnected}
+                                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xl shadow-red-900/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center py-2"
                                 >
-                                    {bidding ? 'Placing...' : `₹${(currentBid + 1000).toLocaleString()}`}
+                                    <span className="text-xs font-medium opacity-90 uppercase tracking-widest text-red-100">Quick Bid</span>
+                                    <span className="text-2xl font-black tracking-tight">₹{(currentBid + 1000).toLocaleString()}</span>
                                 </button>
                                 <button
                                     onClick={() => setShowCustomInput(true)}
-                                    className="flex-1 btn btn-secondary py-4 text-base"
+                                    className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition flex flex-col items-center justify-center gap-0.5"
                                 >
-                                    Custom
+                                    <span className="text-lg">✍️</span>
+                                    <span className="text-[10px] uppercase tracking-wide">Custom</span>
                                 </button>
                             </div>
                         )}
@@ -421,8 +428,15 @@ export default function LiveBidPage() {
 
             {/* Connection Lost Banner */}
             {!isConnected && (
-                <div className="fixed top-16 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-semibold z-[199]">
-                    ⚠️ Connection lost. Reconnecting...
+                <div className="fixed top-20 left-4 right-4 bg-red-500/10 border border-red-500/50 backdrop-blur-md rounded-lg p-3 flex items-center justify-between z-[200]">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-red-200 text-xs font-medium">Reconnecting...</span>
+                    </div>
+                    {/* Debug Info */}
+                    <span className="text-[10px] text-red-400 font-mono opacity-50">
+                        {process.env.NEXT_PUBLIC_PUSHER_KEY ? 'KEY_OK' : 'KEY_MISSING'}
+                    </span>
                 </div>
             )}
         </div>
