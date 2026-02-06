@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Bell, User, ChevronRight } from 'lucide-react';
+import { Bell, User, ChevronRight, IndianRupee } from 'lucide-react';
 import Link from 'next/link';
 import RankBadge from '@/components/RankBadge';
 import BottomNav from '@/components/BottomNav';
@@ -21,74 +21,66 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-slate-950 pb-24">
             {/* Header */}
-            <header className="sticky top-0 z-[200] bg-slate-900 border-b border-gray-800 px-4 py-3">
+            <header className="sticky top-0 z-[100] bg-slate-950/80 backdrop-blur-md border-b border-white/5 px-6 py-4">
                 <div className="flex items-center justify-between">
-                    {/* Left: Balance & Rank */}
-                    <div className="flex flex-col gap-0.5">
-                        <span className="text-xs text-gray-500 uppercase tracking-wide">Balance</span>
-                        <span className="text-lg font-bold text-gray-100">
-                            ₹{userData.balance.toLocaleString()}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                            <RankBadge tier={userData.rankTier} size="sm" />
-                            <span className="text-xs font-semibold text-gray-400">
-                                {userData.rankPoints} pts
+                    {/* Left: Balance */}
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                            <IndianRupee className="w-5 h-5 text-green-500" strokeWidth={3} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-2xl font-bold text-white leading-none">
+                                {userData.balance.toLocaleString()}
                             </span>
+                            <div className="flex items-center gap-2 mt-1">
+                                <RankBadge tier={userData.rankTier} size="sm" />
+                                <span className="text-xs font-medium text-gray-400">
+                                    {userData.rankPoints} pts
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Center: Logo */}
-                    <div className="absolute left-1/2 -translate-x-1/2">
-                        <Image
-                            src="/bid-wars-logo.png"
-                            alt="Bid Wars"
-                            width={100}
-                            height={45}
-                            priority
-                            className="object-contain"
-                        />
-                    </div>
-
-                    {/* Right: Profile & Notifications */}
-                    <div className="flex items-center gap-2">
-                        <button className="relative p-2 hover:bg-gray-800 rounded-full transition">
-                            <Bell className="w-5 h-5 text-gray-400" />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-cyan-500 rounded-full" />
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-3">
+                        <button className="relative p-2.5 hover:bg-white/5 rounded-xl transition-colors group">
+                            <Bell className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-slate-950" />
                         </button>
+
                         <div className="relative">
                             <button
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="p-1.5 hover:bg-gray-800 rounded-full transition"
+                                className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center hover:border-cyan-500/50 transition-all"
                             >
-                                <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
-                                    <User className="w-4 h-4 text-white" />
-                                </div>
+                                <User className="w-5 h-5 text-gray-300" />
                             </button>
 
                             {/* Profile Dropdown */}
                             {showProfileMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
-                                    <button
-                                        onClick={() => {
-                                            setShowProfileMenu(false);
-                                            window.location.href = '/profile';
-                                        }}
-                                        className="w-full px-4 py-3 text-left text-gray-200 hover:bg-gray-700 transition flex items-center gap-2"
-                                    >
-                                        <User className="w-4 h-4" />
-                                        Profile
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            // Call logout API to clear cookie server-side
-                                            await fetch('/api/auth/logout', { method: 'POST' });
-                                            // Redirect to login
-                                            window.location.href = '/login';
-                                        }}
-                                        className="w-full px-4 py-3 text-left text-red-400 hover:bg-gray-700 transition"
-                                    >
-                                        Logout
-                                    </button>
+                                <div className="absolute right-0 mt-3 w-48 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                                    <div className="p-1">
+                                        <button
+                                            onClick={() => {
+                                                setShowProfileMenu(false);
+                                                window.location.href = '/profile';
+                                            }}
+                                            className="w-full px-4 py-3 text-left text-gray-200 hover:bg-white/5 rounded-xl transition flex items-center gap-3"
+                                        >
+                                            <User className="w-4 h-4 text-cyan-400" />
+                                            <span>Profile</span>
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                await fetch('/api/auth/logout', { method: 'POST' });
+                                                window.location.href = '/login';
+                                            }}
+                                            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 rounded-xl transition flex items-center gap-3"
+                                        >
+                                            <div className="w-4 h-4 border-2 border-red-500 rounded-full" />
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -97,26 +89,27 @@ export default function HomePage() {
             </header>
 
             {/* Content */}
-            <main className="px-6 py-4">
-                {/* Tab Toggle */}
-                <div className="flex gap-2 bg-gray-800 p-1 rounded-lg mb-6">
+            <main className="px-6 py-6 space-y-8">
+                {/* Segmented Control */}
+                <div className="p-1.5 bg-gray-900/50 border border-white/5 rounded-2xl flex relative">
+                    {/* Sliding Background - Simplified for now with CSS classes */}
                     <button
                         onClick={() => setActiveTab('bids')}
-                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'bids'
-                            ? 'bg-cyan-500 text-white shadow-lg'
-                            : 'text-gray-400 hover:text-gray-200'
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${activeTab === 'bids'
+                            ? 'bg-gray-800 text-white shadow-lg shadow-black/20 ring-1 ring-white/10'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
-                        Bids
+                        Live Auctions
                     </button>
                     <button
                         onClick={() => setActiveTab('market')}
-                        className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'market'
-                            ? 'bg-cyan-500 text-white shadow-lg'
-                            : 'text-gray-400 hover:text-gray-200'
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${activeTab === 'market'
+                            ? 'bg-gray-800 text-white shadow-lg shadow-black/20 ring-1 ring-white/10'
+                            : 'text-gray-500 hover:text-gray-300'
                             }`}
                     >
-                        Market
+                        Marketplace
                     </button>
                 </div>
 
