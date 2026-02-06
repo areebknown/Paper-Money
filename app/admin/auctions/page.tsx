@@ -104,9 +104,9 @@ export default function AuctionsListPage() {
                                                 {auction.name}
                                             </h3>
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold ring-1 inset-0 ${auction.status === 'LIVE' ? 'bg-green-500/10 text-green-400 ring-green-500/20' :
-                                                    auction.status === 'SCHEDULED' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
-                                                        auction.status === 'COMPLETED' ? 'bg-purple-500/10 text-purple-400 ring-purple-500/20' :
-                                                            'bg-gray-500/10 text-gray-400 ring-gray-500/20'
+                                                auction.status === 'SCHEDULED' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
+                                                    auction.status === 'COMPLETED' ? 'bg-purple-500/10 text-purple-400 ring-purple-500/20' :
+                                                        'bg-gray-500/10 text-gray-400 ring-gray-500/20'
                                                 }`}>
                                                 {auction.status}
                                             </span>
@@ -144,7 +144,22 @@ export default function AuctionsListPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-2">
+                                        {auction.status === 'SCHEDULED' && (
+                                            <button
+                                                onClick={async () => {
+                                                    if (!confirm('Start this auction immediately?')) return;
+                                                    try {
+                                                        const res = await fetch(`/api/auctions/${auction.id}/start`, { method: 'POST' });
+                                                        if (res.ok) fetchAuctions();
+                                                        else alert('Failed to start');
+                                                    } catch (e) { alert('Network error'); }
+                                                }}
+                                                className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg transition"
+                                            >
+                                                Start Now
+                                            </button>
+                                        )}
                                         <Link href={`/admin/auctions/${auction.id}`} className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition">
                                             Edit
                                         </Link>
