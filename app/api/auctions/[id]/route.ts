@@ -21,7 +21,7 @@ export async function GET(
                     },
                     take: 10,
                     include: {
-                        user: {
+                        bidder: {
                             select: {
                                 username: true,
                             },
