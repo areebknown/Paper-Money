@@ -192,7 +192,12 @@ export default function LiveBidPage() {
                         countdown={startCountdown}
                     />
 
-                    <AuctionShutter status={phase}>
+                    <AuctionShutter status={
+                        phase === 'PRE_OPEN' ? 'CLOSED' :
+                            phase === 'REVEAL' ? 'OPEN' :
+                                phase === 'COMPLETED' ? 'CLOSED' :
+                                    phase as any
+                    }>
                         {/* The Content Inside the Shutter (Brick Wall BG is in component) */}
                         <div className="text-center p-6 bg-black/50 backdrop-blur-md rounded-xl border border-white/10 m-4">
                             <div className="text-yellow-400 text-lg font-bold mb-2">
