@@ -97,33 +97,48 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
+        console.log('[API] Create Artifact Body:', body);
+
         const {
             name,
             description,
             imageUrl,
             basePoints,
+            pawnPoints,
             materialComposition,
             width,
             height,
             depth,
         } = body;
 
+        // Strict Validation
+        if (!name || basePoints === undefined) {
+            console.error('[API] Missing required fields for artifact:', { name, basePoints });
+            return NextResponse.json({ error: 'Name and Base Points are required' }, { status: 400 });
+        }
+
         const artifact = await prisma.artifact.create({
             data: {
                 name,
-                description,
-                imageUrl,
+                description: description || '',
+                imageUrl: imageUrl || '',
                 basePoints: Number(basePoints),
-                materialComposition: materialComposition || undefined,
+                pawnPoints: pawnPoints ? Number(pawnPoints) : 0,
+                // Ensure materialComposition is valid JSON or undefined
+                materialComposition: materialComposition && Object.keys(materialComposition).length > 0 ? materialComposition : undefined,
                 width: width ? Number(width) : undefined,
                 height: height ? Number(height) : undefined,
                 depth: depth ? Number(depth) : undefined,
             },
         });
 
+        console.log('[API] Artifact Created:', artifact.id);
         return NextResponse.json({ artifact }, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('POST /api/artifacts error:', error);
-        return NextResponse.json({ error: 'Failed to create artifact' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Failed to create artifact',
+            details: error.message
+        }, { status: 500 });
     }
 }
