@@ -9,11 +9,20 @@ export async function GET(req: Request) {
         const ownerId = searchParams.get('ownerId');
         const includePublic = searchParams.get('public') === 'true';
 
-        const where = ownerId
-            ? { ownerId }
-            : includePublic
-                ? {}
-                : { ownerId: { not: null } };
+        const where: any = {};
+
+        if (ownerId) {
+            where.ownerId = ownerId;
+        } else if (includePublic) {
+            // "Public" means untargeted/marketplace items? 
+            // For now, if no ownerId is specified, we likely want ALL artifacts for Admin view,
+            // or we need a specific 'public' flag. 
+            // Current strict logic: { ownerId: { not: null } } hides system artifacts.
+            // FIX: If no params, show ALL (for admin panel).
+        } else {
+            // Default behavior: Don't exclude system artifacts (ownerId: null).
+            // Previously: where.ownerId = { not: null };
+        }
 
         const artifacts = await prisma.artifact.findMany({
             where,
