@@ -146,38 +146,47 @@ export default function AuctionsListPage() {
                                     </div>
                                     <div className="flex gap-2">
                                         {auction.status === 'SCHEDULED' && (
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    if (!confirm('Start this auction immediately? This will notify all users.')) return;
+                                            <div onClick={(e) => e.stopPropagation()} className="inline-block relative z-20">
+                                                <button
+                                                    type="button"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        console.log('Start button clicked');
 
-                                                    const btn = e.currentTarget;
-                                                    const originalText = btn.innerText;
-                                                    btn.innerText = 'Starting...';
-                                                    btn.disabled = true;
+                                                        if (!confirm('Start this auction immediately? This will notify all users.')) return;
 
-                                                    try {
-                                                        const res = await fetch(`/api/auctions/${auction.id}/start`, { method: 'POST' });
-                                                        if (res.ok) {
-                                                            await fetchAuctions();
-                                                            alert('Auction started successfully!');
-                                                        } else {
-                                                            const err = await res.json();
-                                                            alert(`Failed to start: ${err.error || 'Unknown error'}`);
+                                                        const btn = e.currentTarget;
+                                                        const originalText = btn.innerText;
+                                                        btn.innerText = 'Starting...';
+                                                        btn.disabled = true;
+
+                                                        try {
+                                                            console.log('Sending start request...');
+                                                            const res = await fetch(`/api/auctions/${auction.id}/start`, { method: 'POST' });
+                                                            console.log('Response status:', res.status);
+
+                                                            if (res.ok) {
+                                                                await fetchAuctions();
+                                                                alert('Auction started successfully!');
+                                                            } else {
+                                                                const err = await res.json();
+                                                                console.error('Start failed:', err);
+                                                                alert(`Failed to start: ${err.error || 'Unknown error'}`);
+                                                            }
+                                                        } catch (err) {
+                                                            console.error('Fetch error:', err);
+                                                            alert('Network error. Check console.');
+                                                        } finally {
+                                                            btn.innerText = originalText;
+                                                            btn.disabled = false;
                                                         }
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                        alert('Network error. Check console.');
-                                                    } finally {
-                                                        btn.innerText = originalText;
-                                                        btn.disabled = false;
-                                                    }
-                                                }}
-                                                className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20 z-10 relative"
-                                            >
-                                                Start Now
-                                            </button>
+                                                    }}
+                                                    className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20"
+                                                >
+                                                    Start Now
+                                                </button>
+                                            </div>
                                         )}
                                         <Link href={`/admin/auctions/${auction.id}`} className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition">
                                             Edit
