@@ -79,8 +79,8 @@ export default function HomePage() {
                                     </button>
                                     <button
                                         onClick={async () => {
-                                            // Clear auth token
-                                            document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                                            // Call logout API to clear cookie server-side
+                                            await fetch('/api/auth/logout', { method: 'POST' });
                                             // Redirect to login
                                             window.location.href = '/login';
                                         }}
