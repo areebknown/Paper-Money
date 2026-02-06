@@ -28,10 +28,12 @@ export default function NewAuctionPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...formData,
-                    startTime: new Date(formData.startTime).toISOString(),
-                    duration: parseInt(formData.duration),
+                    name: formData.title,
+                    description: formData.description,
+                    scheduledAt: new Date(formData.startTime).toISOString(),
+                    rankTier: formData.rankRequirement,
                     startingPrice: parseFloat(formData.startingPrice),
+                    artifactIds: formData.artifactId ? [formData.artifactId] : [],
                 }),
             });
 
