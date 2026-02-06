@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'bids' | 'market'>('bids');
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
 
     // Mock user data
     const userData = {
@@ -53,11 +54,43 @@ export default function HomePage() {
                             <Bell className="w-5 h-5 text-gray-400" />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-cyan-500 rounded-full" />
                         </button>
-                        <button className="p-1.5 hover:bg-gray-800 rounded-full transition">
-                            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-white" />
-                            </div>
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                className="p-1.5 hover:bg-gray-800 rounded-full transition"
+                            >
+                                <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
+                                    <User className="w-4 h-4 text-white" />
+                                </div>
+                            </button>
+
+                            {/* Profile Dropdown */}
+                            {showProfileMenu && (
+                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
+                                    <button
+                                        onClick={() => {
+                                            setShowProfileMenu(false);
+                                            window.location.href = '/profile';
+                                        }}
+                                        className="w-full px-4 py-3 text-left text-gray-200 hover:bg-gray-700 transition flex items-center gap-2"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        Profile
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            // Clear auth token
+                                            document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                                            // Redirect to login
+                                            window.location.href = '/login';
+                                        }}
+                                        className="w-full px-4 py-3 text-left text-red-400 hover:bg-gray-700 transition"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -69,8 +102,8 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('bids')}
                         className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'bids'
-                                ? 'bg-cyan-500 text-white shadow-lg'
-                                : 'text-gray-400 hover:text-gray-200'
+                            ? 'bg-cyan-500 text-white shadow-lg'
+                            : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         Bids
@@ -78,8 +111,8 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('market')}
                         className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'market'
-                                ? 'bg-cyan-500 text-white shadow-lg'
-                                : 'text-gray-400 hover:text-gray-200'
+                            ? 'bg-cyan-500 text-white shadow-lg'
+                            : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         Market
