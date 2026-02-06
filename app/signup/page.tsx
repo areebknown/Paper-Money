@@ -30,7 +30,7 @@ export default function SignupPage() {
                 if (data.user.isAdmin) {
                     router.push('/admin');
                 } else {
-                    router.push('/dashboard');
+                    router.push('/home');
                 }
             } else {
                 setError(data.error || 'Signup failed');

@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
 
     // Paths that require authentication
     if (
-        request.nextUrl.pathname.startsWith('/dashboard') ||
+        request.nextUrl.pathname.startsWith('/home') ||
         request.nextUrl.pathname.startsWith('/send') ||
         request.nextUrl.pathname.startsWith('/history') ||
         request.nextUrl.pathname.startsWith('/profile')
@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
         try {
             const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
             await jwtVerify(token, secret);
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/home', request.url));
         } catch (error) {
             // Token invalid, allow access to login/signup
         }
