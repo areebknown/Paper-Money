@@ -25,7 +25,13 @@ export async function GET(
             take: 50, // Limit to 50 most recent bids
         });
 
-        return NextResponse.json({ bids });
+        const formattedBids = bids.map((bid) => ({
+            ...bid,
+            user: bid.bidder,
+            bidder: undefined, // Remove the raw bidder object if you want to clean it up
+        }));
+
+        return NextResponse.json({ bids: formattedBids });
     } catch (error) {
         console.error('Get bids error:', error);
         return NextResponse.json({ error: 'Failed to fetch bids' }, { status: 500 });
