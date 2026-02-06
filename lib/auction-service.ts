@@ -91,3 +91,37 @@ export async function checkAndStartDueAuctions() {
         return { started: 0, error };
     }
 }
+
+/**
+ * Ends an auction manually.
+ */
+export async function endAuctionService(auctionId: string) {
+    const auction = await prisma.auction.findUnique({
+        where: { id: auctionId },
+        select: { id: true, status: true, name: true, currentPrice: true, winnerId: true }
+    });
+
+    if (!auction) throw new Error("Auction not found");
+    if (auction.status === 'COMPLETED') return { success: false, message: "Already completed" };
+
+    const updated = await prisma.auction.update({
+        where: { id: auctionId },
+        data: {
+            status: 'COMPLETED',
+            endedAt: new Date(),
+        }
+    });
+
+    // Notify everyone
+    await pusherServer.trigger(`auction-${auctionId}`, 'auction-ended', {
+        auctionId,
+        winnerId: auction.winnerId,
+        finalPrice: auction.currentPrice
+    });
+
+    await pusherServer.trigger('global-auctions', 'auction-ended', {
+        id: auctionId
+    });
+
+    return { success: true, auction: updated };
+}

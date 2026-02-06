@@ -182,9 +182,34 @@ export default function AuctionsListPage() {
                                                             btn.disabled = false;
                                                         }
                                                     }}
-                                                    className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20"
+                                                    className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20 border-2 border-transparent hover:border-white"
                                                 >
                                                     Start Now
+                                                </button>
+                                            </div>
+                                        )}
+                                        {auction.status === 'LIVE' && (
+                                            <div onClick={(e) => e.stopPropagation()} className="inline-block relative z-20">
+                                                <button
+                                                    type="button"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        if (!confirm('End this auction?')) return;
+
+                                                        try {
+                                                            const res = await fetch(`/api/auctions/${auction.id}/end`, { method: 'POST' });
+                                                            if (res.ok) {
+                                                                alert('Ended!');
+                                                                fetchAuctions();
+                                                            } else {
+                                                                alert('Failed to end');
+                                                            }
+                                                        } catch (e) { alert('Error'); }
+                                                    }}
+                                                    className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-lg shadow-red-900/20"
+                                                >
+                                                    End Now
                                                 </button>
                                             </div>
                                         )}
