@@ -146,72 +146,106 @@ export default function AuctionsListPage() {
                                     </div>
                                     <div className="flex gap-2">
                                         {auction.status === 'SCHEDULED' && (
-                                            <div onClick={(e) => e.stopPropagation()} className="inline-block relative z-20">
-                                                <button
-                                                    type="button"
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        console.log('Start button clicked');
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
 
-                                                        if (!confirm('Start this auction immediately? This will notify all users.')) return;
+                                                    console.log('[ADMIN] ========== START BUTTON CLICKED ==========');
+                                                    console.log('[ADMIN] Auction:', auction.name, auction.id);
 
-                                                        const btn = e.currentTarget;
-                                                        const originalText = btn.innerText;
-                                                        btn.innerText = 'Starting...';
-                                                        btn.disabled = true;
+                                                    if (!confirm(`Start "${auction.name}" immediately?`)) {
+                                                        console.log('[ADMIN] User cancelled');
+                                                        return;
+                                                    }
 
-                                                        try {
-                                                            console.log('Sending start request...');
-                                                            const res = await fetch(`/api/auctions/${auction.id}/start`, { method: 'POST' });
-                                                            console.log('Response status:', res.status);
+                                                    const btn = e.currentTarget;
+                                                    btn.innerText = 'Starting...';
+                                                    btn.disabled = true;
 
-                                                            if (res.ok) {
-                                                                await fetchAuctions();
-                                                                alert('Auction started successfully!');
-                                                            } else {
-                                                                const err = await res.json();
-                                                                console.error('Start failed:', err);
-                                                                alert(`Failed to start: ${err.error || 'Unknown error'}`);
-                                                            }
-                                                        } catch (err) {
-                                                            console.error('Fetch error:', err);
-                                                            alert('Network error. Check console.');
-                                                        } finally {
-                                                            btn.innerText = originalText;
-                                                            btn.disabled = false;
+                                                    try {
+                                                        console.log('[ADMIN] Sending POST to /api/auctions/' + auction.id + '/start');
+                                                        const res = await fetch(`/api/auctions/${auction.id}/start`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' }
+                                                        });
+
+                                                        console.log('[ADMIN] Response status:', res.status);
+                                                        const data = await res.json();
+                                                        console.log('[ADMIN] Response data:', data);
+
+                                                        if (res.ok && data.success) {
+                                                            console.log('[ADMIN] ✅ SUCCESS! Refreshing list...');
+                                                            await fetchAuctions();
+                                                            alert('✅ Auction started!');
+                                                        } else {
+                                                            console.error('[ADMIN] ❌ API Error:', data);
+                                                            alert(`Failed: ${data.error || 'Unknown error'}`);
                                                         }
-                                                    }}
-                                                    className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20 border-2 border-transparent hover:border-white"
-                                                >
-                                                    Start Now
-                                                </button>
-                                            </div>
+                                                    } catch (err) {
+                                                        console.error('[ADMIN] 💥 Network error:', err);
+                                                        alert('Network error - check console');
+                                                    } finally {
+                                                        btn.innerText = 'Start Now';
+                                                        btn.disabled = false;
+                                                    }
+                                                }}
+                                                className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-green-900/20 border-2 border-transparent hover:border-white"
+                                            >
+                                                Start Now
+                                            </button>
                                         )}
                                         {auction.status === 'LIVE' && (
-                                            <div onClick={(e) => e.stopPropagation()} className="inline-block relative z-20">
-                                                <button
-                                                    type="button"
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        if (!confirm('End this auction?')) return;
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
 
-                                                        try {
-                                                            const res = await fetch(`/api/auctions/${auction.id}/end`, { method: 'POST' });
-                                                            if (res.ok) {
-                                                                alert('Ended!');
-                                                                fetchAuctions();
-                                                            } else {
-                                                                alert('Failed to end');
-                                                            }
-                                                        } catch (e) { alert('Error'); }
-                                                    }}
-                                                    className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-lg shadow-red-900/20"
-                                                >
-                                                    End Now
-                                                </button>
-                                            </div>
+                                                    console.log('[ADMIN] ========== END BUTTON CLICKED ==========');
+                                                    console.log('[ADMIN] Auction:', auction.name, auction.id);
+
+                                                    if (!confirm(`End "${auction.name}" now?`)) {
+                                                        console.log('[ADMIN] User cancelled');
+                                                        return;
+                                                    }
+
+                                                    const btn = e.currentTarget;
+                                                    btn.innerText = 'Ending...';
+                                                    btn.disabled = true;
+
+                                                    try {
+                                                        console.log('[ADMIN] Sending POST to /api/auctions/' + auction.id + '/end');
+                                                        const res = await fetch(`/api/auctions/${auction.id}/end`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' }
+                                                        });
+
+                                                        console.log('[ADMIN] Response status:', res.status);
+                                                        const data = await res.json();
+                                                        console.log('[ADMIN] Response data:', data);
+
+                                                        if (res.ok && data.success) {
+                                                            console.log('[ADMIN] ✅ SUCCESS! Refreshing list...');
+                                                            await fetchAuctions();
+                                                            alert('✅ Auction ended!');
+                                                        } else {
+                                                            console.error('[ADMIN] ❌ API Error:', data);
+                                                            alert(`Failed: ${data.error || data.message || 'Unknown error'}`);
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('[ADMIN] 💥 Network error:', err);
+                                                        alert('Network error - check console');
+                                                    } finally {
+                                                        btn.innerText = 'End Now';
+                                                        btn.disabled = false;
+                                                    }
+                                                }}
+                                                className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition shadow-lg shadow-red-900/20"
+                                            >
+                                                End Now
+                                            </button>
                                         )}
                                         <Link href={`/admin/auctions/${auction.id}`} className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition">
                                             Edit
