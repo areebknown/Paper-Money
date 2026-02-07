@@ -7,6 +7,7 @@ import { getPusherClient } from '@/lib/pusher-client';
 import AuctionShutter from '@/components/auction/AuctionShutter';
 import AuctionLock from '@/components/auction/AuctionLock';
 import BidStream, { BidMessage } from '@/components/auction/BidStream';
+import WaitingRoom from '@/components/auction/WaitingRoom';
 
 type ShutterStatus = 'CLOSED' | 'OPENING' | 'OPEN' | 'CLOSING' | 'BIDDING';
 type AuctionPhase = 'WAITING' | 'PRE_OPEN' | 'OPENING' | 'REVEAL' | 'CLOSING' | 'BIDDING' | 'SOLD';
@@ -28,6 +29,7 @@ export default function LiveBidPage() {
     const [currentUser, setCurrentUser] = useState<{ id: string, username: string } | null>(null);
     const [customBidAmount, setCustomBidAmount] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+    const [isLateJoin, setIsLateJoin] = useState(false);
 
     // Animation Timers
     const [lockCountdown, setLockCountdown] = useState(5);
@@ -64,6 +66,13 @@ export default function LiveBidPage() {
                 if (auctionJson.auction.status === 'LIVE' && auctionJson.auction.startedAt) {
                     serverStartTime.current = new Date(auctionJson.auction.startedAt).getTime();
                     console.log('[BidPage] Auction already LIVE. StartedAt:', auctionJson.auction.startedAt);
+
+                    // Check if they're joining late (after animation sequence)
+                    const elapsed = (Date.now() - serverStartTime.current) / 1000;
+                    if (elapsed > 16) {
+                        console.log('[BidPage] 🚫 Late join detected (T+' + Math.floor(elapsed) + 's). Blocking user.');
+                        setIsLateJoin(true);
+                    }
                 }
 
                 // Fetch existing bids
@@ -267,6 +276,38 @@ export default function LiveBidPage() {
         return (
             <div className="h-screen bg-black text-white flex items-center justify-center">
                 <div className="text-red-400">Auction not found</div>
+            </div>
+        );
+    }
+
+    // === WAITING ROOM ===
+    if (auctionData.status === 'WAITING_ROOM') {
+        return <WaitingRoom auction={auctionData} />;
+    }
+
+    // === LATE JOIN BLOCKER ===
+    if (isLateJoin) {
+        return (
+            <div className="h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-6">
+                <div className="text-8xl mb-8">⏰</div>
+                <h1 className="text-3xl font-black mb-4 text-center">
+                    Auction Already In Progress
+                </h1>
+                <p className="text-gray-400 text-center mb-8 max-w-md">
+                    This auction has already started and is currently accepting bids.
+                    Join earlier next time to participate!
+                </p>
+                <div className="space-y-3">
+                    <button
+                        onClick={() => router.push('/home')}
+                        className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition shadow-xl"
+                    >
+                        Back to Home
+                    </button>
+                    <p className="text-gray-600 text-xs text-center">
+                        Tip: Join the waiting room 5 minutes before an auction starts
+                    </p>
+                </div>
             </div>
         );
     }

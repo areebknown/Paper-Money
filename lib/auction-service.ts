@@ -125,3 +125,71 @@ export async function endAuctionService(auctionId: string) {
 
     return { success: true, auction: updated };
 }
+/**
+ * Checks for auctions that need status updates and transitions them.
+ * Called lazily when users load the site.
+ */
+export async function checkAndUpdateAuctionStatuses() {
+    try {
+        const now = new Date();
+
+        // 1. Find SCHEDULED auctions that should enter WAITING_ROOM (5 min before start)
+        const waitingRoomCandidates = await prisma.auction.findMany({
+            where: {
+                status: 'SCHEDULED',
+                scheduledAt: {
+                    lte: new Date(now.getTime() + 5 * 60 * 1000), // 5 min from now
+                    gt: now // But not yet past
+                }
+            },
+            select: { id: true, name: true, scheduledAt: true }
+        });
+
+        console.log(`[StatusCheck] Found ${waitingRoomCandidates.length} auctions ready for waiting room`);
+
+        // Transition to WAITING_ROOM
+        for (const auction of waitingRoomCandidates) {
+            await prisma.auction.update({
+                where: { id: auction.id },
+                data: { status: 'WAITING_ROOM' }
+            });
+
+            // Notify via Pusher
+            await pusherServer.trigger('global-auctions', 'auction-waiting-room', {
+                id: auction.id,
+                name: auction.name,
+                scheduledAt: auction.scheduledAt,
+                status: 'WAITING_ROOM'
+            });
+
+            console.log(`[StatusCheck] ✅ ${auction.name} → WAITING_ROOM`);
+        }
+
+        // 2. Find WAITING_ROOM auctions that should start (reached scheduled time)
+        const dueAuctions = await prisma.auction.findMany({
+            where: {
+                status: 'WAITING_ROOM',
+                scheduledAt: { lte: now }
+            },
+            select: { id: true, name: true }
+        });
+
+        console.log(`[StatusCheck] Found ${dueAuctions.length} auctions ready to start`);
+
+        // Start them
+        const results = await Promise.allSettled(
+            dueAuctions.map(a => startAuctionService(a.id))
+        );
+
+        const startedCount = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`[StatusCheck] ✅ Started ${startedCount}/${dueAuctions.length} auctions`);
+
+        return {
+            waitingRoom: waitingRoomCandidates.length,
+            started: startedCount
+        };
+    } catch (error) {
+        console.error('[StatusCheck] Error:', error);
+        return { waitingRoom: 0, started: 0, error };
+    }
+}

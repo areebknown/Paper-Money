@@ -35,6 +35,14 @@ model User {
   wonAuctions          Auction[]     @relation("AuctionWinner")
 }
 
+enum AuctionStatus {
+  SCHEDULED
+  WAITING_ROOM
+  LIVE
+  COMPLETED
+  ENDED
+}
+
 model Transaction {
   id          String   @id @default(cuid())
   amount      Decimal  @db.Decimal(10, 2)
