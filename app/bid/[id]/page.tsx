@@ -42,10 +42,13 @@ export default function LiveBidPage() {
     useEffect(() => {
         const init = async () => {
             try {
+                let currentUserId: string | null = null;
+
                 // Get current user
                 const userRes = await fetch('/api/user');
                 if (userRes.ok) {
                     const userData = await userRes.json();
+                    currentUserId = userData.user.id;
                     setCurrentUser({ id: userData.user.id, username: userData.user.username });
                     setBalance(Number(userData.user.balance));
                 }
@@ -71,7 +74,7 @@ export default function LiveBidPage() {
                         id: b.id,
                         username: b.user.username,
                         amount: Number(b.amount),
-                        isMine: userData?.user?.id === b.userId,
+                        isMine: currentUserId === b.userId,
                         timestamp: new Date(b.createdAt).getTime(),
                         type: 'QUICK'
                     }));
