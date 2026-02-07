@@ -33,24 +33,22 @@ export async function startAuctionService(auctionId: string) {
         },
     });
 
-    // 3. Trigger Pusher Events
+    // 3. Trigger Pusher Events (fire-and-forget - don't block on these)
 
     // A. Specific Channel (For the Bid Page)
-    // This tells anyone on /bid/[id] to wake up
-    await pusherServer.trigger(`auction-${auctionId}`, 'status-change', {
+    pusherServer.trigger(`auction-${auctionId}`, 'status-change', {
         status: 'LIVE',
         auctionId: auctionId,
         startedAt: updatedAuction.startedAt,
-    });
+    }).catch(err => console.error('[StartAuction] Pusher failed:', err));
 
     // B. Global Channel (For Home/Admin Lists)
-    // This tells the home page list to flip the badge to LIVE
-    await pusherServer.trigger('global-auctions', 'auction-started', {
+    pusherServer.trigger('global-auctions', 'auction-started', {
         id: auctionId,
         name: updatedAuction.name,
         status: 'LIVE',
         startedAt: updatedAuction.startedAt,
-    });
+    }).catch(err => console.error('[StartAuction] Pusher failed:', err));
 
     console.log(`[AuctionEngine] Started auction ${auctionId} (${updatedAuction.name})`);
 
@@ -112,16 +110,16 @@ export async function endAuctionService(auctionId: string) {
         }
     });
 
-    // Notify everyone
-    await pusherServer.trigger(`auction-${auctionId}`, 'auction-ended', {
+    // Notify everyone (fire-and-forget - don't block on Pusher)
+    pusherServer.trigger(`auction-${auctionId}`, 'auction-ended', {
         auctionId,
         winnerId: auction.winnerId,
         finalPrice: auction.currentPrice
-    });
+    }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
-    await pusherServer.trigger('global-auctions', 'auction-ended', {
+    pusherServer.trigger('global-auctions', 'auction-ended', {
         id: auctionId
-    });
+    }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
     return { success: true, auction: updated };
 }

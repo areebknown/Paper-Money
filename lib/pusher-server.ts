@@ -9,7 +9,7 @@ export const pusherServer = new Pusher({
     useTLS: true,
 });
 
-// Trigger a Pusher event
+// Trigger a Pusher event (non-blocking)
 export async function triggerPusherEvent(
     channel: string,
     event: string,
@@ -17,9 +17,15 @@ export async function triggerPusherEvent(
 ): Promise<void> {
     try {
         await pusherServer.trigger(channel, event, data);
-        console.log(`[Pusher] Triggered ${event} on ${channel}`);
-    } catch (error) {
-        console.error('[Pusher] Error triggering event:', error);
-        throw error;
+        console.log(`[Pusher] ✅ Triggered ${event} on ${channel}`);
+    } catch (error: any) {
+        // Log but don't throw - Pusher failures shouldn't break the app
+        console.error(`[Pusher] ❌ Failed to trigger ${event} on ${channel}:`, error.message);
+        console.error('[Pusher] Error details:', {
+            status: error.status,
+            body: error.body,
+            error: error.toString()
+        });
+        // Don't throw - let the calling function continue
     }
 }
