@@ -1,214 +1,321 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Wifi, WifiOff, User } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Wifi, WifiOff } from 'lucide-react';
 import { getPusherClient } from '@/lib/pusher-client';
-
-// New Components
 import AuctionShutter from '@/components/auction/AuctionShutter';
 import AuctionLock from '@/components/auction/AuctionLock';
 import BidStream, { BidMessage } from '@/components/auction/BidStream';
 
-type AuctionPhase = 'PRE_OPEN' | 'OPENING' | 'REVEAL' | 'CLOSING' | 'BIDDING' | 'COMPLETED';
+type ShutterStatus = 'CLOSED' | 'OPENING' | 'OPEN' | 'CLOSING' | 'BIDDING';
+type AuctionPhase = 'WAITING' | 'PRE_OPEN' | 'OPENING' | 'REVEAL' | 'CLOSING' | 'BIDDING' | 'SOLD';
 
 export default function LiveBidPage() {
     const params = useParams();
     const router = useRouter();
     const auctionId = params.id as string;
 
-    // --- State ---
-    const [phase, setPhase] = useState<AuctionPhase>('PRE_OPEN');
+    // Core State
+    const [phase, setPhase] = useState<AuctionPhase>('WAITING');
     const [balance, setBalance] = useState(0);
     const [currentPrice, setCurrentPrice] = useState(0);
     const [bids, setBids] = useState<BidMessage[]>([]);
-    const [isConnected, setIsConnected] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
     const [bidding, setBidding] = useState(false);
-
-    // Timers
-    const [startCountdown, setStartCountdown] = useState(5); // 0-5s
-    const [shutterCountdown, setShutterCountdown] = useState(5); // 10-15s
-    const [bidCountdown, setBidCountdown] = useState(10); // The "Going once..." timer
-
-    // Data
     const [auctionData, setAuctionData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<{ id: string, username: string } | null>(null);
+    const [customBidAmount, setCustomBidAmount] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
 
-    // --- 1. Init & Sync ---
+    // Animation Timers
+    const [lockCountdown, setLockCountdown] = useState(5);
+    const [shutterCountdown, setShutterCountdown] = useState(5);
+    const [bidCountdown, setBidCountdown] = useState(10);
+
+    // Refs for Pusher
+    const serverStartTime = useRef<number | null>(null);
+    const tickerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // === 1. INITIAL DATA FETCH ===
     useEffect(() => {
         const init = async () => {
             try {
-                // Fetch User
+                // Get current user
                 const userRes = await fetch('/api/user');
                 if (userRes.ok) {
-                    const uData = await userRes.json();
-                    setCurrentUser(uData.user);
-                    setBalance(Number(uData.user.balance));
+                    const userData = await userRes.json();
+                    setCurrentUser({ id: userData.user.id, username: userData.user.username });
+                    setBalance(Number(userData.user.balance));
                 }
 
-                // Fetch Auction
-                const res = await fetch(`/api/auctions/${auctionId}`);
-                if (!res.ok) throw new Error('Auction not found');
-                const data = await res.json();
-                setAuctionData(data.auction);
-                setCurrentPrice(Number(data.auction.currentPrice));
+                // Get auction
+                const auctionRes = await fetch(`/api/auctions/${auctionId}`);
+                if (!auctionRes.ok) throw new Error('Auction not found');
+                const auctionJson = await auctionRes.json();
+                setAuctionData(auctionJson.auction);
+                setCurrentPrice(Number(auctionJson.auction.currentPrice || auctionJson.auction.startingPrice));
 
-                // Fetch Bids
+                // If auction is LIVE and has startedAt, begin animation
+                if (auctionJson.auction.status === 'LIVE' && auctionJson.auction.startedAt) {
+                    serverStartTime.current = new Date(auctionJson.auction.startedAt).getTime();
+                    console.log('[BidPage] Auction already LIVE. StartedAt:', auctionJson.auction.startedAt);
+                }
+
+                // Fetch existing bids
                 const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
                 if (bidsRes.ok) {
-                    const bData = await bidsRes.json();
-                    // Transform to Chat Messages
-                    const msgs = bData.bids.map((b: any) => ({
+                    const bidsJson = await bidsRes.json();
+                    const messages: BidMessage[] = bidsJson.bids.map((b: any) => ({
                         id: b.id,
                         username: b.user.username,
                         amount: Number(b.amount),
-                        isMine: b.userId === data.auction.winnerId, // Loose check, better is b.userId === currentUser.id
+                        isMine: userData?.user?.id === b.userId,
                         timestamp: new Date(b.createdAt).getTime(),
                         type: 'QUICK'
                     }));
-                    setBids(msgs.reverse()); // Newest first
+                    setBids(messages.reverse());
                 }
 
                 setLoading(false);
             } catch (e) {
-                console.error(e);
+                console.error('[BidPage] Init error:', e);
                 setLoading(false);
             }
         };
         init();
     }, [auctionId]);
 
-    // --- 2. The "Show" Logic (Time Sync) ---
+    // === 2. PUSHER SUBSCRIPTION ===
     useEffect(() => {
-        if (!auctionData) return;
+        if (!auctionId) return;
 
-        // If completed, just show it
-        if (auctionData.status === 'COMPLETED' || auctionData.status === 'ENDED') {
-            setPhase('COMPLETED');
+        const pusher = getPusherClient();
+        console.log('[Pusher] Connecting to auction-' + auctionId);
+
+        // Connection state
+        pusher.connection.bind('state_change', (states: any) => {
+            console.log('[Pusher] State:', states.current);
+            setIsConnected(states.current === 'connected');
+        });
+
+        pusher.connection.bind('error', (err: any) => {
+            console.error('[Pusher] Connection error:', err);
+        });
+
+        const channel = pusher.subscribe(`auction-${auctionId}`);
+
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.log('[Pusher] ✅ Subscribed to auction-' + auctionId);
+        });
+
+        channel.bind('pusher:subscription_error', (err: any) => {
+            console.error('[Pusher] ❌ Subscription failed:', err);
+        });
+
+        // === CRITICAL EVENT: Auction Starts ===
+        channel.bind('status-change', (data: any) => {
+            console.log('[Pusher] status-change:', data);
+            if (data.status === 'LIVE' && data.startedAt) {
+                serverStartTime.current = new Date(data.startedAt).getTime();
+                console.log('[Pusher] 🎬 Auction STARTED at:', data.startedAt);
+                setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
+            }
+            if (data.status === 'COMPLETED' || data.status === 'ENDED') {
+                setPhase('SOLD');
+                serverStartTime.current = null;
+            }
+        });
+
+        // === CRITICAL EVENT: New Bid ===
+        channel.bind('new-bid', (data: any) => {
+            console.log('[Pusher] new-bid:', data);
+            setCurrentPrice(data.amount);
+            setBidCountdown(10); // Reset countdown
+
+            // Add to chat
+            const newBid: BidMessage = {
+                id: data.bidId || `bid-${Date.now()}`,
+                username: data.username,
+                amount: data.amount,
+                isMine: currentUser ? data.userId === currentUser.id : false,
+                timestamp: Date.now(),
+                type: data.isCustom ? 'CUSTOM' : 'QUICK'
+            };
+            setBids(prev => [newBid, ...prev]);
+        });
+
+        // === Auction Ended Event ===
+        channel.bind('auction-ended', () => {
+            console.log('[Pusher] Auction ended');
+            setPhase('SOLD');
+        });
+
+        return () => {
+            console.log('[Pusher] Unsubscribing');
+            channel.unbind_all();
+            channel.unsubscribe();
+        };
+    }, [auctionId, currentUser]);
+
+    // === 3. ANIMATION TICKER (Synced to Server Time) ===
+    useEffect(() => {
+        if (!serverStartTime.current) {
+            setPhase('WAITING');
             return;
         }
 
-        const interval = setInterval(() => {
-            const now = new Date().getTime();
-            const start = new Date(auctionData.startedAt).getTime();
-            const diff = (now - start) / 1000; // Seconds since start
+        // Clear old ticker
+        if (tickerRef.current) clearInterval(tickerRef.current);
 
-            if (diff < 5) {
+        tickerRef.current = setInterval(() => {
+            const now = Date.now();
+            const elapsed = (now - serverStartTime.current!) / 1000; // seconds
+
+            if (elapsed < 0) {
+                setPhase('WAITING');
+            } else if (elapsed < 5) {
                 setPhase('PRE_OPEN');
-                setStartCountdown(Math.max(0, Math.ceil(5 - diff)));
-            } else if (diff >= 5 && diff < 10) {
-                setPhase('OPENING'); // Lock breaks, Shutter opens
-            } else if (diff >= 10 && diff < 15) {
+                setLockCountdown(Math.max(0, Math.ceil(5 - elapsed)));
+            } else if (elapsed >= 5 && elapsed < 10) {
+                setPhase('OPENING');
+            } else if (elapsed >= 10 && elapsed < 15) {
                 setPhase('REVEAL');
-                setShutterCountdown(Math.max(0, Math.ceil(15 - diff)));
-            } else if (diff >= 15 && diff < 16) {
-                setPhase('CLOSING'); // Shutter closes
+                setShutterCountdown(Math.max(0, Math.ceil(15 - elapsed)));
+            } else if (elapsed >= 15 && elapsed < 16) {
+                setPhase('CLOSING');
             } else {
                 setPhase('BIDDING');
             }
         }, 100);
 
-        return () => clearInterval(interval);
-    }, [auctionData]);
+        return () => {
+            if (tickerRef.current) clearInterval(tickerRef.current);
+        };
+    }, [serverStartTime.current]);
 
-    // --- 3. Pusher Events ---
-    useEffect(() => {
-        const client = getPusherClient();
-        const channel = client.subscribe(`auction-${auctionId}`);
-
-        channel.bind('status-change', (data: any) => {
-            if (data.status === 'LIVE' && auctionData) {
-                // Update startedAt to sync animation
-                setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
-            }
-            if (data.status === 'COMPLETED' || data.status === 'ENDED') {
-                setPhase('COMPLETED');
-            }
-        });
-
-        channel.bind('new-bid', (data: any) => {
-            setCurrentPrice(data.amount);
-            setBidCountdown(10); // Reset timer
-
-            // Add chat bubble
-            setBids(prev => [{
-                id: data.bidId || Math.random().toString(),
-                username: data.username,
-                amount: data.amount,
-                isMine: currentUser ? data.userId === currentUser.id : false,
-                timestamp: Date.now(),
-                type: 'QUICK' // or Custom
-            }, ...prev]);
-        });
-
-        return () => channel.unsubscribe();
-    }, [auctionId, auctionData, currentUser]);
-
-    // --- 4. Bidding Countdown (The "Going Once" timer) ---
+    // === 4. BIDDING COUNTDOWN ===
     useEffect(() => {
         if (phase === 'BIDDING' && bidCountdown > 0) {
-            const t = setTimeout(() => setBidCountdown(p => p - 1), 1000);
+            const t = setTimeout(() => setBidCountdown(p => Math.max(0, p - 1)), 1000);
             return () => clearTimeout(t);
+        } else if (phase === 'BIDDING' && bidCountdown === 0) {
+            setPhase('SOLD');
         }
     }, [phase, bidCountdown]);
 
-
-    // --- Handlers ---
+    // === HANDLERS ===
     const placeBid = async (amount: number) => {
         if (bidding || phase !== 'BIDDING') return;
+        if (amount <= currentPrice) {
+            alert('Bid must be higher than current price!');
+            return;
+        }
+        if (amount > balance) {
+            alert('Insufficient balance!');
+            return;
+        }
+
         setBidding(true);
         try {
-            await fetch('/api/bid/place', {
+            const res = await fetch('/api/bid/place', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ auctionId, amount })
             });
-            // Optimistic update handled by Pusher
-        } catch (e) { alert('Error placing bid'); }
-        finally { setBidding(false); }
+
+            if (!res.ok) {
+                const err = await res.json();
+                alert(err.error || 'Failed to place bid');
+            } else {
+                const data = await res.json();
+                setBalance(data.newBalance);
+                setShowCustomInput(false);
+                setCustomBidAmount('');
+            }
+        } catch (e) {
+            console.error('[Bid] Error:', e);
+            alert('Network error');
+        } finally {
+            setBidding(false);
+        }
     };
 
-    if (loading) return <div className="bg-black text-white h-screen flex items-center justify-center">Loading...</div>;
+    const handleCustomBid = () => {
+        const amount = parseInt(customBidAmount);
+        if (isNaN(amount) || amount <= currentPrice) {
+            alert('Invalid bid amount');
+            return;
+        }
+        placeBid(amount);
+    };
+
+    // === RENDERING ===
+    if (loading) {
+        return (
+            <div className="h-screen bg-black text-white flex items-center justify-center">
+                <div className="text-lg">Loading auction...</div>
+            </div>
+        );
+    }
+
+    if (!auctionData) {
+        return (
+            <div className="h-screen bg-black text-white flex items-center justify-center">
+                <div className="text-red-400">Auction not found</div>
+            </div>
+        );
+    }
+
+    // Map phase to shutter status
+    const getShutterStatus = (): ShutterStatus => {
+        if (phase === 'WAITING' || phase === 'PRE_OPEN') return 'CLOSED';
+        if (phase === 'OPENING') return 'OPENING';
+        if (phase === 'REVEAL') return 'OPEN';
+        if (phase === 'CLOSING') return 'CLOSING';
+        return 'BIDDING';
+    };
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans overflow-hidden flex flex-col">
-            {/* Top Bar */}
-            <header className="p-4 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-50">
-                <button onClick={() => router.back()}><ArrowLeft /></button>
-                <div className="font-bold text-green-400">₹{balance.toLocaleString()}</div>
-                <div className="flex gap-2">
-                    {isConnected ? <Wifi className="text-green-500" /> : <WifiOff className="text-red-500" />}
+        <div className="min-h-screen bg-black text-white font-sans flex flex-col">
+            {/* === HEADER === */}
+            <header className="p-4 flex justify-between items-center bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+                <button onClick={() => router.back()} className="p-2 hover:bg-gray-800 rounded-lg">
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="flex flex-col items-center">
+                    <span className="text-xs text-gray-400">Balance</span>
+                    <span className="text-lg font-bold text-green-400">₹{balance.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    {isConnected ? (
+                        <Wifi className="w-5 h-5 text-green-400" />
+                    ) : (
+                        <WifiOff className="w-5 h-5 text-red-400" />
+                    )}
                 </div>
             </header>
 
-            {/* Main Stage */}
-            <main className="flex-1 relative flex flex-col">
-
-                {/* 1. The Shutter & Artifacts */}
-                <div className="relative z-10">
+            {/* === MAIN STAGE === */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                {/* Shutter & Lock */}
+                <div className="relative p-4">
                     <AuctionLock
                         isLocked={phase === 'PRE_OPEN'}
-                        countdown={startCountdown}
+                        countdown={lockCountdown}
                     />
-
-                    <AuctionShutter status={
-                        phase === 'PRE_OPEN' ? 'CLOSED' :
-                            phase === 'REVEAL' ? 'OPEN' :
-                                phase === 'COMPLETED' ? 'CLOSED' :
-                                    phase as any
-                    }>
-                        {/* The Content Inside the Shutter (Brick Wall BG is in component) */}
-                        <div className="text-center p-6 bg-black/50 backdrop-blur-md rounded-xl border border-white/10 m-4">
-                            <div className="text-yellow-400 text-lg font-bold mb-2">
-                                {auctionData?.rankTier} TIER
+                    <AuctionShutter status={getShutterStatus()}>
+                        <div className="text-center p-6 bg-black/60 backdrop-blur-sm rounded-xl border border-white/20 max-w-md">
+                            <div className="text-yellow-400 font-bold mb-2 uppercase tracking-wider">
+                                {auctionData.rankTier} Tier
                             </div>
-                            <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">
-                                {auctionData?.name}
+                            <h1 className="text-2xl font-black text-white mb-4 uppercase">
+                                {auctionData.name}
                             </h1>
                             <div className="flex flex-wrap gap-2 justify-center">
-                                {auctionData?.artifacts?.map((a: any, i: number) => (
-                                    <span key={i} className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-200 text-sm">
+                                {auctionData.artifacts?.map((a: any, i: number) => (
+                                    <span key={i} className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-200 text-xs font-mono">
                                         {a.artifact.name}
                                     </span>
                                 ))}
@@ -217,56 +324,106 @@ export default function LiveBidPage() {
                     </AuctionShutter>
                 </div>
 
-                {/* 2. Info / Timer Bar */}
-                <div className="bg-gray-900 p-2 text-center text-xs font-mono uppercase tracking-widest text-gray-500 border-y border-gray-800">
-                    {phase === 'PRE_OPEN' && 'Secure Channel Logic Initializing...'}
-                    {phase === 'OPENING' && 'Security Shutter Disengaging...'}
-                    {phase === 'REVEAL' && <span className="text-red-400 animate-pulse">SHUTTER CLOSING IN {shutterCountdown}s</span>}
-                    {phase === 'CLOSING' && 'Engaging Privacy Shields...'}
+                {/* Status Bar */}
+                <div className="bg-gray-900 px-4 py-2 text-center text-xs font-mono uppercase tracking-widest border-y border-gray-800">
+                    {phase === 'WAITING' && <span className="text-gray-500">Waiting for auction to start...</span>}
+                    {phase === 'PRE_OPEN' && <span className="text-yellow-400 animate-pulse">Starting in {lockCountdown}s</span>}
+                    {phase === 'OPENING' && <span className="text-cyan-400">🔓 Security Breach Detected...</span>}
+                    {phase === 'REVEAL' && <span className="text-red-400 animate-pulse font-bold">⚠️ Shutter Closing in {shutterCountdown}s</span>}
+                    {phase === 'CLOSING' && <span className="text-gray-400">Engaging Privacy Mode...</span>}
                     {phase === 'BIDDING' && (
-                        <span className={bidCountdown < 4 ? 'text-red-500 font-bold' : 'text-green-500'}>
-                            {bidCountdown === 0 ? 'SOLD (Processing...)' : `Time Remaining: ${bidCountdown}s`}
+                        <span className={bidCountdown < 4 ? 'text-red-500 font-black animate-pulse' : 'text-green-400'}>
+                            {bidCountdown === 0 ? '🔨 SOLD!' : `⏱️ ${bidCountdown}s Remaining`}
                         </span>
                     )}
-                    {phase === 'COMPLETED' && 'Auction Concluded'}
+                    {phase === 'SOLD' && <span className="text-green-500 font-bold">✅ Auction Ended</span>}
                 </div>
 
-                {/* 3. The Bid Stream (Chat) */}
-                <div className="flex-1 relative bg-gray-950/50 flex flex-col">
+                {/* Chat Stream */}
+                <div className="flex-1 bg-gray-950/50 overflow-hidden">
                     <BidStream bids={bids} />
                 </div>
 
-                {/* 4. Controls */}
-                <div className="p-4 bg-gray-900 border-t border-gray-800 pb-safe">
-                    <div className="flex justify-between items-end mb-4 px-2">
-                        <div className="text-gray-400 text-xs uppercase">Current High</div>
-                        <div className="text-4xl font-black text-cyan-400">₹{currentPrice.toLocaleString()}</div>
-                    </div>
-
-                    <div className="flex gap-3 h-16">
-                        <button
-                            disabled={phase !== 'BIDDING'}
-                            onClick={() => alert('Loan coming soon')}
-                            className="w-20 bg-gray-800 rounded-xl flex flex-col items-center justify-center disabled:opacity-30 active:scale-95 transition"
-                        >
-                            <span className="text-xl">💰</span>
-                            <span className="text-[10px] uppercase font-bold text-gray-400">Loan</span>
-                        </button>
-
-                        <button
-                            disabled={phase !== 'BIDDING' || bidCountdown === 0}
-                            onClick={() => placeBid(currentPrice + 1000)}
-                            className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl flex items-center justify-between px-6 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-30 disabled:grayscale transition shadow-lg shadow-cyan-900/20 active:scale-95"
-                        >
-                            <div className="flex flex-col text-left">
-                                <span className="text-[10px] font-bold text-cyan-100/70 uppercase">Quick Bid</span>
-                                <span className="text-xl font-black text-white">+ ₹1000</span>
-                            </div>
-                            <div className="text-3xl font-thin opacity-50">IsMine?</div>
-                        </button>
+                {/* Price Display */}
+                <div className="px-6 py-3 bg-gray-900/50 border-t border-gray-800">
+                    <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-400 uppercase">Current High Bid</span>
+                        <span className="text-3xl font-black text-cyan-400">₹{currentPrice.toLocaleString()}</span>
                     </div>
                 </div>
             </main>
+
+            {/* === CONTROLS === */}
+            <footer className="p-4 bg-gray-900 border-t border-gray-800">
+                {showCustomInput ? (
+                    <div className="space-y-3">
+                        <input
+                            type="number"
+                            value={customBidAmount}
+                            onChange={(e) => setCustomBidAmount(e.target.value)}
+                            placeholder={`Enter amount > ₹${currentPrice.toLocaleString()}`}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white font-bold text-xl focus:ring-2 focus:ring-cyan-500 outline-none"
+                            autoFocus
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowCustomInput(false); setCustomBidAmount(''); }}
+                                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-semibold"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCustomBid}
+                                disabled={bidding}
+                                className="flex-[2] py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 rounded-xl font-bold"
+                            >
+                                {bidding ? 'Placing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex gap-3">
+                        <button
+                            disabled={phase !== 'BIDDING'}
+                            onClick={() => alert('Loan feature coming soon')}
+                            className="w-16 h-16 bg-gray-800 rounded-xl flex flex-col items-center justify-center disabled:opacity-30 hover:bg-gray-700 transition"
+                        >
+                            <span className="text-2xl">💰</span>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Loan</span>
+                        </button>
+
+                        <button
+                            disabled={phase !== 'BIDDING' || bidCountdown === 0 || !isConnected}
+                            onClick={() => placeBid(currentPrice + 1000)}
+                            className="flex-1 h-16 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:opacity-30 disabled:grayscale rounded-xl flex items-center justify-between px-4 font-bold shadow-xl shadow-red-900/30 active:scale-95 transition"
+                        >
+                            <div className="flex flex-col text-left">
+                                <span className="text-[10px] text-red-100/70 uppercase">Quick Bid</span>
+                                <span className="text-xl text-white">+₹1,000</span>
+                            </div>
+                            <div className="text-3xl">⚡</div>
+                        </button>
+
+                        <button
+                            disabled={phase !== 'BIDDING'}
+                            onClick={() => setShowCustomInput(true)}
+                            className="w-16 h-16 bg-gray-800 rounded-xl flex flex-col items-center justify-center disabled:opacity-30 hover:bg-gray-700 transition"
+                        >
+                            <span className="text-2xl">✍️</span>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">Custom</span>
+                        </button>
+                    </div>
+                )}
+            </footer>
+
+            {/* Connection Lost Banner */}
+            {!isConnected && (
+                <div className="fixed top-20 left-4 right-4 bg-red-500/10 border border-red-500 rounded-lg p-3 backdrop-blur-md z-50">
+                    <div className="text-red-400 text-sm font-semibold text-center">
+                        🔌 Connection Lost - Reconnecting...
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
