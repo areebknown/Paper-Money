@@ -1,130 +1,129 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Bell, User, ChevronRight, IndianRupee } from 'lucide-react';
 import Link from 'next/link';
-import RankBadge from '@/components/RankBadge';
-import BottomNav from '@/components/BottomNav';
+import Image from 'next/image';
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'bids' | 'market'>('bids');
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [userData, setUserData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Mock user data
-    const userData = {
-        balance: 34000,
-        rankPoints: 340,
-        rankTier: 'GOLD' as const,
-    };
+    useEffect(() => {
+        async function fetchUser() {
+            try {
+                const res = await fetch('/api/user');
+                if (res.ok) {
+                    const data = await res.json();
+                    setUserData(data.user);
+                }
+            } catch (e) {
+                console.error('Failed to fetch user');
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchUser();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#111827] flex items-center justify-center">
+                <div className="text-white text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    const balance = userData?.balance ? Number(userData.balance) : 0;
+    const rankPoints = userData?.rankPoints || 0;
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-24">
+        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-[100] bg-slate-950/80 backdrop-blur-md border-b border-white/5 px-6 py-4">
-                <div className="flex items-center justify-between">
-                    {/* Left: Balance */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                            <IndianRupee className="w-5 h-5 text-green-500" strokeWidth={3} />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-2xl font-bold text-white leading-none">
-                                {userData.balance.toLocaleString()}
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 pb-4 pt-5 rounded-b-3xl">
+                <div className="flex justify-between items-center px-4 mb-4 relative">
+                    {/* Left: Balance + Rank Points */}
+                    <div className="flex flex-col gap-1 w-auto">
+                        <div className="flex items-center gap-1 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 whitespace-nowrap">
+                            <span className="material-icons-round text-[#FBBF24] text-sm drop-shadow-md">currency_rupee</span>
+                            <span className="text-white text-xs font-bold font-['Russo_One'] tracking-wide">
+                                {balance.toLocaleString()}
                             </span>
-                            <div className="flex items-center gap-2 mt-1">
-                                <RankBadge tier={userData.rankTier} size="sm" />
-                                <span className="text-xs font-medium text-gray-400">
-                                    {userData.rankPoints} pts
-                                </span>
-                            </div>
+                        </div>
+                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full border border-white/10">
+                            <span className="material-icons-round text-blue-400 text-sm drop-shadow-md">military_tech</span>
+                            <span className="text-white text-xs font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
                         </div>
                     </div>
 
-                    {/* Right: Actions */}
-                    <div className="flex items-center gap-3">
-                        <button className="relative p-2.5 hover:bg-white/5 rounded-xl transition-colors group">
-                            <Bell className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-slate-950" />
+                    {/* Center: Logo */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
+                        <Image
+                            src="/bid-wars-logo.png"
+                            alt="Bid Wars Logo"
+                            width={112}
+                            height={56}
+                            className="drop-shadow-lg object-contain"
+                        />
+                    </div>
+
+                    {/* Right: Notifications + Profile */}
+                    <div className="flex items-center gap-3 w-24 justify-end">
+                        <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
+                            <span className="material-icons-round text-white">notifications</span>
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
                         </button>
-
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center hover:border-cyan-500/50 transition-all"
-                            >
-                                <User className="w-5 h-5 text-gray-300" />
-                            </button>
-
-                            {/* Profile Dropdown */}
-                            {showProfileMenu && (
-                                <div className="absolute right-0 mt-3 w-48 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                                    <div className="p-1">
-                                        <button
-                                            onClick={() => {
-                                                setShowProfileMenu(false);
-                                                window.location.href = '/profile';
-                                            }}
-                                            className="w-full px-4 py-3 text-left text-gray-200 hover:bg-white/5 rounded-xl transition flex items-center gap-3"
-                                        >
-                                            <User className="w-4 h-4 text-cyan-400" />
-                                            <span>Profile</span>
-                                        </button>
-                                        <button
-                                            onClick={async () => {
-                                                await fetch('/api/auth/logout', { method: 'POST' });
-                                                window.location.href = '/login';
-                                            }}
-                                            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 rounded-xl transition flex items-center gap-3"
-                                        >
-                                            <div className="w-4 h-4 border-2 border-red-500 rounded-full" />
-                                            <span>Logout</span>
-                                        </button>
-                                    </div>
+                        <Link href="/profile">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
+                                <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
+                                    <span className="material-icons-round text-white text-xl">person</span>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        </Link>
                     </div>
                 </div>
-            </header>
 
-            {/* Content */}
-            <main className="px-6 py-6 space-y-8">
-                {/* Segmented Control */}
-                <div className="p-1.5 bg-gray-900/50 border border-white/5 rounded-2xl flex relative">
-                    {/* Sliding Background - Simplified for now with CSS classes */}
+                {/* Tabs */}
+                <div className="flex px-4 mt-6 gap-2">
                     <button
                         onClick={() => setActiveTab('bids')}
-                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${activeTab === 'bids'
-                            ? 'bg-gray-800 text-white shadow-lg shadow-black/20 ring-1 ring-white/10'
-                            : 'text-gray-500 hover:text-gray-300'
+                        className={`flex-1 font-['Russo_One'] text-2xl py-3 rounded-t-xl transition-transform border-t-2 border-x-2 border-white/20 ${activeTab === 'bids'
+                                ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
+                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
                             }`}
                     >
-                        Live Auctions
+                        BIDS
                     </button>
                     <button
                         onClick={() => setActiveTab('market')}
-                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${activeTab === 'market'
-                            ? 'bg-gray-800 text-white shadow-lg shadow-black/20 ring-1 ring-white/10'
-                            : 'text-gray-500 hover:text-gray-300'
+                        className={`flex-1 font-['Russo_One'] text-2xl py-3 rounded-t-xl transition-transform border-t-2 border-x-2 border-white/20 ${activeTab === 'market'
+                                ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
+                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
                             }`}
                     >
-                        Marketplace
+                        MARKET
                     </button>
                 </div>
+            </header>
 
-                {activeTab === 'bids' ? <BidsTab /> : <MarketTab />}
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 relative">
+                {activeTab === 'bids' ? <BidsContent /> : <MarketContent />}
             </main>
 
-            {/* Bottom Navigation */}
+            {/* Bottom Nav */}
             <BottomNav />
+
+            {/* Google Fonts */}
+            <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+            <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
         </div>
     );
 }
 
-function BidsTab() {
+function BidsContent() {
     const [scheduledBids, setScheduledBids] = useState<any[]>([]);
-    const [liveBids, setLiveBids] = useState<any[]>([]); // New state for live auctions
+    const [wonBids, setWonBids] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -134,9 +133,15 @@ function BidsTab() {
                 if (res.ok) {
                     const data = await res.json();
                     const auctions = data.auctions || [];
+                    setScheduledBids(auctions.filter((a: any) => a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM'));
 
-                    setScheduledBids(auctions.filter((a: any) => a.status === 'SCHEDULED'));
-                    setLiveBids(auctions.filter((a: any) => a.status === 'LIVE' || a.status === 'REVEALING' || a.status === 'BIDDING'));
+                    // Get user's won auctions
+                    const userRes = await fetch('/api/user');
+                    if (userRes.ok) {
+                        const userData = await userRes.json();
+                        const userId = userData.user.id;
+                        setWonBids(auctions.filter((a: any) => a.winnerId === userId && a.status === 'COMPLETED'));
+                    }
                 }
             } catch (e) {
                 console.error('Failed to fetch auctions');
@@ -151,103 +156,237 @@ function BidsTab() {
         return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
     }
 
-    // Sort functions
-    const sortByTime = (a: any, b: any) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+    const getTierBg = (tier: string) => {
+        if (tier === 'BRONZE') return '/shutter-bronze.png';
+        if (tier === 'SILVER') return '/shutter-silver.png';
+        if (tier === 'GOLD') return '/shutter-gold.png';
+        return '/shutter-bronze.png';
+    };
+
+    const getTierColors = (tier: string) => {
+        if (tier === 'BRONZE') return {
+            bg: 'from-amber-700 to-amber-900',
+            border: 'border-amber-800',
+            text: 'text-amber-200',
+            badge: 'bg-amber-950'
+        };
+        if (tier === 'SILVER') return {
+            bg: 'from-gray-200 to-gray-400',
+            border: 'border-gray-100',
+            text: 'text-gray-700',
+            badge: 'bg-gray-600'
+        };
+        if (tier === 'GOLD') return {
+            bg: 'from-amber-200 to-amber-500',
+            border: 'border-amber-100',
+            text: 'text-amber-900',
+            badge: 'bg-yellow-600'
+        };
+        return {
+            bg: 'from-gray-500 to-gray-700',
+            border: 'border-gray-400',
+            text: 'text-gray-200',
+            badge: 'bg-gray-800'
+        };
+    };
+
+    const getTimeUntil = (scheduledAt: string) => {
+        const now = new Date().getTime();
+        const scheduled = new Date(scheduledAt).getTime();
+        const diff = scheduled - now;
+
+        if (diff < 0) return 'Starting soon';
+
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 0) return `Starts in ${days}d`;
+        if (hours > 0) return `Starts in ${hours}h`;
+        if (minutes > 0) return `Live in ${minutes}m`;
+        return 'Starting now';
+    };
+
+    const getStatusBadgeColor = (time: string) => {
+        if (time.includes('Live in')) return 'bg-green-500';
+        if (time.includes('h')) return 'bg-blue-500';
+        return 'bg-gray-400';
+    };
 
     return (
-        <div className="space-y-6">
-            {/* Live Bids */}
-            {liveBids.length > 0 && (
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                        <h2 className="text-lg font-bold text-gray-100">Live Now</h2>
+        <div>
+            {/* Scheduled Bids */}
+            <div className="mb-8">
+                <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="material-icons-round">schedule</span> Scheduled Bids
+                </h2>
+                {scheduledBids.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-900/50 rounded-lg">
+                        No scheduled auctions
                     </div>
-                    <div className="space-y-3">
-                        {liveBids.map((bid) => (
-                            <Link href={`/bid/${bid.id}`} key={bid.id}>
-                                <div className="card hover:shadow-md cursor-pointer group border-l-4 border-red-500 bg-red-900/10 mb-3">
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-4xl">🔥</div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
-                                            <p className="text-sm text-red-400 font-bold animate-pulse">
-                                                Current Price: ₹{Number(bid.currentPrice).toLocaleString()}
-                                            </p>
+                ) : (
+                    <div className="space-y-4">
+                        {scheduledBids.map((bid) => {
+                            const colors = getTierColors(bid.rankTier);
+                            const timeText = getTimeUntil(bid.scheduledAt);
+
+                            return (
+                                <Link href={`/bid/${bid.id}`} key={bid.id}>
+                                    <div
+                                        className="relative rounded-2xl p-4 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
+                                        style={{
+                                            backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center'
+                                        }}
+                                    >
+                                        {/* Dark overlay */}
+                                        <div className="absolute inset-0 bg-black/50 rounded-2xl -z-10"></div>
+
+                                        {/* Status badge */}
+                                        <div className={`absolute top-0 right-0 ${getStatusBadgeColor(timeText)} text-white text-xs font-bold px-3 py-1 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                            {timeText}
                                         </div>
-                                        <div className="px-4 py-2 bg-red-600 font-bold text-white rounded-lg text-sm">
-                                            JOIN
+
+                                        <div className="flex items-center gap-4">
+                                            {/* Tier icon */}
+                                            <div className={`w-16 h-16 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
+                                                <span className={`material-icons-round ${colors.text} text-4xl`}>shield</span>
+                                                <div className={`absolute -bottom-2 ${colors.badge} text-white text-[10px] px-2 rounded-full font-bold uppercase`}>
+                                                    {bid.rankTier}
+                                                </div>
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-['Russo_One'] text-white leading-tight">{bid.name}</h3>
+                                                <p className="text-gray-400 text-sm font-medium">Rank: {bid.rankTier}</p>
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-green-400 font-bold">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Notification button */}
+                                            <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
+                                                <span className="material-icons-round text-xl">notifications_active</span>
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            );
+                        })}
                     </div>
-                </section>
-            )}
+                )}
+            </div>
 
-            {/* Scheduled Bids */}
-            <section>
-                <h2 className="text-lg font-bold text-gray-100 mb-4">Upcoming Auctions</h2>
-                {scheduledBids.length === 0 && liveBids.length === 0 ? (
+            {/* Won Shutters */}
+            <div className="mb-8">
+                <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="material-icons-round">emoji_events</span> Won Shutters
+                </h2>
+                {wonBids.length === 0 ? (
                     <div className="text-center py-8 text-gray-500 bg-gray-900/50 rounded-lg">
-                        No scheduled auctions. Check back later!
+                        No won auctions yet
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {scheduledBids.sort(sortByTime).map((bid) => (
+                        {wonBids.map((bid) => (
                             <Link href={`/bid/${bid.id}`} key={bid.id}>
-                                <div className="card hover:shadow-md cursor-pointer group hover:bg-gray-800/80 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-4xl">
-                                            {bid.rankTier === 'GOLD' ? '🥇' : bid.rankTier === 'SILVER' ? '🥈' : '🥉'}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-gray-100 mb-1">{bid.name}</h3>
-                                            <p className="text-sm text-gray-300 mb-0.5">
-                                                Starts: {new Date(bid.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                                            </p>
-                                            <p className="text-sm text-gray-500">
-                                                Starting Price: ₹{Number(bid.startingPrice).toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <RankBadge tier={bid.rankTier} size="sm" />
-                                            <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-cyan-500 transition-colors" />
-                                        </div>
+                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-4 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                    <div>
+                                        <h3 className="text-lg font-['Russo_One'] text-white">
+                                            {bid.name} <span className="text-xs font-normal text-gray-400">RANK - {bid.rankTier}</span>
+                                        </h3>
+                                        <p className="text-sm text-gray-400">
+                                            Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
+                                        </p>
                                     </div>
+                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-sm uppercase tracking-wide flex items-center gap-1">
+                                        info <span className="material-icons-round text-sm">chevron_right</span>
+                                    </button>
                                 </div>
                             </Link>
                         ))}
                     </div>
                 )}
-            </section>
+            </div>
         </div>
     );
 }
 
-function MarketTab() {
+function MarketContent() {
     const categories = [
-        { id: 'invest', name: 'Invest', icon: '📈', description: 'Trade minerals & assets', color: 'from-blue-500 to-cyan-500' },
-        { id: 'pawn', name: 'Pawn', icon: '🏪', description: 'Open your shop', color: 'from-purple-500 to-pink-500' },
-        { id: 'dig', name: 'Dig', icon: '⛏️', description: 'Mine for resources', color: 'from-orange-500 to-red-500' },
-        { id: 'consumer', name: 'Consumer', icon: '🏠', description: 'Buy land, cars & more', color: 'from-green-500 to-emerald-500' },
+        { id: 'invest', name: 'Invest', description: 'Grow your wealth', icon: 'trending_up', bg: 'invest.png', iconBg: 'from-green-200 to-green-500', iconColor: 'text-green-900' },
+        { id: 'pawn', name: 'Pawn', description: 'Quick cash solutions', icon: 'storefront', bg: 'pawn.png', iconBg: 'from-yellow-200 to-yellow-500', iconColor: 'text-yellow-900' },
+        { id: 'dig', name: 'Dig', description: 'Find hidden treasures', icon: 'construction', bg: 'dig.png', iconBg: 'from-orange-200 to-orange-500', iconColor: 'text-orange-900' },
+        { id: 'consumer', name: 'Consumer', description: 'Local marketplace', icon: 'shopping_cart', bg: 'consumer.png', iconBg: 'from-purple-200 to-purple-500', iconColor: 'text-purple-900' },
     ];
 
     return (
         <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-100">Market Categories</h2>
-            <div className="grid grid-cols-2 gap-4">
-                {categories.map((category) => (
-                    <button key={category.id} className="card hover:shadow-lg active:scale-95 transition-all text-left group">
-                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center text-3xl mb-3 group-hover:scale-110 transition-transform`}>
-                            {category.icon}
+            {categories.map((category) => (
+                <Link href={`/${category.id}`} key={category.id}>
+                    <div
+                        className="relative rounded-2xl p-5 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
+                        style={{
+                            backgroundImage: `url('/${category.bg}')`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                        }}
+                    >
+                        {/* Dark overlay */}
+                        <div className="absolute inset-0 bg-black/35 rounded-2xl z-0"></div>
+
+                        <div className="flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-14 h-14 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
+                                    <span className={`material-icons-round ${category.iconColor} text-3xl`}>{category.icon}</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-['Russo_One'] text-white uppercase">{category.name}</h3>
+                                    <p className="text-sm text-gray-400">{category.description}</p>
+                                </div>
+                            </div>
+                            <span className="material-icons-round text-gray-400">chevron_right</span>
                         </div>
-                        <h3 className="font-bold text-gray-100 mb-1">{category.name}</h3>
-                        <p className="text-sm text-gray-500">{category.description}</p>
-                    </button>
-                ))}
-            </div>
+                    </div>
+                </Link>
+            ))}
         </div>
+    );
+}
+
+function BottomNav() {
+    return (
+        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
+            <div className="flex justify-around items-end pb-4 pt-2 relative">
+                <Link href="/home" className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
+                </Link>
+                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+                </Link>
+                <div className="relative w-1/5 flex justify-center -top-6">
+                    <Link href="/pay">
+                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
+                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
+                        </button>
+                    </Link>
+                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
+                </div>
+                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
+                </Link>
+                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
+                </button>
+            </div>
+        </nav>
     );
 }
