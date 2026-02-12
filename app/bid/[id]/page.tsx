@@ -158,7 +158,7 @@ export default function LiveBidPage() {
             setBids(prev => [newBid, ...prev]);
 
             // Reset countdown on new bid to keep auction alive (Anti-Sniping / Bidding War logic)
-            setBidCountdown(15);
+            setBidCountdown(10);
         });
 
         // === Auction Ended Event ===
@@ -200,8 +200,15 @@ export default function LiveBidPage() {
                 setShutterCountdown(Math.max(0, Math.ceil(15 - elapsed)));
             } else if (elapsed >= 15 && elapsed < 16) {
                 setPhase('CLOSING');
+            } else if (elapsed >= 15 && elapsed < 16) {
+                setPhase('CLOSING');
             } else {
-                setPhase('BIDDING');
+                // Only transition to BIDDING if we are in CLOSING. 
+                // Once in BIDDING, this ticker should stop interfering to allow 'SOLD' state.
+                if (phase === 'CLOSING') {
+                    setPhase('BIDDING');
+                }
+                // If we are already in BIDDING or SOLD, do nothing.
             }
         }, 100);
 
