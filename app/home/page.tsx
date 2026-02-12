@@ -133,7 +133,7 @@ function BidsContent() {
                 if (res.ok) {
                     const data = await res.json();
                     const auctions = data.auctions || [];
-                    const auctions = data.auctions || [];
+
                     setScheduledBids(auctions.filter((a: any) =>
                         a.status === 'SCHEDULED' ||
                         a.status === 'WAITING_ROOM' ||
