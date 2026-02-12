@@ -31,14 +31,21 @@ export default function WaitingRoom({ auction }: WaitingRoomProps) {
             const diff = Math.max(0, Math.ceil((scheduled - now) / 1000));
             setCountdown(diff);
 
-            // Auto-redirect when countdown expires (auction should start)
+            // When countdown expires, check status periodically instead of reloading
             if (diff === 0) {
-                setTimeout(() => window.location.reload(), 1000);
+                // Poll every 2 seconds to force status update on server if Pusher is missed
+                if (Math.floor(Date.now() / 1000) % 2 === 0) {
+                    fetch(`/api/auctions/${auction.id}`).then(res => res.json()).then(data => {
+                        if (data.auction && data.auction.status === 'LIVE') {
+                            window.location.reload(); // Only reload if status is ACTUALLY live
+                        }
+                    }).catch(console.error);
+                }
             }
-        }, 100);
+        }, 1000);
 
         return () => clearInterval(interval);
-    }, [auction.scheduledAt]);
+    }, [auction.scheduledAt, auction.id]);
 
     const minutes = Math.floor(countdown / 60);
     const seconds = countdown % 60;
