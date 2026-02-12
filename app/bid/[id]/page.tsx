@@ -70,8 +70,9 @@ export default function LiveBidPage() {
                     // Check if they're joining late (after animation sequence)
                     const elapsed = (Date.now() - serverStartTime.current) / 1000;
                     if (elapsed > 16) {
-                        console.log('[BidPage] 🚫 Late join detected (T+' + Math.floor(elapsed) + 's). Blocking user.');
-                        setIsLateJoin(true);
+                        console.log('[BidPage] Skipping intro animation (T+' + Math.floor(elapsed) + 's).');
+                        // Do not block user, just let them join the bidding phase
+                        // setIsLateJoin(true); 
                     }
                 }
 
