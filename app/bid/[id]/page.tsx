@@ -156,6 +156,9 @@ export default function LiveBidPage() {
                 type: data.isCustom ? 'CUSTOM' : 'QUICK'
             };
             setBids(prev => [newBid, ...prev]);
+
+            // Reset countdown on new bid to keep auction alive (Anti-Sniping / Bidding War logic)
+            setBidCountdown(15);
         });
 
         // === Auction Ended Event ===
