@@ -30,6 +30,7 @@ export async function startAuctionService(auctionId: string) {
         data: {
             status: 'LIVE',
             startedAt: new Date(),
+            endedAt: new Date(Date.now() + 10 * 60 * 1000), // Default 10 minutes duration
         },
     });
 
