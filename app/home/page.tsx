@@ -88,8 +88,8 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('bids')}
                         className={`flex-1 font-['Russo_One'] text-2xl py-3 rounded-t-xl transition-transform border-t-2 border-x-2 border-white/20 ${activeTab === 'bids'
-                                ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
-                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
+                            ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
+                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
                             }`}
                     >
                         BIDS
@@ -97,8 +97,8 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('market')}
                         className={`flex-1 font-['Russo_One'] text-2xl py-3 rounded-t-xl transition-transform border-t-2 border-x-2 border-white/20 ${activeTab === 'market'
-                                ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
-                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
+                            ? 'bg-[#FBBF24] text-[#1E3A8A] shadow-[0_4px_0_0_rgba(0,0,0,0.2)] relative z-10 transform translate-y-1'
+                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 shadow-inner'
                             }`}
                     >
                         MARKET
@@ -133,7 +133,12 @@ function BidsContent() {
                 if (res.ok) {
                     const data = await res.json();
                     const auctions = data.auctions || [];
-                    setScheduledBids(auctions.filter((a: any) => a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM'));
+                    const auctions = data.auctions || [];
+                    setScheduledBids(auctions.filter((a: any) =>
+                        a.status === 'SCHEDULED' ||
+                        a.status === 'WAITING_ROOM' ||
+                        a.status === 'LIVE'
+                    ));
 
                     // Get user's won auctions
                     const userRes = await fetch('/api/user');

@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+import { checkAndUpdateAuctionStatuses } from '@/lib/auction-service';
+
 export async function GET(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Trigger lazy status update before fetching
+        await checkAndUpdateAuctionStatuses();
+
         const { id } = await params;
         const auction = await prisma.auction.findUnique({
             where: { id },
