@@ -71,8 +71,7 @@ export default function LiveBidPage() {
                     const elapsed = (Date.now() - serverStartTime.current) / 1000;
                     if (elapsed > 16) {
                         console.log('[BidPage] Skipping intro animation (T+' + Math.floor(elapsed) + 's).');
-                        // Do not block user, just let them join the bidding phase
-                        // setIsLateJoin(true); 
+                        setPhase('BIDDING');
                     }
                 }
 
@@ -204,12 +203,11 @@ export default function LiveBidPage() {
             } else if (elapsed >= 15 && elapsed < 16) {
                 setPhase('CLOSING');
             } else {
-                // Only transition to BIDDING if we are in CLOSING. 
-                // Once in BIDDING, this ticker should stop interfering to allow 'SOLD' state.
-                if (phase === 'CLOSING') {
+                // If we've passed the 16s intro sequence, ensure we are in BIDDING phase
+                // unless the auction has already been marked as SOLD.
+                if (phase !== 'BIDDING' && phase !== 'SOLD') {
                     setPhase('BIDDING');
                 }
-                // If we are already in BIDDING or SOLD, do nothing.
             }
         }, 100);
 
