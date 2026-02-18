@@ -155,6 +155,10 @@ function BidsContent() {
             }
         }
         fetchAuctions();
+
+        // Poll every 10 seconds so statuses update without manual refresh
+        const pollInterval = setInterval(fetchAuctions, 10000);
+        return () => clearInterval(pollInterval);
     }, []);
 
     if (loading) {
