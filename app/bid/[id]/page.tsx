@@ -725,6 +725,78 @@ export default function LiveBidPage() {
         };
     }, [auctionId]);
 
+    // ── 2b. Polling fallback ───────────────────────────────────────────────────
+    // Polls the DB every 2s as a guaranteed fallback when Pusher fails.
+    // Pusher still runs in parallel for instant updates when it works.
+    useEffect(() => {
+        if (!auctionId || phase === 'SOLD') return;
+
+        let lastPollTime = Date.now() - 5000; // start 5s back to catch recent bids
+
+        const poll = async () => {
+            try {
+                const res = await fetch(`/api/auctions/${auctionId}/poll?since=${lastPollTime}`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // Update server time reference for next poll
+                lastPollTime = data.serverTime ?? Date.now();
+
+                // Handle new bids
+                if (data.newBids && data.newBids.length > 0) {
+                    const me = currentUserRef.current;
+                    setBids(prev => {
+                        const existingIds = new Set(prev.map((b: BidMessage) => b.id));
+                        const fresh = data.newBids.filter((b: any) => !existingIds.has(b.id) && !seenBidIds.current.has(b.id));
+                        if (fresh.length === 0) return prev;
+                        fresh.forEach((b: any) => seenBidIds.current.add(b.id));
+                        addLog(`📡 Poll: +${fresh.length} new bid(s)`);
+                        const newMessages: BidMessage[] = fresh.map((b: any) => ({
+                            id: b.id,
+                            username: b.username,
+                            amount: b.amount,
+                            isMine: me ? b.userId === me.id : false,
+                            timestamp: new Date(b.createdAt).getTime(),
+                            isCustom: false,
+                        }));
+                        return [...prev, ...newMessages];
+                    });
+                }
+
+                // Sync current price
+                if (data.currentPrice && data.currentPrice > 0) {
+                    setCurrentPrice(data.currentPrice);
+                }
+
+                if (data.status === 'LIVE' && data.startedAt) {
+                    if (phase === 'WAITING') {
+                        addLog('📡 Poll: auction LIVE');
+                        serverStartTime.current = new Date(data.startedAt).getTime();
+                        setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
+                    }
+                }
+
+                // Handle auction ended
+                if (data.status === 'COMPLETED') {
+                    addLog(`📡 Poll: auction COMPLETED`);
+                    setSoldInfo({
+                        winnerId: data.winnerId ?? null,
+                        winnerUsername: data.winnerUsername ?? null,
+                        finalPrice: data.finalPrice ?? data.currentPrice ?? 0,
+                        auctionName: data.auctionName ?? 'This Auction',
+                    });
+                    setPhase('SOLD');
+                }
+            } catch (e) {
+                addLog(`⚠️ Poll error: ${e}`);
+            }
+        };
+
+        // Poll immediately, then every 1 second for faster updates
+        poll();
+        const interval = setInterval(poll, 1000);
+        return () => clearInterval(interval);
+    }, [auctionId, phase]);
 
     // ── 3. Animation ticker ────────────────────────────────────────────────────
     useEffect(() => {
