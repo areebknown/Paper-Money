@@ -549,14 +549,79 @@ export default function LiveBidPage() {
         setPusherState(initialState);
         addLog(`Connection state on mount: ${initialState}`);
 
+        // Re-fetch latest state from server whenever Pusher reconnects
+        // This catches any events missed during a 1006 disconnect window
+        const refreshStateFromServer = async () => {
+            addLog('🔄 Reconnected — refreshing state from server...');
+            try {
+                const currentUserId = currentUserRef.current?.id ?? null;
+
+                // Re-fetch auction (status, currentPrice)
+                const auctionRes = await fetch(`/api/auctions/${auctionId}`);
+                if (auctionRes.ok) {
+                    const { auction } = await auctionRes.json();
+                    const cp = Number(auction.currentPrice || auction.startingPrice);
+                    setCurrentPrice(cp);
+
+                    if (auction.status === 'COMPLETED') {
+                        setSoldInfo({
+                            winnerId: auction.winnerId,
+                            winnerUsername: auction.winner?.username ?? null,
+                            finalPrice: cp,
+                            auctionName: auction.name,
+                        });
+                        setPhase('SOLD');
+                        return;
+                    }
+                }
+
+                // Re-fetch bids
+                const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
+                if (bidsRes.ok) {
+                    const { bids } = await bidsRes.json();
+                    const messages: BidMessage[] = bids.map((b: any) => ({
+                        id: b.id,
+                        username: b.user?.username ?? b.bidder?.username ?? 'Unknown',
+                        amount: Number(b.amount),
+                        isMine: currentUserId === (b.userId ?? b.bidderId),
+                        timestamp: new Date(b.createdAt ?? b.timestamp).getTime(),
+                        isCustom: false,
+                    }));
+                    const sorted = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+                    // Add any bids we don't already have (by id)
+                    setBids(prev => {
+                        const existingIds = new Set(prev.map(b => b.id));
+                        const newOnes = sorted.filter(b => !existingIds.has(b.id));
+                        if (newOnes.length > 0) {
+                            addLog(`🔄 Added ${newOnes.length} missed bid(s) from server`);
+                        }
+                        return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+                    });
+                    // Update lastBidderId from highest bid
+                    if (bids.length > 0) {
+                        const highest = bids[0];
+                        setLastBidderId(highest.user?.id ?? highest.bidderId ?? null);
+                    }
+                }
+            } catch (e) {
+                addLog(`🔄 Refresh error: ${e}`);
+            }
+        };
+
         pusher.connection.bind('state_change', (states: any) => {
             setIsConnected(states.current === 'connected');
             setPusherState(states.current);
             addLog(`Connection: ${states.previous} → ${states.current}`);
+            // Reconnected after a drop — catch up on missed events
+            if (states.current === 'connected' && states.previous !== 'connecting') {
+                refreshStateFromServer();
+            }
         });
         pusher.connection.bind('error', (err: any) => {
             addLog(`Connection ERROR: ${JSON.stringify(err)}`);
-        });  // ── Helper to bind all handlers onto a channel ──
+        });
+
+        // ── Helper to bind all handlers onto a channel ──
         // Called on initial subscribe AND after StrictMode cleanup re-mount
         const bindAuctionHandlers = (ch: any) => {
             ch.unbind_all(); // clear any stale handlers first
@@ -656,8 +721,10 @@ export default function LiveBidPage() {
             if (channelRef.current) channelRef.current.unbind_all();
             if (globalChannelRef.current) globalChannelRef.current.unbind_all();
             pusher.connection.unbind('state_change');
+            pusher.connection.unbind('error');
         };
     }, [auctionId]);
+
 
     // ── 3. Animation ticker ────────────────────────────────────────────────────
     useEffect(() => {

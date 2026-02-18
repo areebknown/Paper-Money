@@ -8,8 +8,11 @@ export function getPusherClient(): PusherClient {
             process.env.NEXT_PUBLIC_PUSHER_KEY || 'MISSING_KEY',
             {
                 cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2',
-                // Enable logging in dev to debug connection issues
-                enabledTransports: ['ws', 'wss'],
+                // Do NOT restrict transports — let Pusher choose the best one.
+                // Forcing ws-only causes error 1006 (abnormal close) on mobile/proxied networks.
+                // Pusher will use WSS first and fall back to HTTP if needed.
+                activityTimeout: 30000,   // ping server every 30s to keep connection alive
+                pongTimeout: 10000,       // wait 10s for pong before reconnecting
             }
         );
     }
@@ -18,7 +21,6 @@ export function getPusherClient(): PusherClient {
 
 /**
  * Fully disconnect and destroy the Pusher singleton.
- * Call this when you need a clean slate (e.g. on page unmount in dev StrictMode).
  */
 export function disconnectPusher(): void {
     if (pusherClient) {
