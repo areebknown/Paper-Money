@@ -233,7 +233,23 @@ function BidsContent() {
                     <div className="space-y-4">
                         {scheduledBids.map((bid) => {
                             const colors = getTierColors(bid.rankTier);
-                            const timeText = getTimeUntil(bid.scheduledAt);
+
+                            // Determine badge text and color based on actual status
+                            let badgeText = '';
+                            let badgeColor = '';
+                            const isLiveOrWaiting = bid.status === 'LIVE' || bid.status === 'WAITING_ROOM';
+
+                            if (bid.status === 'LIVE') {
+                                badgeText = '🔴 Live';
+                                badgeColor = 'bg-red-600';
+                            } else if (bid.status === 'WAITING_ROOM') {
+                                badgeText = 'Waiting Room';
+                                badgeColor = 'bg-indigo-500';
+                            } else {
+                                const timeText = getTimeUntil(bid.scheduledAt);
+                                badgeText = timeText;
+                                badgeColor = getStatusBadgeColor(timeText);
+                            }
 
                             return (
                                 <Link href={`/bid/${bid.id}`} key={bid.id}>
@@ -249,8 +265,8 @@ function BidsContent() {
                                         <div className="absolute inset-0 bg-black/50 rounded-2xl -z-10"></div>
 
                                         {/* Status badge */}
-                                        <div className={`absolute top-0 right-0 ${getStatusBadgeColor(timeText)} text-white text-xs font-bold px-3 py-1 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
-                                            {timeText}
+                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-xs font-bold px-3 py-1 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                            {badgeText}
                                         </div>
 
                                         <div className="flex items-center gap-4">
@@ -273,10 +289,12 @@ function BidsContent() {
                                                 </div>
                                             </div>
 
-                                            {/* Notification button */}
-                                            <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
-                                                <span className="material-icons-round text-xl">notifications_active</span>
-                                            </button>
+                                            {/* Notification button — only for SCHEDULED auctions */}
+                                            {!isLiveOrWaiting && (
+                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
+                                                    <span className="material-icons-round text-xl">notifications_active</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>
