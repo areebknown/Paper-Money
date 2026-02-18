@@ -424,6 +424,11 @@ export default function LiveBidPage() {
     const serverStartTime = useRef<number | null>(null);
     const tickerRef = useRef<NodeJS.Timeout | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    // Keep currentUser in a ref so Pusher handlers always have the latest value
+    // without needing to re-subscribe (avoids stale closure bug)
+    const currentUserRef = useRef<{ id: string; username: string } | null>(null);
+    // Track who placed the last bid (to block re-bidding)
+    const [lastBidderId, setLastBidderId] = useState<string | null>(null);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -440,7 +445,9 @@ export default function LiveBidPage() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     currentUserId = userData.user.id;
-                    setCurrentUser({ id: userData.user.id, username: userData.user.username });
+                    const user = { id: userData.user.id, username: userData.user.username };
+                    setCurrentUser(user);
+                    currentUserRef.current = user;
                     setBalance(Number(userData.user.balance));
                     setRankPoints(userData.user.rankPoints || 0);
                 }
@@ -499,7 +506,15 @@ export default function LiveBidPage() {
                         timestamp: new Date(b.createdAt ?? b.timestamp).getTime(),
                         isCustom: false,
                     }));
-                    setBids(messages.reverse());
+                    // Sort ascending by timestamp for chat display
+                    const sorted = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+                    setBids(sorted);
+                    // Set last bidder from highest bid (first in desc-sorted list)
+                    if (messages.length > 0) {
+                        const highestBid = bidsJson.bids[0]; // already sorted desc by amount
+                        const highestBidderId = highestBid.user?.id ?? highestBid.bidderId;
+                        setLastBidderId(highestBidderId ?? null);
+                    }
                 }
 
                 setLoading(false);
@@ -520,7 +535,6 @@ export default function LiveBidPage() {
         const globalChannel = pusher.subscribe('global-auctions');
         globalChannel.bind('auction-waiting-room', (data: any) => {
             if (data.id === auctionId) {
-                // Waiting room just opened — reload so WaitingRoom component shows
                 window.location.reload();
             }
         });
@@ -548,15 +562,18 @@ export default function LiveBidPage() {
         });
 
         channel.bind('new-bid', (data: any) => {
+            // Use ref to get current user — avoids stale closure without re-subscribing
+            const me = currentUserRef.current;
             setCurrentPrice(data.amount);
-            // Start/reset countdown only when a bid is placed
             setBidCountdown(10);
+            // Track who placed this bid (to enforce last-bidder lock)
+            setLastBidderId(data.userId ?? null);
 
             const newBid: BidMessage = {
                 id: data.bidId || `bid-${Date.now()}`,
-                username: data.username,
+                username: data.username ?? 'Unknown',
                 amount: data.amount,
-                isMine: currentUser ? data.userId === currentUser.id : false,
+                isMine: me ? data.userId === me.id : false,
                 timestamp: Date.now(),
                 isCustom: !!data.isCustom,
             };
@@ -575,10 +592,13 @@ export default function LiveBidPage() {
         });
 
         return () => {
+            globalChannel.unbind_all();
+            pusher.unsubscribe('global-auctions');
             channel.unbind_all();
             channel.unsubscribe();
         };
-    }, [auctionId, currentUser]);
+        // Only depends on auctionId — currentUser is accessed via ref, not closure
+    }, [auctionId]);
 
     // ── 3. Animation ticker ────────────────────────────────────────────────────
     useEffect(() => {
@@ -709,7 +729,8 @@ export default function LiveBidPage() {
 
     const tierInfo = getTierIcon(auctionData.rankTier);
     const quickBidAmount = currentPrice + 1000;
-    const canBid = phase === 'BIDDING' && isConnected;
+    const isLeading = !!(currentUser && lastBidderId && lastBidderId === currentUser.id);
+    const canBid = phase === 'BIDDING' && isConnected && !isLeading;
 
     // Info bar label based on phase
     const getInfoLabel = () => {
@@ -828,6 +849,15 @@ export default function LiveBidPage() {
                 ) : (
                     bids.map(bid => <ChatBubble key={bid.id} bid={bid} />)
                 )}
+                {/* Leading banner */}
+                {isLeading && phase === 'BIDDING' && (
+                    <div className="sticky bottom-0 flex justify-center py-1">
+                        <div className="flex items-center gap-2 bg-green-900/80 border border-green-600/50 rounded-full px-4 py-1.5 backdrop-blur-sm">
+                            <span className="text-green-400 text-xs">🏆</span>
+                            <span className="text-green-300 text-xs font-bold">You're leading! Wait for someone to outbid you.</span>
+                        </div>
+                    </div>
+                )}
                 <div ref={chatEndRef} />
             </div>
 
@@ -872,21 +902,24 @@ export default function LiveBidPage() {
                             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Loan</span>
                         </button>
 
-                        {/* Quick Bid — shows actual bid amount */}
+                        {/* Quick Bid — shows actual bid amount, or leading state */}
                         <button
-                            disabled={!canBid || bidding}
+                            disabled={!canBid || bidding || isLeading}
                             onClick={() => placeBid(quickBidAmount)}
-                            className="h-14 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 disabled:opacity-30 disabled:grayscale rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg shadow-red-900/40 active:scale-95 transition"
+                            className={`h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg active:scale-95 transition ${isLeading
+                                ? 'bg-gradient-to-b from-green-700 to-green-900 opacity-80 cursor-not-allowed'
+                                : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 disabled:opacity-30 disabled:grayscale shadow-red-900/40'
+                                }`}
                         >
-                            <span className="text-lg">⚡</span>
+                            <span className="text-lg">{isLeading ? '🏆' : '⚡'}</span>
                             <span className="text-[9px] font-black text-white uppercase tracking-wide leading-none">
-                                {bidding ? '...' : `₹${quickBidAmount.toLocaleString()}`}
+                                {isLeading ? 'Leading' : bidding ? '...' : `₹${quickBidAmount.toLocaleString()}`}
                             </span>
                         </button>
 
                         {/* Custom Bid */}
                         <button
-                            disabled={!canBid}
+                            disabled={!canBid || isLeading}
                             onClick={() => setShowCustomInput(true)}
                             className="h-14 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 rounded-xl flex flex-col items-center justify-center gap-0.5 transition active:scale-95"
                         >
@@ -898,15 +931,17 @@ export default function LiveBidPage() {
             </div>
 
             {/* Connection lost banner */}
-            {!isConnected && (
-                <div className="fixed top-20 left-4 right-4 bg-red-900/80 border border-red-500 rounded-xl p-3 z-40 backdrop-blur-md text-center text-sm text-red-300 font-semibold">
-                    🔌 Connection Lost — Reconnecting...
-                </div>
-            )}
+            {
+                !isConnected && (
+                    <div className="fixed top-20 left-4 right-4 bg-red-900/80 border border-red-500 rounded-xl p-3 z-40 backdrop-blur-md text-center text-sm text-red-300 font-semibold">
+                        🔌 Connection Lost — Reconnecting...
+                    </div>
+                )
+            }
 
             {/* Google Fonts */}
             <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
-        </div>
+        </div >
     );
 }

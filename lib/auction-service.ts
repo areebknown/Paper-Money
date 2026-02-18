@@ -103,30 +103,38 @@ export async function endAuctionService(auctionId: string) {
     if (!auction) throw new Error("Auction not found");
     if (auction.status === 'COMPLETED') return { success: false, message: "Already completed" };
 
+    // Find the highest bidder to set as winner
+    const highestBid = await prisma.auctionBid.findFirst({
+        where: { auctionId },
+        orderBy: { amount: 'desc' },
+        include: {
+            bidder: { select: { id: true, username: true } }
+        }
+    });
+
+    const winnerId = highestBid?.bidder?.id ?? null;
+    const winnerUsername = highestBid?.bidder?.username ?? null;
+    const finalPrice = highestBid ? Number(highestBid.amount) : Number(auction.currentPrice);
+
+    // Update auction with winner and COMPLETED status
     const updated = await prisma.auction.update({
         where: { id: auctionId },
         data: {
             status: 'COMPLETED',
             endedAt: new Date(),
+            ...(winnerId ? { winnerId } : {}),
+            ...(highestBid ? { currentPrice: highestBid.amount } : {}),
         }
     });
 
-    // Fetch winner username if there is a winner
-    let winnerUsername: string | null = null;
-    if (auction.winnerId) {
-        const winner = await prisma.user.findUnique({
-            where: { id: auction.winnerId },
-            select: { username: true }
-        });
-        winnerUsername = winner?.username ?? null;
-    }
+    console.log(`[EndAuction] Winner: ${winnerUsername ?? 'none'} (${winnerId ?? 'no bids'}), Final: ₹${finalPrice}`);
 
-    // Notify everyone (fire-and-forget - don't block on Pusher)
+    // Notify everyone (fire-and-forget)
     pusherServer.trigger(`auction-${auctionId}`, 'auction-ended', {
         auctionId,
-        winnerId: auction.winnerId,
+        winnerId,
         winnerUsername,
-        finalPrice: Number(auction.currentPrice),
+        finalPrice,
         auctionName: auction.name,
     }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
@@ -134,7 +142,7 @@ export async function endAuctionService(auctionId: string) {
         id: auctionId
     }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
-    return { success: true, auction: updated };
+    return { success: true, auction: updated, winnerId, winnerUsername };
 }
 /**
  * Checks for auctions that need status updates and transitions them.
