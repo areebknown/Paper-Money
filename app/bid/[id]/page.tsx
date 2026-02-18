@@ -429,6 +429,8 @@ export default function LiveBidPage() {
     const currentUserRef = useRef<{ id: string; username: string } | null>(null);
     // Track who placed the last bid (to block re-bidding)
     const [lastBidderId, setLastBidderId] = useState<string | null>(null);
+    // Deduplicate bids: track IDs we've already added optimistically
+    const seenBidIds = useRef<Set<string>>(new Set());
 
     // Auto-scroll chat
     useEffect(() => {
@@ -531,24 +533,27 @@ export default function LiveBidPage() {
         if (!auctionId) return;
         const pusher = getPusherClient();
 
-        // Listen on global channel for waiting-room transition (for too-early users)
-        const globalChannel = pusher.subscribe('global-auctions');
-        globalChannel.bind('auction-waiting-room', (data: any) => {
-            if (data.id === auctionId) {
-                window.location.reload();
-            }
-        });
-        globalChannel.bind('auction-started', (data: any) => {
-            if (data.id === auctionId) {
-                window.location.reload();
-            }
-        });
-
+        // Immediately reflect current connection state
+        setIsConnected(pusher.connection.state === 'connected');
         pusher.connection.bind('state_change', (states: any) => {
             setIsConnected(states.current === 'connected');
         });
 
+        // Global channel — for too-early users waiting for waiting room
+        const globalChannel = pusher.subscribe('global-auctions');
+        globalChannel.bind('auction-waiting-room', (data: any) => {
+            if (data.id === auctionId) window.location.reload();
+        });
+        globalChannel.bind('auction-started', (data: any) => {
+            if (data.id === auctionId) window.location.reload();
+        });
+
+        // Auction-specific channel
         const channel = pusher.subscribe(`auction-${auctionId}`);
+
+        channel.bind('subscription_succeeded', () => {
+            console.log('[Pusher] ✅ Subscribed to auction channel');
+        });
 
         channel.bind('status-change', (data: any) => {
             if (data.status === 'LIVE' && data.startedAt) {
@@ -562,15 +567,26 @@ export default function LiveBidPage() {
         });
 
         channel.bind('new-bid', (data: any) => {
-            // Use ref to get current user — avoids stale closure without re-subscribing
             const me = currentUserRef.current;
+            const bidId = data.bidId || `pusher-${Date.now()}`;
+
+            // Skip if we already added this bid optimistically
+            if (seenBidIds.current.has(bidId)) {
+                console.log('[Pusher] Skipping duplicate bid:', bidId);
+                // Still update price + countdown in case optimistic update missed something
+                setCurrentPrice(data.amount);
+                setBidCountdown(10);
+                setLastBidderId(data.userId ?? null);
+                return;
+            }
+            seenBidIds.current.add(bidId);
+
             setCurrentPrice(data.amount);
             setBidCountdown(10);
-            // Track who placed this bid (to enforce last-bidder lock)
             setLastBidderId(data.userId ?? null);
 
             const newBid: BidMessage = {
-                id: data.bidId || `bid-${Date.now()}`,
+                id: bidId,
                 username: data.username ?? 'Unknown',
                 amount: data.amount,
                 isMine: me ? data.userId === me.id : false,
@@ -591,13 +607,14 @@ export default function LiveBidPage() {
             serverStartTime.current = null;
         });
 
+        // CLEANUP: Only unbind handlers, do NOT unsubscribe the channel.
+        // Unsubscribing destroys the singleton's subscription and breaks future mounts.
+        // React StrictMode double-mounts make this critical.
         return () => {
-            globalChannel.unbind_all();
-            pusher.unsubscribe('global-auctions');
             channel.unbind_all();
-            channel.unsubscribe();
+            globalChannel.unbind_all();
+            pusher.connection.unbind('state_change');
         };
-        // Only depends on auctionId — currentUser is accessed via ref, not closure
     }, [auctionId]);
 
     // ── 3. Animation ticker ────────────────────────────────────────────────────
@@ -658,6 +675,8 @@ export default function LiveBidPage() {
     const placeBid = async (amount: number) => {
         if (bidding || phase !== 'BIDDING') return;
         if (amount > balance) { alert('Insufficient balance!'); return; }
+        const me = currentUserRef.current;
+        if (!me) { alert('Not logged in'); return; }
 
         setBidding(true);
         try {
@@ -666,19 +685,46 @@ export default function LiveBidPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ auctionId, amount }),
             });
+
             if (!res.ok) {
                 const err = await res.json();
-                // If bid too low, refresh current price from server response
                 if (err.minimum) {
-                    setCurrentPrice(err.minimum - 1); // Will be corrected by next bid event
+                    // Server told us the real minimum — update our price state
+                    setCurrentPrice(Number(err.minimum) - 1);
                 }
                 alert(err.error || 'Failed to place bid');
-            } else {
-                const data = await res.json();
-                setBalance(data.newBalance);
-                setShowCustomInput(false);
-                setCustomBidAmount('');
+                return;
             }
+
+            const data = await res.json();
+
+            // ── OPTIMISTIC UPDATE ──
+            // Don't wait for Pusher — update UI immediately from API response
+            const bidId = data.bidId;
+            const newPrice = data.newPrice ?? amount;
+
+            // Mark this bid as seen so Pusher doesn't double-add it
+            seenBidIds.current.add(bidId);
+
+            // Update price, balance, countdown, leading state
+            setCurrentPrice(newPrice);
+            setBalance(data.newBalance);
+            setBidCountdown(10);
+            setLastBidderId(me.id);
+
+            // Add chat bubble immediately
+            const optimisticBid: BidMessage = {
+                id: bidId,
+                username: me.username,
+                amount: newPrice,
+                isMine: true,
+                timestamp: Date.now(),
+                isCustom: amount !== (currentPrice + 1000),
+            };
+            setBids(prev => [...prev, optimisticBid]);
+
+            setShowCustomInput(false);
+            setCustomBidAmount('');
         } catch {
             alert('Network error');
         } finally {

@@ -131,7 +131,12 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             bid,
-            newBalance: userBalance - amount
+            newBalance: userBalance - amount,
+            // Extra fields for optimistic UI update (so client doesn't need to wait for Pusher)
+            newPrice: amount,
+            bidId: bid.id,
+            bidderId: user.userId,
+            username: currentUser.username,
         });
 
     } catch (error) {
