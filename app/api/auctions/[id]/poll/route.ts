@@ -51,6 +51,14 @@ export async function GET(
             take: 50,
         });
 
+        const currentPrice = Number(auction.currentPrice || auction.startingPrice);
+
+        // Derive lastBidAt and lastBidderId from the most recent bid
+        // newBids is in desc order before reverse, so first element is newest
+        const latestBid = newBids.length > 0 ? newBids[0] : null;
+        const lastBidAt = latestBid ? latestBid.timestamp.getTime() : null;
+        const lastBidderId = latestBid ? latestBid.bidderId : null;
+
         // Reverse to chronological order for the client
         const formattedBids = newBids.reverse().map(bid => ({
             id: bid.id,
@@ -60,14 +68,15 @@ export async function GET(
             createdAt: bid.timestamp.toISOString(),
         }));
 
-        const currentPrice = Number(auction.currentPrice || auction.startingPrice);
-
         return NextResponse.json({
             status: auction.status,
             currentPrice,
             endedAt: auction.endedAt?.toISOString() ?? null,
             startedAt: auction.startedAt?.toISOString() ?? null,
             newBids: formattedBids,
+            // Timer sync — server tells client when the last bid was placed
+            lastBidAt,
+            lastBidderId,
             // Winner info (only set when COMPLETED)
             winnerId: auction.winnerId ?? null,
             winnerUsername: auction.winner?.username ?? null,

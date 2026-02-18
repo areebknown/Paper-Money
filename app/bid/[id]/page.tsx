@@ -762,6 +762,20 @@ export default function LiveBidPage() {
                     setCurrentPrice(data.currentPrice);
                 }
 
+                // ── Sync leading state & countdown timer from server ──
+                // This is the KEY fix: polling must update lastBidderId and
+                // bidCountdown so the "Leading" button and timer stay in sync.
+                if (data.lastBidderId) {
+                    setLastBidderId(data.lastBidderId);
+                }
+                if (data.lastBidAt && data.serverTime) {
+                    // Compute remaining countdown from server timestamps
+                    // This ensures all clients show the same countdown
+                    const elapsedSinceBid = (data.serverTime - data.lastBidAt) / 1000;
+                    const remaining = Math.max(0, Math.ceil(10 - elapsedSinceBid));
+                    setBidCountdown(remaining);
+                }
+
                 if (data.status === 'LIVE' && data.startedAt) {
                     if (phase === 'WAITING') {
                         addLog('📡 Poll: auction LIVE');
