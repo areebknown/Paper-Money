@@ -3,13 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield } from 'lucide-react';
+import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield, Wallet } from 'lucide-react';
 
 const ADMIN_NAV_ITEMS = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
     { href: '/admin/auctions', icon: Gavel, label: 'Auctions' },
     { href: '/admin/artifacts', icon: Package, label: 'Artifacts' },
     { href: '/admin/contracts', icon: FileText, label: 'Contracts' },
+    { href: '/admin/balance', icon: Wallet, label: 'Manage Balance' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -43,8 +44,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${isActive
-                                        ? 'bg-white text-red-900'
-                                        : 'text-red-200 hover:bg-red-800'
+                                    ? 'bg-white text-red-900'
+                                    : 'text-red-200 hover:bg-red-800'
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />

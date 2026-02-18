@@ -433,13 +433,9 @@ export default function LiveBidPage() {
     // Stable channel ref so we never re-subscribe on StrictMode double-mount
     const channelRef = useRef<any>(null);
     const globalChannelRef = useRef<any>(null);
-    // Debug state
-    const [pusherState, setPusherState] = useState('initializing');
-    const [pusherLog, setPusherLog] = useState<string[]>([]);
+    // Debug logger — logs to console only (debug panel removed)
     const addLog = (msg: string) => {
-        const ts = new Date().toLocaleTimeString();
-        setPusherLog(prev => [`[${ts}] ${msg}`, ...prev].slice(0, 20));
-        console.log('[Pusher Debug]', msg);
+        console.log('[BidPage]', msg);
     };
 
     // Auto-scroll chat
@@ -546,7 +542,6 @@ export default function LiveBidPage() {
         // Immediately reflect current connection state
         const initialState = pusher.connection.state;
         setIsConnected(initialState === 'connected');
-        setPusherState(initialState);
         addLog(`Connection state on mount: ${initialState}`);
 
         // Re-fetch latest state from server whenever Pusher reconnects
@@ -610,7 +605,6 @@ export default function LiveBidPage() {
 
         pusher.connection.bind('state_change', (states: any) => {
             setIsConnected(states.current === 'connected');
-            setPusherState(states.current);
             addLog(`Connection: ${states.previous} → ${states.current}`);
             // Reconnected after a drop — catch up on missed events
             if (states.current === 'connected' && states.previous !== 'connecting') {
@@ -1186,23 +1180,7 @@ export default function LiveBidPage() {
                 )
             }
 
-            {/* 🛠 Pusher Debug Panel — remove after fixing */}
-            <div className="fixed bottom-4 left-2 right-2 z-50 bg-black/90 border border-yellow-500/50 rounded-xl p-2 text-[9px] font-mono max-h-40 overflow-y-auto">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className={`w-2 h-2 rounded-full ${pusherState === 'connected' ? 'bg-green-400' : pusherState === 'connecting' ? 'bg-yellow-400 animate-pulse' : 'bg-red-400'}`} />
-                    <span className="text-yellow-400 font-bold">Pusher: {pusherState}</span>
-                    <span className="text-gray-500 ml-auto">ch: auction-{auctionId?.slice(-6)}</span>
-                </div>
-                {pusherLog.length === 0 ? (
-                    <div className="text-gray-600 italic">No events yet...</div>
-                ) : (
-                    pusherLog.map((line, i) => (
-                        <div key={i} className={`leading-4 ${line.includes('✅') ? 'text-green-400' : line.includes('❌') || line.includes('ERROR') ? 'text-red-400' : line.includes('new-bid') ? 'text-cyan-400' : line.includes('auction-ended') ? 'text-yellow-400' : 'text-gray-400'}`}>
-                            {line}
-                        </div>
-                    ))
-                )}
-            </div>
+
 
 
             {/* Google Fonts */}
