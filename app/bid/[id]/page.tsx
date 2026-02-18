@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -167,6 +167,101 @@ function SoldDialog({
     );
 }
 
+// ─── Too Early Screen ────────────────────────────────────────────────────────
+function TooEarlyScreen({
+    auctionName,
+    scheduledAt,
+    onGoHome,
+}: {
+    auctionName: string;
+    scheduledAt: string;
+    onGoHome: () => void;
+}) {
+    const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0, total: 0 });
+
+    useEffect(() => {
+        const calc = () => {
+            const waitingRoomOpens = new Date(scheduledAt).getTime() - 5 * 60 * 1000;
+            const diff = Math.max(0, waitingRoomOpens - Date.now());
+            const total = Math.floor(diff / 1000);
+            setTimeLeft({
+                h: Math.floor(total / 3600),
+                m: Math.floor((total % 3600) / 60),
+                s: total % 60,
+                total,
+            });
+        };
+        calc();
+        const t = setInterval(calc, 1000);
+        return () => clearInterval(t);
+    }, [scheduledAt]);
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    return (
+        <div className="h-screen bg-[#111827] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Background shimmer */}
+            <div className="absolute inset-0" style={{
+                background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(30,58,138,0.3) 0%, transparent 70%)',
+            }} />
+
+            {/* Lock icon */}
+            <div className="text-8xl mb-6 animate-pulse">🔒</div>
+
+            <h1 className="text-2xl font-black text-white text-center mb-1" style={{ fontFamily: 'Russo One, sans-serif' }}>
+                Auction Not Open Yet
+            </h1>
+            <p className="text-gray-400 text-sm text-center mb-8 max-w-xs">
+                <span className="text-yellow-400 font-semibold">{auctionName}</span> hasn't opened its waiting room yet.
+                You can join when there are 5 minutes left.
+            </p>
+
+            {/* Countdown */}
+            <div className="bg-gray-900/80 border border-gray-700 rounded-2xl px-8 py-5 mb-8 text-center">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3 font-mono">Waiting Room Opens In</p>
+                {timeLeft.total > 0 ? (
+                    <div className="flex items-center gap-3">
+                        {timeLeft.h > 0 && (
+                            <>
+                                <div className="text-center">
+                                    <p className="text-4xl font-black font-mono text-white">{pad(timeLeft.h)}</p>
+                                    <p className="text-[9px] text-gray-500 uppercase tracking-widest">hrs</p>
+                                </div>
+                                <span className="text-2xl text-gray-600 font-black">:</span>
+                            </>
+                        )}
+                        <div className="text-center">
+                            <p className="text-4xl font-black font-mono text-white">{pad(timeLeft.m)}</p>
+                            <p className="text-[9px] text-gray-500 uppercase tracking-widest">min</p>
+                        </div>
+                        <span className="text-2xl text-gray-600 font-black">:</span>
+                        <div className="text-center">
+                            <p className={`text-4xl font-black font-mono ${timeLeft.total <= 30 ? 'text-yellow-400 animate-pulse' : 'text-white'}`}>{pad(timeLeft.s)}</p>
+                            <p className="text-[9px] text-gray-500 uppercase tracking-widest">sec</p>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-green-400 font-black text-lg animate-pulse">Opening soon...</p>
+                )}
+            </div>
+
+            <p className="text-gray-600 text-xs text-center mb-6">
+                This page will automatically redirect you when the waiting room opens.
+            </p>
+
+            <button
+                onClick={onGoHome}
+                className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl text-sm transition active:scale-95"
+            >
+                ← Back to Home
+            </button>
+
+            {/* Fonts */}
+            <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+        </div>
+    );
+}
+
 // ─── Layered Shutter Stage ────────────────────────────────────────────────────
 function ShutterStage({
     phase,
@@ -315,6 +410,9 @@ export default function LiveBidPage() {
     const [customBidAmount, setCustomBidAmount] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [soldInfo, setSoldInfo] = useState<SoldInfo | null>(null);
+    // Too-early guard
+    const [tooEarly, setTooEarly] = useState(false);
+    const [scheduledAt, setScheduledAt] = useState<string>('');
 
     // Animation timers
     const [lockCountdown, setLockCountdown] = useState(10);
@@ -363,6 +461,14 @@ export default function LiveBidPage() {
                     setBidCountdown(10);
                 }
 
+                // Block access if auction is still SCHEDULED (waiting room not open yet)
+                if (auction.status === 'SCHEDULED') {
+                    setScheduledAt(auction.scheduledAt);
+                    setTooEarly(true);
+                    setLoading(false);
+                    return;
+                }
+
                 if (auction.status === 'LIVE' && auction.startedAt) {
                     serverStartTime.current = new Date(auction.startedAt).getTime();
                     const elapsed = (Date.now() - serverStartTime.current) / 1000;
@@ -409,6 +515,20 @@ export default function LiveBidPage() {
     useEffect(() => {
         if (!auctionId) return;
         const pusher = getPusherClient();
+
+        // Listen on global channel for waiting-room transition (for too-early users)
+        const globalChannel = pusher.subscribe('global-auctions');
+        globalChannel.bind('auction-waiting-room', (data: any) => {
+            if (data.id === auctionId) {
+                // Waiting room just opened — reload so WaitingRoom component shows
+                window.location.reload();
+            }
+        });
+        globalChannel.bind('auction-started', (data: any) => {
+            if (data.id === auctionId) {
+                window.location.reload();
+            }
+        });
 
         pusher.connection.bind('state_change', (states: any) => {
             setIsConnected(states.current === 'connected');
@@ -564,11 +684,22 @@ export default function LiveBidPage() {
         );
     }
 
-    if (!auctionData) {
+    if (!auctionData && !tooEarly) {
         return (
             <div className="h-screen bg-[#111827] text-white flex items-center justify-center">
                 <div className="text-red-400">Auction not found</div>
             </div>
+        );
+    }
+
+    // Too early — show guard screen
+    if (tooEarly) {
+        return (
+            <TooEarlyScreen
+                auctionName={auctionData?.name ?? 'This Auction'}
+                scheduledAt={scheduledAt}
+                onGoHome={() => router.push('/home')}
+            />
         );
     }
 
