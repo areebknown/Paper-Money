@@ -111,11 +111,23 @@ export async function endAuctionService(auctionId: string) {
         }
     });
 
+    // Fetch winner username if there is a winner
+    let winnerUsername: string | null = null;
+    if (auction.winnerId) {
+        const winner = await prisma.user.findUnique({
+            where: { id: auction.winnerId },
+            select: { username: true }
+        });
+        winnerUsername = winner?.username ?? null;
+    }
+
     // Notify everyone (fire-and-forget - don't block on Pusher)
     pusherServer.trigger(`auction-${auctionId}`, 'auction-ended', {
         auctionId,
         winnerId: auction.winnerId,
-        finalPrice: auction.currentPrice
+        winnerUsername,
+        finalPrice: Number(auction.currentPrice),
+        auctionName: auction.name,
     }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
     pusherServer.trigger('global-auctions', 'auction-ended', {

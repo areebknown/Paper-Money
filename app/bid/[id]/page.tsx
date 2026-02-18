@@ -19,7 +19,14 @@ interface BidMessage {
     isCustom: boolean;
 }
 
-// ─── Tier helpers (same as home page) ─────────────────────────────────────────
+interface SoldInfo {
+    winnerId: string | null;
+    winnerUsername: string | null;
+    finalPrice: number;
+    auctionName: string;
+}
+
+// ─── Tier helpers ─────────────────────────────────────────────────────────────
 function getTierIcon(tier: string) {
     if (tier === 'GOLD') return { icon: 'workspace_premium', color: 'text-yellow-400', bg: 'from-yellow-600 to-yellow-900', border: 'border-yellow-500' };
     if (tier === 'SILVER') return { icon: 'shield', color: 'text-gray-300', bg: 'from-gray-400 to-gray-700', border: 'border-gray-300' };
@@ -33,11 +40,9 @@ function ChatBubble({ bid }: { bid: BidMessage }) {
 
     return (
         <div className={`flex items-end gap-2 mb-2 ${bid.isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-            {/* Avatar */}
             <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white text-xs font-black shrink-0 shadow-lg`}>
                 {initials}
             </div>
-            {/* Bubble */}
             <div className={`max-w-[70%] ${bid.isMine ? 'items-end' : 'items-start'} flex flex-col`}>
                 <span className={`text-[10px] text-gray-500 mb-0.5 ${bid.isMine ? 'text-right' : 'text-left'}`}>
                     {bid.username}
@@ -46,10 +51,115 @@ function ChatBubble({ bid }: { bid: BidMessage }) {
                     ? 'bg-blue-600 text-white rounded-br-sm'
                     : 'bg-gray-800 text-gray-100 rounded-bl-sm border border-gray-700'
                     }`}>
-                    {bid.isCustom ? (
-                        <span className="font-black text-sm">₹{bid.amount.toLocaleString()}</span>
+                    <span className="text-sm font-semibold">
+                        {bid.isCustom ? 'custom bid ' : 'bid '}
+                        <span className="font-black">₹{bid.amount.toLocaleString()}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Sold / Winner Dialog ─────────────────────────────────────────────────────
+function SoldDialog({
+    soldInfo,
+    currentUserId,
+    auctionId,
+    onClaim,
+    onGoHome,
+}: {
+    soldInfo: SoldInfo;
+    currentUserId: string | null;
+    auctionId: string;
+    onClaim: () => void;
+    onGoHome: () => void;
+}) {
+    const isWinner = currentUserId && soldInfo.winnerId === currentUserId;
+    const [claiming, setClaiming] = useState(false);
+    const [claimed, setClaimed] = useState(false);
+
+    const handleClaim = async () => {
+        setClaiming(true);
+        try {
+            const res = await fetch(`/api/auctions/${auctionId}/claim`, { method: 'POST' });
+            if (res.ok) {
+                setClaimed(true);
+                onClaim();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Failed to claim');
+            }
+        } catch {
+            alert('Network error');
+        } finally {
+            setClaiming(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="relative w-full max-w-sm bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700 rounded-3xl overflow-hidden shadow-2xl">
+                {/* Top accent */}
+                <div className={`h-1.5 w-full ${isWinner ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400' : 'bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600'}`} />
+
+                <div className="p-6 text-center">
+                    {/* Gavel icon */}
+                    <div className="text-6xl mb-3">🔨</div>
+
+                    {/* Auctioneer announcement */}
+                    <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-mono">SOLD!</p>
+                    <div className="bg-gray-800/60 border border-gray-700 rounded-2xl px-4 py-3 mb-4">
+                        <p className="text-white text-sm leading-relaxed">
+                            <span className="text-gray-400 italic">"</span>
+                            <span className="font-bold text-white">{soldInfo.auctionName}</span>
+                            {' '}is sold to{' '}
+                            <span className={`font-black ${isWinner ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                                {soldInfo.winnerUsername ?? 'Unknown Bidder'}
+                            </span>
+                            {' '}for{' '}
+                            <span className="font-black text-green-400">
+                                ₹{soldInfo.finalPrice.toLocaleString()}
+                            </span>
+                            <span className="text-gray-400 italic">"</span>
+                        </p>
+                    </div>
+
+                    {isWinner ? (
+                        <>
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-2 mb-4">
+                                <p className="text-yellow-400 font-bold text-sm">🏆 You won this auction!</p>
+                            </div>
+                            {claimed ? (
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2 mb-4">
+                                    <p className="text-green-400 font-bold text-sm">✅ Added to your inventory!</p>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleClaim}
+                                    disabled={claiming}
+                                    className="w-full py-3.5 bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 disabled:opacity-50 text-gray-900 font-black rounded-xl text-sm uppercase tracking-wide shadow-lg shadow-yellow-900/30 active:scale-95 transition mb-3"
+                                >
+                                    {claiming ? 'Adding...' : '📦 Add to Inventory'}
+                                </button>
+                            )}
+                            <button
+                                onClick={onGoHome}
+                                className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl text-sm transition"
+                            >
+                                Return to Home
+                            </button>
+                        </>
                     ) : (
-                        <span className="text-sm font-semibold">bid <span className="font-black">₹{bid.amount.toLocaleString()}</span></span>
+                        <>
+                            <p className="text-gray-500 text-xs mb-4">Better luck next time! Join the waiting room early for the next auction.</p>
+                            <button
+                                onClick={onGoHome}
+                                className="w-full py-3.5 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black rounded-xl text-sm uppercase tracking-wide shadow-lg active:scale-95 transition"
+                            >
+                                Return to Home
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
@@ -63,83 +173,38 @@ function ShutterStage({
     auctionData,
     lockCountdown,
     shutterCountdown,
-    bidCountdown,
 }: {
     phase: AuctionPhase;
     auctionData: any;
     lockCountdown: number;
     shutterCountdown: number;
-    bidCountdown: number;
 }) {
     const isShutterClosed = phase === 'WAITING' || phase === 'PRE_OPEN' || phase === 'CLOSING' || phase === 'BIDDING' || phase === 'SOLD';
-    const tierInfo = getTierIcon(auctionData.rankTier);
-
-    // Shutter Y position
     const shutterY = isShutterClosed ? '0%' : '-100%';
 
     return (
         <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
             {/* ── LAYER 1 (bottom): Brick Wall Room ── */}
-            <div className="absolute inset-0 overflow-hidden" style={{
-                background: '#1a1008',
-            }}>
-                {/* Back wall with brick pattern */}
+            <div className="absolute inset-0 overflow-hidden" style={{ background: '#1a1008' }}>
                 <div className="absolute inset-0" style={{
                     backgroundImage: `
-                        repeating-linear-gradient(
-                            0deg,
-                            transparent,
-                            transparent 28px,
-                            rgba(0,0,0,0.4) 28px,
-                            rgba(0,0,0,0.4) 30px
-                        ),
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent,
-                            transparent 58px,
-                            rgba(0,0,0,0.3) 58px,
-                            rgba(0,0,0,0.3) 60px
-                        )
+                        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.4) 28px, rgba(0,0,0,0.4) 30px),
+                        repeating-linear-gradient(90deg, transparent, transparent 58px, rgba(0,0,0,0.3) 58px, rgba(0,0,0,0.3) 60px)
                     `,
                     backgroundColor: '#3d2b1a',
                 }} />
-                {/* Offset brick rows */}
                 <div className="absolute inset-0" style={{
                     backgroundImage: `
-                        repeating-linear-gradient(
-                            0deg,
-                            transparent,
-                            transparent 13px,
-                            rgba(0,0,0,0.15) 13px,
-                            rgba(0,0,0,0.15) 15px
-                        ),
-                        repeating-linear-gradient(
-                            90deg,
-                            transparent,
-                            transparent 29px,
-                            rgba(0,0,0,0.2) 29px,
-                            rgba(0,0,0,0.2) 31px
-                        )
+                        repeating-linear-gradient(0deg, transparent, transparent 13px, rgba(0,0,0,0.15) 13px, rgba(0,0,0,0.15) 15px),
+                        repeating-linear-gradient(90deg, transparent, transparent 29px, rgba(0,0,0,0.2) 29px, rgba(0,0,0,0.2) 31px)
                     `,
                     backgroundPosition: '30px 15px',
                     opacity: 0.6,
                 }} />
-                {/* Ambient light from top */}
-                <div className="absolute inset-0" style={{
-                    background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,200,100,0.12) 0%, transparent 70%)',
-                }} />
-                {/* Floor */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/4" style={{
-                    background: 'linear-gradient(to bottom, #2a1f0f, #1a1208)',
-                    borderTop: '2px solid rgba(255,180,80,0.15)',
-                }} />
-                {/* Side walls perspective */}
-                <div className="absolute left-0 top-0 bottom-0 w-8" style={{
-                    background: 'linear-gradient(to right, rgba(0,0,0,0.6), transparent)',
-                }} />
-                <div className="absolute right-0 top-0 bottom-0 w-8" style={{
-                    background: 'linear-gradient(to left, rgba(0,0,0,0.6), transparent)',
-                }} />
+                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,200,100,0.12) 0%, transparent 70%)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-1/4" style={{ background: 'linear-gradient(to bottom, #2a1f0f, #1a1208)', borderTop: '2px solid rgba(255,180,80,0.15)' }} />
+                <div className="absolute left-0 top-0 bottom-0 w-8" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.6), transparent)' }} />
+                <div className="absolute right-0 top-0 bottom-0 w-8" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.6), transparent)' }} />
             </div>
 
             {/* ── LAYER 2: Artifact Images ── */}
@@ -147,14 +212,10 @@ function ShutterStage({
                 {auctionData.artifacts && auctionData.artifacts.length > 0 ? (
                     <div className="flex flex-wrap gap-3 justify-center items-center">
                         {auctionData.artifacts.map((a: any, i: number) => (
-                            <div key={i} className="relative">
+                            <div key={i}>
                                 {a.artifact.imageUrl ? (
-                                    <img
-                                        src={a.artifact.imageUrl}
-                                        alt=""
-                                        className="h-20 w-20 object-contain drop-shadow-2xl"
-                                        style={{ filter: 'drop-shadow(0 0 12px rgba(255,200,80,0.4))' }}
-                                    />
+                                    <img src={a.artifact.imageUrl} alt="" className="h-20 w-20 object-contain drop-shadow-2xl"
+                                        style={{ filter: 'drop-shadow(0 0 12px rgba(255,200,80,0.4))' }} />
                                 ) : (
                                     <div className="w-20 h-20 bg-yellow-900/40 border border-yellow-600/30 rounded-lg flex items-center justify-center">
                                         <span className="material-icons-round text-yellow-500 text-3xl">inventory_2</span>
@@ -172,7 +233,7 @@ function ShutterStage({
 
             {/* ── LAYER 3 (top): The Shutter ── */}
             <div
-                className="absolute inset-0 z-20 transition-transform"
+                className="absolute inset-0 z-20"
                 style={{
                     transform: `translateY(${shutterY})`,
                     transition: isShutterClosed
@@ -180,28 +241,17 @@ function ShutterStage({
                         : 'transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 }}
             >
-                {/* Shutter slats */}
-                <div className="absolute inset-0 overflow-hidden" style={{
-                    background: 'linear-gradient(180deg, #4a5568 0%, #2d3748 100%)',
-                }}>
-                    {/* Horizontal slat lines */}
+                <div className="absolute inset-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #4a5568 0%, #2d3748 100%)' }}>
                     {Array.from({ length: 16 }).map((_, i) => (
                         <div key={i} className="absolute left-0 right-0" style={{
-                            top: `${(i / 16) * 100}%`,
-                            height: '1px',
-                            background: 'rgba(0,0,0,0.5)',
-                            boxShadow: '0 1px 0 rgba(255,255,255,0.05)',
+                            top: `${(i / 16) * 100}%`, height: '1px',
+                            background: 'rgba(0,0,0,0.5)', boxShadow: '0 1px 0 rgba(255,255,255,0.05)',
                         }} />
                     ))}
-                    {/* Shutter texture gradient */}
-                    <div className="absolute inset-0" style={{
-                        backgroundImage: 'repeating-linear-gradient(180deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 18px)',
-                    }} />
-                    {/* Vertical rails */}
+                    <div className="absolute inset-0" style={{ backgroundImage: 'repeating-linear-gradient(180deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 18px)' }} />
                     <div className="absolute left-3 top-0 bottom-0 w-3 rounded" style={{ background: 'linear-gradient(90deg, #1a202c, #2d3748, #1a202c)' }} />
                     <div className="absolute right-3 top-0 bottom-0 w-3 rounded" style={{ background: 'linear-gradient(90deg, #1a202c, #2d3748, #1a202c)' }} />
 
-                    {/* Shutter content based on phase */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         {phase === 'PRE_OPEN' && (
                             <div className="text-center">
@@ -229,12 +279,12 @@ function ShutterStage({
                         )}
                     </div>
 
-                    {/* Bottom handle bar */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, #718096, #a0aec0, #718096)', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }} />
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-2.5 rounded-full"
+                        style={{ background: 'linear-gradient(90deg, #718096, #a0aec0, #718096)', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }} />
                 </div>
             </div>
 
-            {/* ── Status overlay (REVEAL phase countdown) ── */}
+            {/* REVEAL countdown overlay */}
             {phase === 'REVEAL' && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-red-600/90 text-white text-xs font-black px-4 py-1.5 rounded-full font-mono animate-pulse shadow-lg">
                     ⚠️ CLOSING IN {shutterCountdown}s
@@ -255,6 +305,7 @@ export default function LiveBidPage() {
     const [balance, setBalance] = useState(0);
     const [rankPoints, setRankPoints] = useState(0);
     const [currentPrice, setCurrentPrice] = useState(0);
+    const [startingPrice, setStartingPrice] = useState(0);
     const [bids, setBids] = useState<BidMessage[]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [bidding, setBidding] = useState(false);
@@ -263,11 +314,13 @@ export default function LiveBidPage() {
     const [currentUser, setCurrentUser] = useState<{ id: string; username: string } | null>(null);
     const [customBidAmount, setCustomBidAmount] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+    const [soldInfo, setSoldInfo] = useState<SoldInfo | null>(null);
 
     // Animation timers
     const [lockCountdown, setLockCountdown] = useState(10);
     const [shutterCountdown, setShutterCountdown] = useState(5);
-    const [bidCountdown, setBidCountdown] = useState(10);
+    // bidCountdown: null = hasn't started yet (no bids placed), number = counting down
+    const [bidCountdown, setBidCountdown] = useState<number | null>(null);
 
     // Refs
     const serverStartTime = useRef<number | null>(null);
@@ -297,15 +350,36 @@ export default function LiveBidPage() {
                 const auctionRes = await fetch(`/api/auctions/${auctionId}`);
                 if (!auctionRes.ok) throw new Error('Auction not found');
                 const auctionJson = await auctionRes.json();
-                setAuctionData(auctionJson.auction);
-                setCurrentPrice(Number(auctionJson.auction.currentPrice || auctionJson.auction.startingPrice));
+                const auction = auctionJson.auction;
+                setAuctionData(auction);
 
-                if (auctionJson.auction.status === 'LIVE' && auctionJson.auction.startedAt) {
-                    serverStartTime.current = new Date(auctionJson.auction.startedAt).getTime();
+                const sp = Number(auction.startingPrice);
+                const cp = Number(auction.currentPrice || auction.startingPrice);
+                setStartingPrice(sp);
+                setCurrentPrice(cp);
+
+                // If there are already bids, start the countdown
+                if (cp > sp) {
+                    setBidCountdown(10);
+                }
+
+                if (auction.status === 'LIVE' && auction.startedAt) {
+                    serverStartTime.current = new Date(auction.startedAt).getTime();
                     const elapsed = (Date.now() - serverStartTime.current) / 1000;
-                    if (elapsed > 16) {
+                    if (elapsed > 21) {
                         setPhase('BIDDING');
                     }
+                }
+
+                // If already completed, show sold dialog
+                if (auction.status === 'COMPLETED') {
+                    setSoldInfo({
+                        winnerId: auction.winnerId,
+                        winnerUsername: auction.winner?.username ?? null,
+                        finalPrice: cp,
+                        auctionName: auction.name,
+                    });
+                    setPhase('SOLD');
                 }
 
                 const bidsRes = await fetch(`/api/auctions/${auctionId}/bids`);
@@ -313,10 +387,10 @@ export default function LiveBidPage() {
                     const bidsJson = await bidsRes.json();
                     const messages: BidMessage[] = bidsJson.bids.map((b: any) => ({
                         id: b.id,
-                        username: b.user.username,
+                        username: b.user?.username ?? b.bidder?.username ?? 'Unknown',
                         amount: Number(b.amount),
-                        isMine: currentUserId === b.userId,
-                        timestamp: new Date(b.createdAt).getTime(),
+                        isMine: currentUserId === (b.userId ?? b.bidderId),
+                        timestamp: new Date(b.createdAt ?? b.timestamp).getTime(),
                         isCustom: false,
                     }));
                     setBids(messages.reverse());
@@ -355,7 +429,9 @@ export default function LiveBidPage() {
 
         channel.bind('new-bid', (data: any) => {
             setCurrentPrice(data.amount);
+            // Start/reset countdown only when a bid is placed
             setBidCountdown(10);
+
             const newBid: BidMessage = {
                 id: data.bidId || `bid-${Date.now()}`,
                 username: data.username,
@@ -367,8 +443,15 @@ export default function LiveBidPage() {
             setBids(prev => [...prev, newBid]);
         });
 
-        channel.bind('auction-ended', () => {
+        channel.bind('auction-ended', (data: any) => {
             setPhase('SOLD');
+            setSoldInfo({
+                winnerId: data.winnerId ?? null,
+                winnerUsername: data.winnerUsername ?? null,
+                finalPrice: data.finalPrice ?? 0,
+                auctionName: data.auctionName ?? 'This Shutter',
+            });
+            serverStartTime.current = null;
         });
 
         return () => {
@@ -404,26 +487,36 @@ export default function LiveBidPage() {
                 if (phase !== 'BIDDING' && phase !== 'SOLD') {
                     setPhase('BIDDING');
                 }
+                // Stop ticker once in BIDDING
+                if (tickerRef.current) {
+                    clearInterval(tickerRef.current);
+                    tickerRef.current = null;
+                }
             }
         }, 100);
 
         return () => { if (tickerRef.current) clearInterval(tickerRef.current); };
     }, [serverStartTime.current]);
 
-    // ── 4. Bid countdown ───────────────────────────────────────────────────────
+    // ── 4. Bid countdown (only runs after first bid) ───────────────────────────
     useEffect(() => {
-        if (phase === 'BIDDING' && bidCountdown > 0) {
-            const t = setTimeout(() => setBidCountdown(p => Math.max(0, p - 1)), 1000);
+        if (phase !== 'BIDDING') return;
+        if (bidCountdown === null) return; // No bids yet — don't count down
+
+        if (bidCountdown > 0) {
+            const t = setTimeout(() => setBidCountdown(p => (p !== null ? Math.max(0, p - 1) : null)), 1000);
             return () => clearTimeout(t);
-        } else if (phase === 'BIDDING' && bidCountdown === 0) {
+        } else {
+            // Countdown hit zero — end auction
             setPhase('SOLD');
+            // Trigger server-side end
+            fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' }).catch(console.error);
         }
-    }, [phase, bidCountdown]);
+    }, [phase, bidCountdown, auctionId]);
 
     // ── Handlers ───────────────────────────────────────────────────────────────
     const placeBid = async (amount: number) => {
         if (bidding || phase !== 'BIDDING') return;
-        if (amount <= currentPrice) { alert('Bid must be higher than current price!'); return; }
         if (amount > balance) { alert('Insufficient balance!'); return; }
 
         setBidding(true);
@@ -435,6 +528,10 @@ export default function LiveBidPage() {
             });
             if (!res.ok) {
                 const err = await res.json();
+                // If bid too low, refresh current price from server response
+                if (err.minimum) {
+                    setCurrentPrice(err.minimum - 1); // Will be corrected by next bid event
+                }
                 alert(err.error || 'Failed to place bid');
             } else {
                 const data = await res.json();
@@ -451,7 +548,7 @@ export default function LiveBidPage() {
 
     const handleCustomBid = () => {
         const amount = parseInt(customBidAmount);
-        if (isNaN(amount) || amount <= currentPrice) { alert('Invalid bid amount'); return; }
+        if (isNaN(amount) || amount <= currentPrice) { alert(`Bid must be more than ₹${currentPrice.toLocaleString()}`); return; }
         placeBid(amount);
     };
 
@@ -475,21 +572,40 @@ export default function LiveBidPage() {
         );
     }
 
-    // ── Waiting Room ───────────────────────────────────────────────────────────
     if (auctionData.status === 'WAITING_ROOM') {
         return <WaitingRoom auction={auctionData} />;
     }
 
     const tierInfo = getTierIcon(auctionData.rankTier);
-    const canBid = phase === 'BIDDING' && bidCountdown > 0 && isConnected;
+    const quickBidAmount = currentPrice + 1000;
+    const canBid = phase === 'BIDDING' && isConnected;
 
-    // ── Main render ────────────────────────────────────────────────────────────
+    // Info bar label based on phase
+    const getInfoLabel = () => {
+        if (phase === 'PRE_OPEN') return `Counting for starting bid ₹${startingPrice.toLocaleString()}`;
+        if (phase === 'OPENING' || phase === 'REVEAL') return 'Revealing contents...';
+        if (phase === 'CLOSING') return 'Bidding begins...';
+        if (phase === 'BIDDING') return 'Current Bid';
+        if (phase === 'SOLD') return 'Final Price';
+        return 'Starting Price';
+    };
+
     return (
-        <div className="h-screen bg-[#111827] text-white flex flex-col overflow-hidden font-['Inter']">
+        <div className="h-screen bg-[#111827] text-white flex flex-col overflow-hidden font-['Inter'] relative">
 
-            {/* ── HEADER (same style as home page) ── */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0">
-                {/* Left: Balance + Rank */}
+            {/* ── SOLD DIALOG OVERLAY ── */}
+            {phase === 'SOLD' && soldInfo && (
+                <SoldDialog
+                    soldInfo={soldInfo}
+                    currentUserId={currentUser?.id ?? null}
+                    auctionId={auctionId}
+                    onClaim={() => { /* already handled inside */ }}
+                    onGoHome={() => router.push('/home')}
+                />
+            )}
+
+            {/* ── HEADER ── */}
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0 relative">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1 bg-black/30 px-3 py-1 rounded-full border border-white/10">
                         <span className="material-icons-round text-[#FBBF24] text-sm">currency_rupee</span>
@@ -501,15 +617,12 @@ export default function LiveBidPage() {
                     </div>
                 </div>
 
-                {/* Center: Logo */}
                 <div className="absolute left-1/2 -translate-x-1/2">
                     <Image src="/bid-wars-logo.png" alt="Bid Wars" width={100} height={50} className="object-contain drop-shadow-lg" />
                 </div>
 
-                {/* Right: Connection + Notifications + Profile */}
                 <div className="flex items-center gap-2">
-                    {/* Connection dot */}
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-500'} shadow-lg`} title={isConnected ? 'Connected' : 'Disconnected'} />
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-500'} shadow-lg`} />
                     <button className="relative w-9 h-9 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition">
                         <span className="material-icons-round text-white text-lg">notifications</span>
                         <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#1E3A8A]" />
@@ -524,20 +637,18 @@ export default function LiveBidPage() {
                 </div>
             </header>
 
-            {/* ── SHUTTER STAGE (16:9) ── */}
+            {/* ── SHUTTER STAGE ── */}
             <div className="shrink-0 w-full">
                 <ShutterStage
                     phase={phase}
                     auctionData={auctionData}
                     lockCountdown={lockCountdown}
                     shutterCountdown={shutterCountdown}
-                    bidCountdown={bidCountdown}
                 />
             </div>
 
-            {/* ── INFO BAR (below shutter) ── */}
+            {/* ── INFO BAR ── */}
             <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 border-b border-gray-800">
-                {/* Left: Rank */}
                 <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 bg-gradient-to-b ${tierInfo.bg} rounded-lg flex items-center justify-center border ${tierInfo.border} shadow`}>
                         <span className={`material-icons-round ${tierInfo.color} text-base`}>{tierInfo.icon}</span>
@@ -545,34 +656,36 @@ export default function LiveBidPage() {
                     <span className={`text-xs font-black uppercase tracking-wider ${tierInfo.color}`}>{auctionData.rankTier} Tier</span>
                 </div>
 
-                {/* Right: Starting price + timer */}
                 <div className="text-right">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Current Bid</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">{getInfoLabel()}</p>
                     <p className="text-lg font-black text-cyan-400 leading-none">₹{currentPrice.toLocaleString()}</p>
                 </div>
             </div>
 
             {/* ── LIVE CHAT ── */}
             <div className="flex-1 overflow-y-auto px-3 py-2 bg-gray-950/60 relative min-h-0">
-                {/* LIVE badge */}
                 <div className="sticky top-0 flex justify-center mb-2 z-10">
                     {phase === 'BIDDING' && (
                         <div className="flex items-center gap-2 bg-gray-900/90 border border-gray-700 rounded-full px-3 py-1 backdrop-blur-sm">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                             <span className="text-xs font-bold text-gray-300 font-mono">LIVE</span>
-                            <span className={`text-xs font-black font-mono ml-1 ${bidCountdown <= 3 ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>
-                                {bidCountdown}s
-                            </span>
-                        </div>
-                    )}
-                    {phase === 'SOLD' && (
-                        <div className="bg-green-900/80 border border-green-700 rounded-full px-4 py-1">
-                            <span className="text-xs font-bold text-green-400">✅ Auction Ended</span>
+                            {bidCountdown !== null ? (
+                                <span className={`text-xs font-black font-mono ml-1 ${bidCountdown <= 3 ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>
+                                    {bidCountdown}s
+                                </span>
+                            ) : (
+                                <span className="text-xs font-mono ml-1 text-gray-500">Place first bid!</span>
+                            )}
                         </div>
                     )}
                     {(phase === 'WAITING' || phase === 'PRE_OPEN') && (
                         <div className="bg-gray-900/80 border border-gray-700 rounded-full px-4 py-1">
                             <span className="text-xs text-gray-500 font-mono">Waiting for auction...</span>
+                        </div>
+                    )}
+                    {(phase === 'OPENING' || phase === 'REVEAL' || phase === 'CLOSING') && (
+                        <div className="bg-gray-900/80 border border-yellow-700/50 rounded-full px-4 py-1">
+                            <span className="text-xs text-yellow-500 font-mono animate-pulse">🔓 Revealing...</span>
                         </div>
                     )}
                 </div>
@@ -628,15 +741,15 @@ export default function LiveBidPage() {
                             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Loan</span>
                         </button>
 
-                        {/* Quick Bid (center, highlighted) */}
+                        {/* Quick Bid — shows actual bid amount */}
                         <button
                             disabled={!canBid || bidding}
-                            onClick={() => placeBid(currentPrice + 1000)}
-                            className="h-14 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 disabled:opacity-30 disabled:grayscale rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg shadow-red-900/40 active:scale-95 transition font-black"
+                            onClick={() => placeBid(quickBidAmount)}
+                            className="h-14 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 disabled:opacity-30 disabled:grayscale rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg shadow-red-900/40 active:scale-95 transition"
                         >
                             <span className="text-lg">⚡</span>
-                            <span className="text-[9px] font-black text-white uppercase tracking-wide">
-                                {bidding ? '...' : `Bid +₹1K`}
+                            <span className="text-[9px] font-black text-white uppercase tracking-wide leading-none">
+                                {bidding ? '...' : `₹${quickBidAmount.toLocaleString()}`}
                             </span>
                         </button>
 
@@ -655,7 +768,7 @@ export default function LiveBidPage() {
 
             {/* Connection lost banner */}
             {!isConnected && (
-                <div className="fixed top-20 left-4 right-4 bg-red-900/80 border border-red-500 rounded-xl p-3 z-50 backdrop-blur-md text-center text-sm text-red-300 font-semibold">
+                <div className="fixed top-20 left-4 right-4 bg-red-900/80 border border-red-500 rounded-xl p-3 z-40 backdrop-blur-md text-center text-sm text-red-300 font-semibold">
                     🔌 Connection Lost — Reconnecting...
                 </div>
             )}
