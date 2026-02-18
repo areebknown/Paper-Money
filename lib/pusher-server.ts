@@ -1,31 +1,41 @@
 import Pusher from 'pusher';
 
+const appId = process.env.PUSHER_APP_ID || '';
+const key = process.env.NEXT_PUBLIC_PUSHER_KEY || '';
+const secret = process.env.PUSHER_SECRET || '';
+const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2';
+
+// Log config on startup so we can verify in Vercel logs
+console.log('[Pusher Server] Config check:', {
+    appId: appId ? `${appId.slice(0, 4)}... (${appId.length} chars)` : '❌ MISSING',
+    key: key ? `${key.slice(0, 4)}... (${key.length} chars)` : '❌ MISSING',
+    secret: secret ? `set (${secret.length} chars)` : '❌ MISSING',
+    cluster,
+});
+
 // Server-side Pusher instance
 export const pusherServer = new Pusher({
-    appId: process.env.PUSHER_APP_ID || '',
-    key: process.env.NEXT_PUBLIC_PUSHER_KEY || '',
-    secret: process.env.PUSHER_SECRET || '',
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2',
+    appId,
+    key,
+    secret,
+    cluster,
     useTLS: true,
 });
 
-// Trigger a Pusher event (non-blocking)
+// Trigger a Pusher event with full error details
 export async function triggerPusherEvent(
     channel: string,
     event: string,
     data: any
 ): Promise<void> {
     try {
-        await pusherServer.trigger(channel, event, data);
-        console.log(`[Pusher] ✅ Triggered ${event} on ${channel}`);
+        const result = await pusherServer.trigger(channel, event, data);
+        console.log(`[Pusher] ✅ Triggered ${event} on ${channel}`, result);
     } catch (error: any) {
-        // Log but don't throw - Pusher failures shouldn't break the app
-        console.error(`[Pusher] ❌ Failed to trigger ${event} on ${channel}:`, error.message);
-        console.error('[Pusher] Error details:', {
-            status: error.status,
-            body: error.body,
-            error: error.toString()
-        });
+        console.error(`[Pusher] ❌ FAILED to trigger ${event} on ${channel}`);
+        console.error('[Pusher] Status:', error.status);
+        console.error('[Pusher] Body:', error.body);
+        console.error('[Pusher] Message:', error.message);
         // Don't throw - let the calling function continue
     }
 }

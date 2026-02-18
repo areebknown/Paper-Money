@@ -622,6 +622,11 @@ export default function LiveBidPage() {
                 setPhase('SOLD');
                 serverStartTime.current = null;
             });
+
+            // Test event — fired by /api/pusher/test to verify delivery
+            ch.bind('test-event', (data: any) => {
+                addLog(`🧪 TEST EVENT RECEIVED: ${data.message}`);
+            });
         };
 
         const bindGlobalHandlers = (ch: any) => {
