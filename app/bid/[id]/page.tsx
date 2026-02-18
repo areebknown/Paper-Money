@@ -425,12 +425,14 @@ export default function LiveBidPage() {
     const tickerRef = useRef<NodeJS.Timeout | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
     // Keep currentUser in a ref so Pusher handlers always have the latest value
-    // without needing to re-subscribe (avoids stale closure bug)
     const currentUserRef = useRef<{ id: string; username: string } | null>(null);
     // Track who placed the last bid (to block re-bidding)
     const [lastBidderId, setLastBidderId] = useState<string | null>(null);
     // Deduplicate bids: track IDs we've already added optimistically
     const seenBidIds = useRef<Set<string>>(new Set());
+    // Stable channel ref so we never re-subscribe on StrictMode double-mount
+    const channelRef = useRef<any>(null);
+    const globalChannelRef = useRef<any>(null);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -539,80 +541,89 @@ export default function LiveBidPage() {
             setIsConnected(states.current === 'connected');
         });
 
-        // Global channel — for too-early users waiting for waiting room
-        const globalChannel = pusher.subscribe('global-auctions');
-        globalChannel.bind('auction-waiting-room', (data: any) => {
-            if (data.id === auctionId) window.location.reload();
-        });
-        globalChannel.bind('auction-started', (data: any) => {
-            if (data.id === auctionId) window.location.reload();
-        });
+        // ── Helper to bind all handlers onto a channel ──
+        // Called on initial subscribe AND after StrictMode cleanup re-mount
+        const bindAuctionHandlers = (ch: any) => {
+            ch.unbind_all(); // clear any stale handlers first
 
-        // Auction-specific channel
-        const channel = pusher.subscribe(`auction-${auctionId}`);
+            ch.bind('status-change', (data: any) => {
+                if (data.status === 'LIVE' && data.startedAt) {
+                    serverStartTime.current = new Date(data.startedAt).getTime();
+                    setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
+                }
+                if (data.status === 'COMPLETED' || data.status === 'ENDED') {
+                    setPhase('SOLD');
+                    serverStartTime.current = null;
+                }
+            });
 
-        channel.bind('subscription_succeeded', () => {
-            console.log('[Pusher] ✅ Subscribed to auction channel');
-        });
+            ch.bind('new-bid', (data: any) => {
+                const me = currentUserRef.current;
+                const bidId = data.bidId || `pusher-${Date.now()}`;
 
-        channel.bind('status-change', (data: any) => {
-            if (data.status === 'LIVE' && data.startedAt) {
-                serverStartTime.current = new Date(data.startedAt).getTime();
-                setAuctionData((prev: any) => ({ ...prev, status: 'LIVE', startedAt: data.startedAt }));
-            }
-            if (data.status === 'COMPLETED' || data.status === 'ENDED') {
-                setPhase('SOLD');
-                serverStartTime.current = null;
-            }
-        });
+                // Skip if we already added this bid optimistically (for the bidder themselves)
+                if (seenBidIds.current.has(bidId)) {
+                    // Still sync price/countdown/lastBidder for accuracy
+                    setCurrentPrice(data.amount);
+                    setBidCountdown(10);
+                    setLastBidderId(data.userId ?? null);
+                    return;
+                }
+                seenBidIds.current.add(bidId);
 
-        channel.bind('new-bid', (data: any) => {
-            const me = currentUserRef.current;
-            const bidId = data.bidId || `pusher-${Date.now()}`;
-
-            // Skip if we already added this bid optimistically
-            if (seenBidIds.current.has(bidId)) {
-                console.log('[Pusher] Skipping duplicate bid:', bidId);
-                // Still update price + countdown in case optimistic update missed something
                 setCurrentPrice(data.amount);
                 setBidCountdown(10);
                 setLastBidderId(data.userId ?? null);
-                return;
-            }
-            seenBidIds.current.add(bidId);
 
-            setCurrentPrice(data.amount);
-            setBidCountdown(10);
-            setLastBidderId(data.userId ?? null);
-
-            const newBid: BidMessage = {
-                id: bidId,
-                username: data.username ?? 'Unknown',
-                amount: data.amount,
-                isMine: me ? data.userId === me.id : false,
-                timestamp: Date.now(),
-                isCustom: !!data.isCustom,
-            };
-            setBids(prev => [...prev, newBid]);
-        });
-
-        channel.bind('auction-ended', (data: any) => {
-            setPhase('SOLD');
-            setSoldInfo({
-                winnerId: data.winnerId ?? null,
-                winnerUsername: data.winnerUsername ?? null,
-                finalPrice: data.finalPrice ?? 0,
-                auctionName: data.auctionName ?? 'This Shutter',
+                const newBid: BidMessage = {
+                    id: bidId,
+                    username: data.username ?? 'Unknown',
+                    amount: data.amount,
+                    isMine: me ? data.userId === me.id : false,
+                    timestamp: Date.now(),
+                    isCustom: !!data.isCustom,
+                };
+                setBids(prev => [...prev, newBid]);
             });
-            serverStartTime.current = null;
-        });
 
-        // CLEANUP: Only unbind handlers, do NOT unsubscribe the channel.
-        // Unsubscribing destroys the singleton's subscription and breaks future mounts.
-        // React StrictMode double-mounts make this critical.
+            ch.bind('auction-ended', (data: any) => {
+                setSoldInfo({
+                    winnerId: data.winnerId ?? null,
+                    winnerUsername: data.winnerUsername ?? null,
+                    finalPrice: data.finalPrice ?? 0,
+                    auctionName: data.auctionName ?? 'This Shutter',
+                });
+                setPhase('SOLD');
+                serverStartTime.current = null;
+            });
+        };
+
+        const bindGlobalHandlers = (ch: any) => {
+            ch.unbind_all();
+            ch.bind('auction-waiting-room', (data: any) => {
+                if (data.id === auctionId) window.location.reload();
+            });
+            ch.bind('auction-started', (data: any) => {
+                if (data.id === auctionId) window.location.reload();
+            });
+        };
+
+        // Subscribe once, store in ref. On re-mount (StrictMode), re-use existing channel.
+        if (!channelRef.current) {
+            channelRef.current = pusher.subscribe(`auction-${auctionId}`);
+        }
+        if (!globalChannelRef.current) {
+            globalChannelRef.current = pusher.subscribe('global-auctions');
+        }
+
+        // Always re-bind handlers (they were cleared by previous cleanup)
+        bindAuctionHandlers(channelRef.current);
+        bindGlobalHandlers(globalChannelRef.current);
+
         return () => {
-            channel.unbind_all();
-            globalChannel.unbind_all();
+            // Only unbind handlers — keep channels subscribed so Pusher stays connected
+            if (channelRef.current) channelRef.current.unbind_all();
+            if (globalChannelRef.current) globalChannelRef.current.unbind_all();
             pusher.connection.unbind('state_change');
         };
     }, [auctionId]);
@@ -655,7 +666,7 @@ export default function LiveBidPage() {
         return () => { if (tickerRef.current) clearInterval(tickerRef.current); };
     }, [serverStartTime.current]);
 
-    // ── 4. Bid countdown (only runs after first bid) ───────────────────────────
+    // ── 4. Bid countdown (only runs after first bid) ─────────────────────────────────
     useEffect(() => {
         if (phase !== 'BIDDING') return;
         if (bidCountdown === null) return; // No bids yet — don't count down
@@ -664,12 +675,32 @@ export default function LiveBidPage() {
             const t = setTimeout(() => setBidCountdown(p => (p !== null ? Math.max(0, p - 1) : null)), 1000);
             return () => clearTimeout(t);
         } else {
-            // Countdown hit zero — end auction
-            setPhase('SOLD');
-            // Trigger server-side end
-            fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' }).catch(console.error);
+            // Countdown hit zero — call end API and use response for soldInfo
+            // Don't set phase=SOLD yet; wait for the API to return winner data
+            // so the dialog has the right info immediately
+            const endAuction = async () => {
+                try {
+                    const res = await fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Set soldInfo from API response so dialog shows correctly
+                        setSoldInfo({
+                            winnerId: data.winnerId ?? null,
+                            winnerUsername: data.winnerUsername ?? null,
+                            finalPrice: data.finalPrice ?? currentPrice,
+                            auctionName: data.auctionName ?? auctionData?.name ?? 'This Auction',
+                        });
+                    }
+                } catch (e) {
+                    console.error('[BidPage] End auction error:', e);
+                } finally {
+                    // Always show SOLD phase regardless of API success
+                    setPhase('SOLD');
+                }
+            };
+            endAuction();
         }
-    }, [phase, bidCountdown, auctionId]);
+    }, [phase, bidCountdown, auctionId, currentPrice, auctionData]);
 
     // ── Handlers ───────────────────────────────────────────────────────────────
     const placeBid = async (amount: number) => {

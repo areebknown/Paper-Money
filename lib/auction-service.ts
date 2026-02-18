@@ -142,7 +142,7 @@ export async function endAuctionService(auctionId: string) {
         id: auctionId
     }).catch(err => console.error('[EndAuction] Pusher failed:', err));
 
-    return { success: true, auction: updated, winnerId, winnerUsername };
+    return { success: true, auction: updated, winnerId, winnerUsername, finalPrice, auctionName: auction.name };
 }
 /**
  * Checks for auctions that need status updates and transitions them.
