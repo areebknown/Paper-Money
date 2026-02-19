@@ -930,16 +930,19 @@ export default function LiveBidPage() {
             setBidCountdown(10);
             setLastBidderId(me.id);
 
-            // Add chat bubble immediately
-            const optimisticBid: BidMessage = {
-                id: bidId,
-                username: me.username,
-                amount: newPrice,
-                isMine: true,
-                timestamp: Date.now(),
-                isCustom: amount !== (currentPrice + 1000),
-            };
-            setBids(prev => [...prev, optimisticBid]);
+            // Add chat bubble immediately — but only if poll hasn't already added it
+            setBids(prev => {
+                if (prev.some(b => b.id === bidId)) return prev; // poll beat us, skip
+                const optimisticBid: BidMessage = {
+                    id: bidId,
+                    username: me.username,
+                    amount: newPrice,
+                    isMine: true,
+                    timestamp: Date.now(),
+                    isCustom: amount !== (currentPrice + 1000),
+                };
+                return [...prev, optimisticBid];
+            });
 
             setShowCustomInput(false);
             setCustomBidAmount('');
