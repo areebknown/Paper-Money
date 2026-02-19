@@ -811,7 +811,7 @@ export default function LiveBidPage() {
 
         // Poll immediately, then every 1 second for faster updates
         poll();
-        const interval = setInterval(poll, 1000);
+        const interval = setInterval(poll, 5000);
         return () => clearInterval(interval);
     }, [auctionId, phase]);
 
@@ -1129,32 +1129,73 @@ export default function LiveBidPage() {
             </div>
 
             {/* ── ACTION BUTTONS ── */}
-            <div className="shrink-0 p-3 bg-gray-900 border-t border-gray-800">
+            <div className="shrink-0 p-4 bg-gray-900 border-t border-gray-800 safe-area-bottom">
+
+                {/* Custom Bid Panel (replaces standard input) */}
                 {showCustomInput ? (
-                    <div className="space-y-2">
-                        <input
-                            type="number"
-                            value={customBidAmount}
-                            onChange={e => setCustomBidAmount(e.target.value)}
-                            placeholder={`Enter amount > ₹${currentPrice.toLocaleString()}`}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white font-bold text-lg focus:ring-2 focus:ring-cyan-500 outline-none"
-                            autoFocus
-                            onKeyDown={e => e.key === 'Enter' && handleCustomBid()}
-                        />
-                        <div className="flex gap-2">
+                    <div className="animate-in slide-in-from-bottom-5 fade-in duration-200">
+                        {/* Header: Label + Close */}
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Custom Bid Amount</span>
                             <button
                                 onClick={() => { setShowCustomInput(false); setCustomBidAmount(''); }}
-                                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-semibold text-sm transition"
+                                className="bg-gray-800 p-1 rounded-full hover:bg-gray-700 text-gray-400"
                             >
-                                Cancel
+                                <span className="material-icons-round text-sm">close</span>
                             </button>
+                        </div>
+
+                        {/* Main Input + Place Button Row */}
+                        <div className="flex gap-3 mb-3 h-14">
+                            <div className="relative flex-1 bg-gray-950 rounded-xl border border-gray-700 flex items-center px-4 focus-within:border-cyan-500 focus-within:ring-1 focus-within:ring-cyan-500 transition-all">
+                                <span className="text-gray-500 text-lg mr-1">₹</span>
+                                <input
+                                    type="number"
+                                    value={customBidAmount}
+                                    onChange={(e) => setCustomBidAmount(e.target.value)}
+                                    placeholder={currentPrice.toString()}
+                                    className="bg-transparent w-full text-2xl font-bold text-white outline-none placeholder:text-gray-700 font-['Russo_One']"
+                                    autoFocus
+                                />
+                                {/* Inline Undo Button */}
+                                {customBidAmount !== '' && customBidAmount !== currentPrice.toString() && (
+                                    <button
+                                        onClick={() => setCustomBidAmount(currentPrice.toString())}
+                                        className="absolute right-3 p-1 rounded-full bg-gray-800 text-gray-400 hover:text-white"
+                                    >
+                                        <span className="material-icons-round text-sm">undo</span>
+                                    </button>
+                                )}
+                            </div>
+
                             <button
                                 onClick={handleCustomBid}
-                                disabled={bidding}
-                                className="flex-[2] py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 rounded-xl font-black text-sm transition"
+                                disabled={!customBidAmount || parseInt(customBidAmount) <= currentPrice || !isConnected}
+                                className={`px-6 rounded-xl font-bold uppercase tracking-wide flex items-center gap-2 transition-all ${!customBidAmount || parseInt(customBidAmount) <= currentPrice
+                                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                        : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 active:scale-95'
+                                    }`}
                             >
-                                {bidding ? 'Placing...' : 'Confirm Bid'}
+                                <span className="material-icons-round">gavel</span>
+                                Place
                             </button>
+                        </div>
+
+                        {/* Quick Add Buttons (Bento Styling) */}
+                        <div className="grid grid-cols-3 gap-2">
+                            {[1000, 5000, 10000].map((inc) => (
+                                <button
+                                    key={inc}
+                                    onClick={() => {
+                                        const base = customBidAmount ? parseInt(customBidAmount) : currentPrice;
+                                        setCustomBidAmount((base + inc).toString());
+                                    }}
+                                    className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 rounded-lg py-3 flex flex-col items-center justify-center transition-all active:scale-95"
+                                >
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Add</span>
+                                    <span className="text-white font-bold font-['Russo_One']">+₹{(inc / 1000)}k</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 ) : (
@@ -1187,7 +1228,10 @@ export default function LiveBidPage() {
                         {/* Custom Bid */}
                         <button
                             disabled={!canBid || isLeading}
-                            onClick={() => setShowCustomInput(true)}
+                            onClick={() => {
+                                setCustomBidAmount(currentPrice.toString()); // Pre-fill with current price
+                                setShowCustomInput(true);
+                            }}
                             className="h-14 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 rounded-xl flex flex-col items-center justify-center gap-0.5 transition active:scale-95"
                         >
                             <span className="text-xl">✍️</span>
