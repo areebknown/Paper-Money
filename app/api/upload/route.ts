@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { getUserFromToken } from '@/lib/auth';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -11,17 +10,13 @@ cloudinary.config({
 
 // Admin-only upload endpoint
 export async function POST(req: Request) {
-    // Auth check — must be admin
-    try {
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        const { payload } = await jwtVerify(token, secret);
-        if (!payload.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    } catch {
+    // Auth check — use the same helper every other admin route uses
+    const user = await getUserFromToken();
+    if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!user.isAdmin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     try {
@@ -33,19 +28,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        // Convert browser File to a Buffer for Cloudinary
+        // Convert browser File to Buffer for Cloudinary
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Cloudinary using a stream/buffer upload
+        // Upload to Cloudinary
         const result = await new Promise<any>((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder,
-                    // Auto-format to WebP and auto-quality — free optimization!
                     fetch_format: 'auto',
                     quality: 'auto',
-                    // Resize to max 1200px width to save storage
                     transformation: [{ width: 1200, crop: 'limit' }],
                 },
                 (error, result) => {
@@ -57,7 +50,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({
-            url: result.secure_url,
+            // Inject optimization params so the stored URL is always optimized
+            url: result.secure_url.replace('/upload/', '/upload/q_auto,f_auto/'),
             publicId: result.public_id,
             width: result.width,
             height: result.height,
