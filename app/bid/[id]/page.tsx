@@ -1025,7 +1025,7 @@ export default function LiveBidPage() {
                 </div>
 
                 <div className="absolute left-1/2 -translate-x-1/2">
-                    <Image src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo" alt="Bid Wars" width={100} height={50} className="object-contain drop-shadow-lg" />
+                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-12 w-auto" />
                 </div>
 
                 <div className="flex items-center gap-2">

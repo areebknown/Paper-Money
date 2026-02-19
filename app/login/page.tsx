@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Eye, EyeOff, Lock, User as UserIcon } from 'lucide-react';
 
 export default function LoginPage() {
@@ -49,13 +48,10 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
-                    <Image
+                    <img
                         src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                         alt="Bid Wars"
-                        width={200}
-                        height={90}
-                        priority
-                        className="object-contain"
+                        className="object-contain h-24 w-auto"
                     />
                 </div>
 

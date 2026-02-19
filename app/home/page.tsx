@@ -58,12 +58,10 @@ export default function HomePage() {
 
                     {/* Center: Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                        <Image
+                        <img
                             src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                             alt="Bid Wars Logo"
-                            width={112}
-                            height={56}
-                            className="drop-shadow-lg object-contain"
+                            className="drop-shadow-lg object-contain h-14 w-auto"
                         />
                     </div>
 
