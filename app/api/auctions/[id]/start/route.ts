@@ -1,36 +1,22 @@
 import { NextResponse } from 'next/server';
-
-// Simple test endpoint to verify dynamic routing works
-export async function GET() {
-    return NextResponse.json({
-        message: 'Start route is working!',
-        timestamp: new Date().toISOString()
-    });
-}
+import { startAuctionService } from '@/lib/auction-service';
+import { getUserFromToken } from '@/lib/auth';
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    console.log('[START API] ========== REQUEST RECEIVED ==========');
-    console.log('[START API] Headers:', Object.fromEntries(req.headers.entries()));
-    console.log('[START API] URL:', req.url);
-
     try {
+        // Only admins can manually start an auction
+        const user = await getUserFromToken();
+        if (!user?.isAdmin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const { id } = await params;
-        console.log('[START API] Auction ID:', id);
+        console.log('[START API] Starting auction:', id);
 
-        // Temporary: Just return success to test if route works
-        return NextResponse.json({
-            test: true,
-            message: 'Route is accessible',
-            auctionId: id
-        });
-
-        /* Original code - uncomment after testing
-        console.log('[START API] Calling startAuctionService...');
         const result = await startAuctionService(id);
-        console.log('[START API] Service result:', result);
 
         if (!result.success) {
             console.log('[START API] ❌ Service returned failure:', result.message);
@@ -40,14 +26,13 @@ export async function POST(
             );
         }
 
-        console.log('[START API] ✅ Success! Returning result');
+        console.log('[START API] ✅ Auction started successfully:', id);
         return NextResponse.json(result);
-        */
+
     } catch (error: any) {
-        console.error('[START API] 💥 FATAL ERROR:', error);
-        console.error('[START API] Error stack:', error.stack);
+        console.error('[START API] 💥 Error:', error);
         return NextResponse.json(
-            { error: error.message || 'Failed to start auction', stack: error.stack },
+            { error: error.message || 'Failed to start auction' },
             { status: 500 }
         );
     }
