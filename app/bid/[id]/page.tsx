@@ -736,25 +736,34 @@ export default function LiveBidPage() {
                 // Update server time reference for next poll
                 lastPollTime = data.serverTime ?? Date.now();
 
-                // Handle new bids
+                // Handle new bids — filter BEFORE entering setBids to avoid stale-state race
                 if (data.newBids && data.newBids.length > 0) {
                     const me = currentUserRef.current;
-                    setBids(prev => {
-                        const existingIds = new Set(prev.map((b: BidMessage) => b.id));
-                        const fresh = data.newBids.filter((b: any) => !existingIds.has(b.id) && !seenBidIds.current.has(b.id));
-                        if (fresh.length === 0) return prev;
-                        fresh.forEach((b: any) => seenBidIds.current.add(b.id));
-                        addLog(`📡 Poll: +${fresh.length} new bid(s)`);
-                        const newMessages: BidMessage[] = fresh.map((b: any) => ({
-                            id: b.id,
-                            username: b.username,
-                            amount: b.amount,
-                            isMine: me ? b.userId === me.id : false,
-                            timestamp: new Date(b.createdAt).getTime(),
-                            isCustom: false,
-                        }));
-                        return [...prev, ...newMessages];
-                    });
+
+                    // Use seenBidIds ref (always current) to pre-filter BEFORE touching state
+                    const genuinelyNew = data.newBids.filter((b: any) => !seenBidIds.current.has(b.id));
+
+                    if (genuinelyNew.length > 0) {
+                        // Mark all as seen immediately so parallel polls/pusher can't double-add
+                        genuinelyNew.forEach((b: any) => seenBidIds.current.add(b.id));
+                        addLog(`📡 Poll: +${genuinelyNew.length} new bid(s)`);
+
+                        setBids(prev => {
+                            // Secondary guard inside updater against React batching races
+                            const existingIds = new Set(prev.map((b: BidMessage) => b.id));
+                            const fresh = genuinelyNew.filter((b: any) => !existingIds.has(b.id));
+                            if (fresh.length === 0) return prev;
+                            const newMessages: BidMessage[] = fresh.map((b: any) => ({
+                                id: b.id,
+                                username: b.username,
+                                amount: b.amount,
+                                isMine: me ? b.userId === me.id : false,
+                                timestamp: new Date(b.createdAt).getTime(),
+                                isCustom: false,
+                            }));
+                            return [...prev, ...newMessages];
+                        });
+                    }
                 }
 
                 // Sync current price
