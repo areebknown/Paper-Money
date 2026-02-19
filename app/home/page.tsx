@@ -59,7 +59,7 @@ export default function HomePage() {
                     {/* Center: Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
                         <Image
-                            src="/bid-wars-logo.png"
+                            src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                             alt="Bid Wars Logo"
                             width={112}
                             height={56}
@@ -165,11 +165,12 @@ function BidsContent() {
         return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
     }
 
+    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto';
     const getTierBg = (tier: string) => {
-        if (tier === 'BRONZE') return '/shutter-bronze.png';
-        if (tier === 'SILVER') return '/shutter-silver.png';
-        if (tier === 'GOLD') return '/shutter-gold.png';
-        return '/shutter-bronze.png';
+        if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
+        if (tier === 'SILVER') return `${CDN}/shutter/silver`;
+        if (tier === 'GOLD') return `${CDN}/shutter/gold`;
+        return `${CDN}/shutter/bronze`;
     };
 
     const getTierColors = (tier: string) => {
@@ -344,11 +345,12 @@ function BidsContent() {
 }
 
 function MarketContent() {
+    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto';
     const categories = [
-        { id: 'invest', name: 'Invest', description: 'Grow your wealth', icon: 'trending_up', bg: 'invest.png', iconBg: 'from-green-200 to-green-500', iconColor: 'text-green-900' },
-        { id: 'pawn', name: 'Pawn', description: 'Quick cash solutions', icon: 'storefront', bg: 'pawn.png', iconBg: 'from-yellow-200 to-yellow-500', iconColor: 'text-yellow-900' },
-        { id: 'dig', name: 'Dig', description: 'Find hidden treasures', icon: 'construction', bg: 'dig.png', iconBg: 'from-orange-200 to-orange-500', iconColor: 'text-orange-900' },
-        { id: 'consumer', name: 'Consumer', description: 'Local marketplace', icon: 'shopping_cart', bg: 'consumer.png', iconBg: 'from-purple-200 to-purple-500', iconColor: 'text-purple-900' },
+        { id: 'invest', name: 'Invest', description: 'Grow your wealth', icon: 'trending_up', bg: `${CDN}/market-bg/invest`, iconBg: 'from-green-200 to-green-500', iconColor: 'text-green-900' },
+        { id: 'pawn', name: 'Pawn', description: 'Quick cash solutions', icon: 'storefront', bg: `${CDN}/market-bg/pawn`, iconBg: 'from-yellow-200 to-yellow-500', iconColor: 'text-yellow-900' },
+        { id: 'dig', name: 'Dig', description: 'Find hidden treasures', icon: 'construction', bg: `${CDN}/market-bg/dig`, iconBg: 'from-orange-200 to-orange-500', iconColor: 'text-orange-900' },
+        { id: 'consumer', name: 'Consumer', description: 'Local marketplace', icon: 'shopping_cart', bg: `${CDN}/market-bg/consumer`, iconBg: 'from-purple-200 to-purple-500', iconColor: 'text-purple-900' },
     ];
 
     return (
@@ -358,7 +360,7 @@ function MarketContent() {
                     <div
                         className="relative rounded-2xl p-5 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
                         style={{
-                            backgroundImage: `url('/${category.bg}')`,
+                            backgroundImage: `url('${category.bg}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}

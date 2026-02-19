@@ -50,7 +50,7 @@ export default function LoginPage() {
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
                     <Image
-                        src="/bid-wars-logo.png"
+                        src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                         alt="Bid Wars"
                         width={200}
                         height={90}

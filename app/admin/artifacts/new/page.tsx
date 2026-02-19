@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Image as ImageIcon, Trophy, AlertCircle, Layers, Check } from 'lucide-react';
+import { ChevronLeft, Trophy, AlertCircle, Layers, Upload, X, ImageIcon, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewArtifactPage() {
@@ -10,7 +10,6 @@ export default function NewArtifactPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Form matches Prisma Schema: Name, Description, ImageUrl, BasePoints, PawnPoints, Dimensions
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -24,20 +23,65 @@ export default function NewArtifactPage() {
         materialGold: '',
     });
 
+    // Image upload state
+    const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+    const [preview, setPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Show preview immediately (local blob)
+        const localUrl = URL.createObjectURL(file);
+        setPreview(localUrl);
+        setUploadState('uploading');
+        setError('');
+
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('folder', 'artifacts');
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: fd,
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Upload failed');
+            }
+
+            const data = await res.json();
+            setFormData(prev => ({ ...prev, imageUrl: data.url }));
+            setUploadState('done');
+        } catch (err: any) {
+            setUploadState('error');
+            setError(`Image upload failed: ${err.message}`);
+        }
+    };
+
+    const clearImage = () => {
+        setPreview(null);
+        setUploadState('idle');
+        setFormData(prev => ({ ...prev, imageUrl: '' }));
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (uploadState === 'uploading') { setError('Please wait for the image to finish uploading.'); return; }
         setLoading(true);
         setError('');
 
         try {
-            // Validate required
             if (!formData.name || !formData.basePoints) {
                 setError('Name and Base Points are required.');
                 setLoading(false);
                 return;
             }
 
-            // Construct payload matching API expectation
             const materialComposition: Record<string, number> = {};
             if (formData.materialSilver) materialComposition['silver'] = Number(formData.materialSilver);
             if (formData.materialGold) materialComposition['gold'] = Number(formData.materialGold);
@@ -61,7 +105,6 @@ export default function NewArtifactPage() {
             });
 
             const data = await res.json();
-
             if (res.ok) {
                 router.push('/admin/artifacts');
                 router.refresh();
@@ -75,10 +118,11 @@ export default function NewArtifactPage() {
         }
     };
 
+    const inputCls = 'w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition';
+
     return (
         <div className="px-6 py-6 min-h-screen bg-[#0a0a0a] text-gray-100">
             <div className="max-w-3xl mx-auto">
-                {/* Header */}
                 <Link href="/admin/artifacts" className="flex items-center gap-2 text-gray-400 hover:text-gray-200 mb-6 transition group">
                     <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     Back to Artifacts
@@ -95,36 +139,75 @@ export default function NewArtifactPage() {
                     </div>
                 )}
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Basic Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Artifact Name</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Ancient Vase"
-                                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Image URL</label>
-                            <div className="relative">
-                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                <input
-                                    type="url"
-                                    value={formData.imageUrl}
-                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                    placeholder="https://"
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                                />
-                            </div>
-                        </div>
+                    {/* Name */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-400">Artifact Name *</label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="Ancient Vase"
+                            className={inputCls}
+                            required
+                        />
                     </div>
 
+                    {/* Image Upload */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" />
+                            Artifact Image
+                        </label>
+
+                        {!preview ? (
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-gray-700 hover:border-purple-500 rounded-xl p-10 text-center cursor-pointer transition group"
+                            >
+                                <Upload className="w-10 h-10 text-gray-600 group-hover:text-purple-400 mx-auto mb-3 transition" />
+                                <p className="text-gray-400 group-hover:text-gray-200 transition font-medium">Click to upload image</p>
+                                <p className="text-xs text-gray-600 mt-1">PNG, JPG, WEBP — auto-converted to WebP & compressed by Cloudinary</p>
+                            </div>
+                        ) : (
+                            <div className="relative rounded-xl overflow-hidden border border-gray-800">
+                                {/* Preview */}
+                                <img src={preview} alt="Preview" className="w-full h-52 object-cover" />
+
+                                {/* Status overlay */}
+                                {uploadState === 'uploading' && (
+                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2">
+                                        <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                                        <span className="text-white font-semibold">Uploading to Cloudinary...</span>
+                                    </div>
+                                )}
+                                {uploadState === 'done' && (
+                                    <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-green-900/80 border border-green-600 rounded-full px-3 py-1">
+                                        <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                        <span className="text-green-300 text-xs font-bold">Uploaded to Cloudinary ✓</span>
+                                    </div>
+                                )}
+
+                                {/* Remove button */}
+                                <button
+                                    type="button"
+                                    onClick={clearImage}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-red-900/80 rounded-full flex items-center justify-center transition"
+                                >
+                                    <X className="w-4 h-4 text-white" />
+                                </button>
+                            </div>
+                        )}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                    </div>
+
+                    {/* Description */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-400">Description</label>
                         <textarea
@@ -143,13 +226,13 @@ export default function NewArtifactPage() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-400">Base Points (BP)</label>
+                                <label className="text-sm font-medium text-gray-400">Base Points (BP) *</label>
                                 <input
                                     type="number"
                                     value={formData.basePoints}
                                     onChange={(e) => setFormData({ ...formData, basePoints: e.target.value })}
                                     placeholder="1000"
-                                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+                                    className={inputCls}
                                     required
                                 />
                                 <p className="text-xs text-gray-500">Fundamental value of the item.</p>
@@ -161,7 +244,7 @@ export default function NewArtifactPage() {
                                     value={formData.pawnPoints}
                                     onChange={(e) => setFormData({ ...formData, pawnPoints: e.target.value })}
                                     placeholder="500"
-                                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+                                    className={inputCls}
                                 />
                                 <p className="text-xs text-gray-500">Quick-sell value at Pawn Shop.</p>
                             </div>
@@ -200,13 +283,18 @@ export default function NewArtifactPage() {
                         </div>
                     </div>
 
-                    {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || uploadState === 'uploading'}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-purple-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8"
                     >
-                        {loading ? 'Minting...' : 'Mint Artifact'}
+                        {loading ? (
+                            <><Loader2 className="w-5 h-5 animate-spin" /> Minting...</>
+                        ) : uploadState === 'uploading' ? (
+                            <><Loader2 className="w-5 h-5 animate-spin" /> Uploading Image...</>
+                        ) : (
+                            'Mint Artifact'
+                        )}
                     </button>
                 </form>
             </div>
