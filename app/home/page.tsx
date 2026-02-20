@@ -42,31 +42,33 @@ export default function HomePage() {
             {/* Header */}
             <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 pb-4 pt-5 rounded-b-3xl">
                 <div className="flex justify-between items-center px-4 mb-4 relative">
-                    {/* Left: Balance + Rank Points */}
-                    <div className="flex flex-col gap-1 w-auto">
-                        <div className="flex items-center gap-1 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 whitespace-nowrap">
-                            <span className="material-icons-round text-[#FBBF24] text-sm drop-shadow-md">currency_rupee</span>
-                            <span className="text-white text-xs font-bold font-['Russo_One'] tracking-wide">
-                                {balance.toLocaleString()}
-                            </span>
+                    {/* Left: User Balance & Rank */}
+                    {userData ? (
+                        <div className="flex flex-col justify-center bg-black/40 rounded-xl border border-white/10 h-10 px-2.5 z-10">
+                            <div className="flex items-center gap-1 mb-[2px]">
+                                <span className="material-icons-round text-[#FBBF24] text-[11px] leading-none">currency_rupee</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] truncate max-w-[70px] leading-none">{balance.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="material-icons-round text-blue-400 text-[11px] leading-none">military_tech</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] truncate max-w-[70px] leading-none">{rankPoints}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full border border-white/10">
-                            <span className="material-icons-round text-blue-400 text-sm drop-shadow-md">military_tech</span>
-                            <span className="text-white text-xs font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
-                        </div>
-                    </div>
+                    ) : (
+                        <div className="w-24"></div> // Placeholder
+                    )}
 
                     {/* Center: Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
                         <img
-                            src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
+                            src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo"
                             alt="Bid Wars Logo"
-                            className="drop-shadow-lg object-contain h-14 w-auto"
+                            className="drop-shadow-lg object-contain h-10 w-auto"
                         />
                     </div>
 
                     {/* Right: Notifications + Profile */}
-                    <div className="flex items-center gap-3 w-24 justify-end">
+                    <div className="flex items-center gap-3 w-24 justify-end z-10">
                         <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
                             <span className="material-icons-round text-white">notifications</span>
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
@@ -262,9 +264,9 @@ function BidsContent() {
                             }
 
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-4">
+                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-3">
                                     <div
-                                        className="relative rounded-2xl p-4 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
+                                        className="relative rounded-2xl p-3 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
                                             backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('${getTierBg(bid.rankTier)}')`,
                                             backgroundSize: 'cover',
@@ -272,24 +274,23 @@ function BidsContent() {
                                         }}
                                     >
                                         {/* Status badge */}
-                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-xs font-bold px-3 py-1 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
                                             {badgeText}
                                         </div>
 
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-3">
                                             {/* Tier icon */}
-                                            <div className={`w-16 h-16 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text}`} style={{ fontSize: '48px' }}>shield</span>
-                                                <div className={`absolute -bottom-2 ${colors.badge} text-white text-[10px] px-2 rounded-full font-bold uppercase`}>
+                                            <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
+                                                <span className={`material-icons-round ${colors.text}`} style={{ fontSize: '24px' }}>shield</span>
+                                                <div className={`absolute -bottom-2 ${colors.badge} text-white text-[9px] px-2 rounded-full font-bold uppercase`}>
                                                     {bid.rankTier}
                                                 </div>
                                             </div>
 
                                             {/* Content */}
                                             <div className="flex-1">
-                                                <h3 className="text-xl font-['Russo_One'] text-white leading-tight">{bid.name}</h3>
-                                                <p className="text-gray-400 text-sm font-medium">Rank: {bid.rankTier}</p>
-                                                <div className="flex items-center justify-between mt-2">
+                                                <h3 className="text-lg font-['Russo_One'] text-white leading-tight truncate">{bid.name}</h3>
+                                                <div className="flex items-center gap-2 mt-1">
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-green-400 font-bold">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
                                                     </div>
@@ -321,20 +322,20 @@ function BidsContent() {
                         No won auctions yet
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {wonBids.map((bid) => (
                             <Link href={`/bid/${bid.id}`} key={bid.id} className="block">
-                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-2 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
                                     <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="text-base font-['Russo_One'] text-white truncate">
-                                            {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
+                                        <h3 className="text-sm font-['Russo_One'] text-white truncate">
+                                            {bid.name} <span className="text-[9px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
                                         </h3>
-                                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                                        <p className="text-[10px] text-gray-400 mt-0.5 truncate">
                                             Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
                                         </p>
                                     </div>
-                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
-                                        info <span className="material-icons-round text-sm">chevron_right</span>
+                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-[10px] uppercase tracking-wide flex items-center gap-0.5 shrink-0">
+                                        info <span className="material-icons-round text-xs">chevron_right</span>
                                     </button>
                                 </div>
                             </Link>
@@ -356,11 +357,11 @@ function MarketContent() {
     ];
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {categories.map((category) => (
-                <Link href={`/${category.id}`} key={category.id} className="block mb-4">
+                <Link href={`/${category.id}`} key={category.id} className="block mb-3">
                     <div
-                        className="relative rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
+                        className="relative rounded-2xl p-3 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
                         style={{
                             backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('${category.bg}')`,
                             backgroundSize: 'cover',
@@ -369,15 +370,15 @@ function MarketContent() {
                     >
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-3">
-                                <div className={`w-12 h-12 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
-                                    <span className={`material-icons-round ${category.iconColor} text-2xl`}>{category.icon}</span>
+                                <div className={`w-10 h-10 bg-gradient-to-b ${category.iconBg} rounded-[10px] flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
+                                    <span className={`material-icons-round ${category.iconColor} text-xl`}>{category.icon}</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-['Russo_One'] text-white uppercase leading-tight">{category.name}</h3>
-                                    <p className="text-xs text-gray-400 mt-0.5">{category.description}</p>
+                                    <h3 className="text-lg font-['Russo_One'] text-white uppercase leading-tight">{category.name}</h3>
+                                    <p className="text-[10px] text-gray-400 mt-0.5">{category.description}</p>
                                 </div>
                             </div>
-                            <span className="material-icons-round text-gray-400 text-xl">chevron_right</span>
+                            <span className="material-icons-round text-gray-400 text-lg">chevron_right</span>
                         </div>
                     </div>
                 </Link>
