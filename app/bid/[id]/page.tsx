@@ -30,6 +30,7 @@ interface SoldInfo {
 function getTierIcon(tier: string) {
     if (tier === 'GOLD') return { icon: 'workspace_premium', color: 'text-yellow-400', bg: 'from-yellow-600 to-yellow-900', border: 'border-yellow-500' };
     if (tier === 'SILVER') return { icon: 'shield', color: 'text-gray-300', bg: 'from-gray-400 to-gray-700', border: 'border-gray-300' };
+    if (tier === 'DIAMOND') return { icon: 'diamond', color: 'text-indigo-300', bg: 'from-indigo-600 to-purple-900', border: 'border-purple-500' };
     return { icon: 'shield', color: 'text-amber-400', bg: 'from-amber-700 to-amber-950', border: 'border-amber-600' };
 }
 
@@ -1070,7 +1071,7 @@ export default function LiveBidPage() {
             <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 border-b border-gray-800">
                 <div className="flex items-center gap-4">
                     <div className={`w-16 h-16 bg-gradient-to-b ${tierInfo.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${tierInfo.border}`}>
-                        <span className={`material-icons-round ${tierInfo.color} text-6xl`}>{tierInfo.icon}</span>
+                        <span className={`material-icons-round ${tierInfo.color} text-[48px]`}>{tierInfo.icon}</span>
                     </div>
                     <span className={`text-sm font-black uppercase tracking-wider ${tierInfo.color} font-['Russo_One']`}>{auctionData.rankTier} Rank</span>
                 </div>
@@ -1155,7 +1156,6 @@ export default function LiveBidPage() {
                                     onChange={(e) => setCustomBidAmount(e.target.value)}
                                     placeholder={currentPrice.toString()}
                                     className="bg-transparent w-full text-2xl font-bold text-white outline-none placeholder:text-gray-700 font-['Russo_One']"
-                                    autoFocus
                                 />
                                 {/* Inline Undo Button */}
                                 {customBidAmount !== '' && customBidAmount !== currentPrice.toString() && (

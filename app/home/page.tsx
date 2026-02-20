@@ -168,7 +168,7 @@ function BidsContent() {
         if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
         if (tier === 'SILVER') return `${CDN}/shutter/silver`;
         if (tier === 'GOLD') return `${CDN}/shutter/gold`;
-        if (tier === 'DIAMOND') return `https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/v1771586328/shutter/xm9krvefxp1kzg8e08dn.png`;
+        if (tier === 'DIAMOND') return `https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto,w_800/v1771586328/shutter/xm9krvefxp1kzg8e08dn.png`;
         return `${CDN}/shutter/bronze`;
     };
 
@@ -266,7 +266,7 @@ function BidsContent() {
                                     <div
                                         className="relative rounded-2xl p-4 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
-                                            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${getTierBg(bid.rankTier)}')`,
+                                            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${getTierBg(bid.rankTier)}')`,
                                             backgroundSize: 'cover',
                                             backgroundPosition: 'center'
                                         }}
@@ -279,7 +279,7 @@ function BidsContent() {
                                         <div className="flex items-center gap-4">
                                             {/* Tier icon */}
                                             <div className={`w-16 h-16 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text} text-6xl`}>shield</span>
+                                                <span className={`material-icons-round ${colors.text} text-[48px]`}>shield</span>
                                                 <div className={`absolute -bottom-2 ${colors.badge} text-white text-[10px] px-2 rounded-full font-bold uppercase`}>
                                                     {bid.rankTier}
                                                 </div>
@@ -362,7 +362,7 @@ function MarketContent() {
                     <div
                         className="relative rounded-2xl p-5 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
                         style={{
-                            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${category.bg}')`,
+                            backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('${category.bg}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}
