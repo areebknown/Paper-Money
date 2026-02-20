@@ -1069,11 +1069,11 @@ export default function LiveBidPage() {
 
             {/* ── INFO BAR ── */}
             <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 border-b border-gray-800">
-                <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 bg-gradient-to-b ${tierInfo.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${tierInfo.border}`}>
-                        <span className={`material-icons-round ${tierInfo.color} text-[48px]`}>{tierInfo.icon}</span>
+                <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 bg-gradient-to-b ${tierInfo.bg} rounded-lg flex items-center justify-center border ${tierInfo.border} shadow`}>
+                        <span className={`material-icons-round ${tierInfo.color} text-base`}>{tierInfo.icon}</span>
                     </div>
-                    <span className={`text-sm font-black uppercase tracking-wider ${tierInfo.color} font-['Russo_One']`}>{auctionData.rankTier} Rank</span>
+                    <span className={`text-xs font-black uppercase tracking-wider ${tierInfo.color}`}>{auctionData.rankTier} Rank</span>
                 </div>
 
                 <div className="text-right">
