@@ -168,6 +168,7 @@ function BidsContent() {
         if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
         if (tier === 'SILVER') return `${CDN}/shutter/silver`;
         if (tier === 'GOLD') return `${CDN}/shutter/gold`;
+        if (tier === 'DIAMOND') return `https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/v1771586328/shutter/xm9krvefxp1kzg8e08dn.png`;
         return `${CDN}/shutter/bronze`;
     };
 
@@ -189,6 +190,12 @@ function BidsContent() {
             border: 'border-amber-100',
             text: 'text-amber-900',
             badge: 'bg-yellow-600'
+        };
+        if (tier === 'DIAMOND') return {
+            bg: 'from-indigo-400 to-purple-600',
+            border: 'border-indigo-300',
+            text: 'text-indigo-950',
+            badge: 'bg-purple-900'
         };
         return {
             bg: 'from-gray-500 to-gray-700',
@@ -255,18 +262,15 @@ function BidsContent() {
                             }
 
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id}>
+                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block">
                                     <div
                                         className="relative rounded-2xl p-4 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
-                                            backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
+                                            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${getTierBg(bid.rankTier)}')`,
                                             backgroundSize: 'cover',
                                             backgroundPosition: 'center'
                                         }}
                                     >
-                                        {/* Dark overlay */}
-                                        <div className="absolute inset-0 bg-black/50 rounded-2xl -z-10"></div>
-
                                         {/* Status badge */}
                                         <div className={`absolute top-0 right-0 ${badgeColor} text-white text-xs font-bold px-3 py-1 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
                                             {badgeText}
@@ -275,7 +279,7 @@ function BidsContent() {
                                         <div className="flex items-center gap-4">
                                             {/* Tier icon */}
                                             <div className={`w-16 h-16 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text} text-4xl`}>shield</span>
+                                                <span className={`material-icons-round ${colors.text} text-6xl`}>shield</span>
                                                 <div className={`absolute -bottom-2 ${colors.badge} text-white text-[10px] px-2 rounded-full font-bold uppercase`}>
                                                     {bid.rankTier}
                                                 </div>
@@ -354,18 +358,15 @@ function MarketContent() {
     return (
         <div className="space-y-4">
             {categories.map((category) => (
-                <Link href={`/${category.id}`} key={category.id}>
+                <Link href={`/${category.id}`} key={category.id} className="block">
                     <div
                         className="relative rounded-2xl p-5 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
                         style={{
-                            backgroundImage: `url('${category.bg}')`,
+                            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${category.bg}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}
                     >
-                        {/* Dark overlay */}
-                        <div className="absolute inset-0 bg-black/35 rounded-2xl z-0"></div>
-
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-4">
                                 <div className={`w-14 h-14 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>

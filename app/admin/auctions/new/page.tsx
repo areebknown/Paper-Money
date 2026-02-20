@@ -184,7 +184,6 @@ export default function NewAuctionPage() {
                                     <option value="BRONZE">Bronze</option>
                                     <option value="SILVER">Silver</option>
                                     <option value="GOLD">Gold</option>
-                                    <option value="PLATINUM">Platinum</option>
                                     <option value="DIAMOND">Diamond</option>
                                 </select>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">▼</div>

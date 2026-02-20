@@ -1068,16 +1068,16 @@ export default function LiveBidPage() {
 
             {/* ── INFO BAR ── */}
             <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 border-b border-gray-800">
-                <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 bg-gradient-to-b ${tierInfo.bg} rounded-lg flex items-center justify-center border ${tierInfo.border} shadow`}>
-                        <span className={`material-icons-round ${tierInfo.color} text-base`}>{tierInfo.icon}</span>
+                <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 bg-gradient-to-b ${tierInfo.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${tierInfo.border}`}>
+                        <span className={`material-icons-round ${tierInfo.color} text-6xl`}>{tierInfo.icon}</span>
                     </div>
-                    <span className={`text-xs font-black uppercase tracking-wider ${tierInfo.color}`}>{auctionData.rankTier} Tier</span>
+                    <span className={`text-sm font-black uppercase tracking-wider ${tierInfo.color} font-['Russo_One']`}>{auctionData.rankTier} Rank</span>
                 </div>
 
                 <div className="text-right">
                     <p className="text-[10px] text-gray-500 uppercase tracking-wider">{getInfoLabel()}</p>
-                    <p className="text-lg font-black text-cyan-400 leading-none">₹{currentPrice.toLocaleString()}</p>
+                    <p className="text-xl font-black text-cyan-400 font-['Russo_One'] tracking-wide">₹{currentPrice.toLocaleString()}</p>
                 </div>
             </div>
 
@@ -1172,8 +1172,8 @@ export default function LiveBidPage() {
                                 onClick={handleCustomBid}
                                 disabled={!customBidAmount || parseInt(customBidAmount) <= currentPrice || !isConnected}
                                 className={`px-6 rounded-xl font-bold uppercase tracking-wide flex items-center gap-2 transition-all ${!customBidAmount || parseInt(customBidAmount) <= currentPrice
-                                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                                        : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 active:scale-95'
+                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                    : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 active:scale-95'
                                     }`}
                             >
                                 <span className="material-icons-round">gavel</span>

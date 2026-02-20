@@ -23,7 +23,7 @@ model User {
   // Bid Wars: Rank & Progression
   rankPoints Int      @default(0)
   loanTokens Int      @default(1)
-  rankTier   String   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
+  rankTier   String   @default("BRONZE") // BRONZE, SILVER, GOLD, DIAMOND
   
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
