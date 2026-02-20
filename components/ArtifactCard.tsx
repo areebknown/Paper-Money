@@ -12,6 +12,15 @@ interface ArtifactCardProps {
     onClick?: () => void;
 }
 
+// ─── Image compression utility ──────────────────────────────────────────────────
+function compressImageUrl(url: string) {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && !url.includes('q_auto:eco')) {
+        return url.replace('/upload/', '/upload/q_auto:eco,f_auto,w_400/');
+    }
+    return url;
+}
+
 export default function ArtifactCard({
     name,
     imageUrl,
@@ -32,7 +41,7 @@ export default function ArtifactCard({
             {/* Image */}
             <div className="relative w-full aspect-square bg-gradient-subtle rounded-lg mb-3 overflow-hidden">
                 {imageUrl ? (
-                    <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                    <img src={compressImageUrl(imageUrl)} alt={name} className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-6xl">
                         📦

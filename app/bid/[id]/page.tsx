@@ -34,6 +34,18 @@ function getTierIcon(tier: string) {
     return { icon: 'shield', color: 'text-amber-400', bg: 'from-amber-700 to-amber-950', border: 'border-amber-600' };
 }
 
+// ─── Image compression utility ──────────────────────────────────────────────────
+function compressImageUrl(url: string) {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && !url.includes('q_auto:eco')) {
+        // Find the "upload/" part and insert our compression modifiers right after it
+        // A standard Cloudinary URL might look like .../image/upload/v1234/file.png
+        return url.replace('/upload/', '/upload/q_auto:eco,f_auto,w_400/');
+    }
+    return url;
+}
+
+
 // ─── Chat Bubble ──────────────────────────────────────────────────────────────
 function ChatBubble({ bid }: { bid: BidMessage }) {
     const initials = bid.username.slice(0, 2).toUpperCase();
@@ -310,7 +322,7 @@ function ShutterStage({
                         {auctionData.artifacts.map((a: any, i: number) => (
                             <div key={i}>
                                 {a.artifact.imageUrl ? (
-                                    <img src={a.artifact.imageUrl} alt="" className="h-20 w-20 object-contain drop-shadow-2xl"
+                                    <img src={compressImageUrl(a.artifact.imageUrl)} alt="" className="h-20 w-20 object-contain drop-shadow-2xl"
                                         style={{ filter: 'drop-shadow(0 0 12px rgba(255,200,80,0.4))' }} />
                                 ) : (
                                     <div className="w-20 h-20 bg-yellow-900/40 border border-yellow-600/30 rounded-lg flex items-center justify-center">
@@ -1025,23 +1037,23 @@ export default function LiveBidPage() {
             )}
 
             {/* ── HEADER ── */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0 relative">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1 bg-black/30 px-3 py-1 rounded-full border border-white/10">
-                        <span className="material-icons-round text-[#FBBF24] text-sm">currency_rupee</span>
-                        <span className="text-white text-xs font-bold font-['Russo_One']">{balance.toLocaleString()}</span>
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0 relative h-16">
+                <div className="flex flex-col gap-1 w-1/3">
+                    <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 w-fit">
+                        <span className="material-icons-round text-[#FBBF24] text-[10px]">currency_rupee</span>
+                        <span className="text-white text-[10px] font-bold font-['Russo_One'] max-w-[70px] truncate">{balance.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10">
-                        <span className="material-icons-round text-blue-400 text-sm">military_tech</span>
-                        <span className="text-white text-xs font-bold font-['Russo_One']">{rankPoints}</span>
+                    <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10 w-fit">
+                        <span className="material-icons-round text-blue-400 text-[10px]">military_tech</span>
+                        <span className="text-white text-[9px] font-bold font-['Russo_One'] truncate">{rankPoints}</span>
                     </div>
                 </div>
 
                 <div className="absolute left-1/2 -translate-x-1/2">
-                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-12 w-auto" />
+                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-9 w-auto" />
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2 w-1/3">
                     <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-500'} shadow-lg`} />
                     <button className="relative w-9 h-9 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition">
                         <span className="material-icons-round text-white text-lg">notifications</span>

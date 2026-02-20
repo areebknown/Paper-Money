@@ -163,12 +163,12 @@ function BidsContent() {
         return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
     }
 
-    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto';
+    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400';
     const getTierBg = (tier: string) => {
         if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
         if (tier === 'SILVER') return `${CDN}/shutter/silver`;
         if (tier === 'GOLD') return `${CDN}/shutter/gold`;
-        if (tier === 'DIAMOND') return `https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/v1771586328/shutter/xm9krvefxp1kzg8e08dn.png`;
+        if (tier === 'DIAMOND') return `${CDN}/shutter/xm9krvefxp1kzg8e08dn.png`;
         return `${CDN}/shutter/bronze`;
     };
 
@@ -324,16 +324,16 @@ function BidsContent() {
                     <div className="space-y-4">
                         {wonBids.map((bid) => (
                             <Link href={`/bid/${bid.id}`} key={bid.id} className="block">
-                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-4 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
-                                    <div>
-                                        <h3 className="text-lg font-['Russo_One'] text-white">
-                                            {bid.name} <span className="text-xs font-normal text-gray-400">RANK - {bid.rankTier}</span>
+                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                    <div className="min-w-0 flex-1 pr-2">
+                                        <h3 className="text-base font-['Russo_One'] text-white truncate">
+                                            {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
                                         </h3>
-                                        <p className="text-sm text-gray-400">
+                                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                                             Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
                                         </p>
                                     </div>
-                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-sm uppercase tracking-wide flex items-center gap-1">
+                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
                                         info <span className="material-icons-round text-sm">chevron_right</span>
                                     </button>
                                 </div>
@@ -347,7 +347,7 @@ function BidsContent() {
 }
 
 function MarketContent() {
-    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto';
+    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400';
     const categories = [
         { id: 'invest', name: 'Invest', description: 'Grow your wealth', icon: 'trending_up', bg: `${CDN}/market-bg/invest`, iconBg: 'from-green-200 to-green-500', iconColor: 'text-green-900' },
         { id: 'pawn', name: 'Pawn', description: 'Quick cash solutions', icon: 'storefront', bg: `${CDN}/market-bg/pawn`, iconBg: 'from-yellow-200 to-yellow-500', iconColor: 'text-yellow-900' },
@@ -360,7 +360,7 @@ function MarketContent() {
             {categories.map((category) => (
                 <Link href={`/${category.id}`} key={category.id} className="block mb-4">
                     <div
-                        className="relative rounded-2xl p-5 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
+                        className="relative rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
                         style={{
                             backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('${category.bg}')`,
                             backgroundSize: 'cover',
@@ -368,16 +368,16 @@ function MarketContent() {
                         }}
                     >
                         <div className="flex items-center justify-between relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-14 h-14 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
-                                    <span className={`material-icons-round ${category.iconColor} text-3xl`}>{category.icon}</span>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-12 h-12 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
+                                    <span className={`material-icons-round ${category.iconColor} text-2xl`}>{category.icon}</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-['Russo_One'] text-white uppercase">{category.name}</h3>
-                                    <p className="text-sm text-gray-400">{category.description}</p>
+                                    <h3 className="text-xl font-['Russo_One'] text-white uppercase leading-tight">{category.name}</h3>
+                                    <p className="text-xs text-gray-400 mt-0.5">{category.description}</p>
                                 </div>
                             </div>
-                            <span className="material-icons-round text-gray-400">chevron_right</span>
+                            <span className="material-icons-round text-gray-400 text-xl">chevron_right</span>
                         </div>
                     </div>
                 </Link>
