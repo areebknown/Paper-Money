@@ -216,10 +216,14 @@ function BidsContent() {
         const minutes = Math.floor(diff / (1000 * 60));
         const hours = Math.floor(minutes / 60);
         const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30);
 
-        if (days > 0) return `Starts in ${days}d`;
-        if (hours > 0) return `Starts in ${hours}h`;
-        if (minutes > 0) return `Live in ${minutes}m`;
+        const pluralize = (count: number, unit: string) => `${count} ${unit}${count !== 1 ? 's' : ''}`;
+
+        if (months > 0) return `Starts in ${pluralize(months, 'month')}`;
+        if (days > 0) return `Starts in ${pluralize(days, 'day')}`;
+        if (hours > 0) return `Starts in ${pluralize(hours, 'hour')}`;
+        if (minutes > 0) return `Live in ${pluralize(minutes, 'minute')}`;
         return 'Starting now';
     };
 
