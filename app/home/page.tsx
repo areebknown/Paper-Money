@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -137,11 +137,97 @@ export default function HomePage() {
     );
 }
 
+const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400';
+
+const getTierBg = (tier: string) => {
+    if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
+    if (tier === 'SILVER') return `${CDN}/shutter/silver`;
+    if (tier === 'GOLD') return `${CDN}/shutter/gold`;
+    if (tier === 'DIAMOND') return `${CDN}/shutter/xm9krvefxp1kzg8e08dn.png`;
+    return `${CDN}/shutter/bronze`;
+};
+
+const getTierColors = (tier: string) => {
+    if (tier === 'BRONZE') return {
+        bg: 'from-amber-700 to-amber-900',
+        border: 'border-amber-800',
+        text: 'text-amber-200',
+        badge: 'bg-amber-950'
+    };
+    if (tier === 'SILVER') return {
+        bg: 'from-gray-200 to-gray-400',
+        border: 'border-gray-100',
+        text: 'text-gray-700',
+        badge: 'bg-gray-600'
+    };
+    if (tier === 'GOLD') return {
+        bg: 'from-amber-200 to-amber-500',
+        border: 'border-amber-100',
+        text: 'text-amber-900',
+        badge: 'bg-yellow-600'
+    };
+    if (tier === 'DIAMOND') return {
+        bg: 'from-indigo-400 to-purple-600',
+        border: 'border-indigo-300',
+        text: 'text-indigo-950',
+        badge: 'bg-purple-900'
+    };
+    return {
+        bg: 'from-gray-500 to-gray-700',
+        border: 'border-gray-400',
+        text: 'text-gray-200',
+        badge: 'bg-gray-800'
+    };
+};
+
+const getTimeUntil = (scheduledAt: string) => {
+    const now = new Date().getTime();
+    const scheduled = new Date(scheduledAt).getTime();
+    const diff = scheduled - now;
+
+    if (diff < 0) return 'Starting soon';
+
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+
+    const pluralize = (count: number, unit: string) => `${count} ${unit}${count !== 1 ? 's' : ''}`;
+
+    if (months > 0) return `Starts in ${pluralize(months, 'month')}`;
+    if (days > 0) return `Starts in ${pluralize(days, 'day')}`;
+    if (hours > 0) return `Starts in ${pluralize(hours, 'hour')}`;
+    if (minutes > 0) return `Live in ${pluralize(minutes, 'minute')}`;
+    return 'Starting now';
+};
+
+const getStatusBadgeColor = (time: string) => {
+    if (time.includes('Live in')) return 'bg-green-500';
+    if (time.includes('h')) return 'bg-blue-500';
+    return 'bg-gray-400';
+};
+
 function BidsContent() {
     const [scheduledBids, setScheduledBids] = useState<any[]>([]);
     const [wonBids, setWonBids] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showExactTime, setShowExactTime] = useState(false);
+
+    // Infinite Scroll State for Won Shutters
+    const [visibleWonCount, setVisibleWonCount] = useState(4);
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+            observer.current = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) {
+                    setVisibleWonCount(prev => prev + 5);
+                }
+            });
+            if (node) observer.current.observe(node);
+        }
+    }, [loading]);
 
     useEffect(() => {
         async function fetchAuctions() {
@@ -182,74 +268,7 @@ function BidsContent() {
         return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
     }
 
-    const CDN = 'https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400';
-    const getTierBg = (tier: string) => {
-        if (tier === 'BRONZE') return `${CDN}/shutter/bronze`;
-        if (tier === 'SILVER') return `${CDN}/shutter/silver`;
-        if (tier === 'GOLD') return `${CDN}/shutter/gold`;
-        if (tier === 'DIAMOND') return `${CDN}/shutter/xm9krvefxp1kzg8e08dn.png`;
-        return `${CDN}/shutter/bronze`;
-    };
 
-    const getTierColors = (tier: string) => {
-        if (tier === 'BRONZE') return {
-            bg: 'from-amber-700 to-amber-900',
-            border: 'border-amber-800',
-            text: 'text-amber-200',
-            badge: 'bg-amber-950'
-        };
-        if (tier === 'SILVER') return {
-            bg: 'from-gray-200 to-gray-400',
-            border: 'border-gray-100',
-            text: 'text-gray-700',
-            badge: 'bg-gray-600'
-        };
-        if (tier === 'GOLD') return {
-            bg: 'from-amber-200 to-amber-500',
-            border: 'border-amber-100',
-            text: 'text-amber-900',
-            badge: 'bg-yellow-600'
-        };
-        if (tier === 'DIAMOND') return {
-            bg: 'from-indigo-400 to-purple-600',
-            border: 'border-indigo-300',
-            text: 'text-indigo-950',
-            badge: 'bg-purple-900'
-        };
-        return {
-            bg: 'from-gray-500 to-gray-700',
-            border: 'border-gray-400',
-            text: 'text-gray-200',
-            badge: 'bg-gray-800'
-        };
-    };
-
-    const getTimeUntil = (scheduledAt: string) => {
-        const now = new Date().getTime();
-        const scheduled = new Date(scheduledAt).getTime();
-        const diff = scheduled - now;
-
-        if (diff < 0) return 'Starting soon';
-
-        const minutes = Math.floor(diff / (1000 * 60));
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-        const months = Math.floor(days / 30);
-
-        const pluralize = (count: number, unit: string) => `${count} ${unit}${count !== 1 ? 's' : ''}`;
-
-        if (months > 0) return `Starts in ${pluralize(months, 'month')}`;
-        if (days > 0) return `Starts in ${pluralize(days, 'day')}`;
-        if (hours > 0) return `Starts in ${pluralize(hours, 'hour')}`;
-        if (minutes > 0) return `Live in ${pluralize(minutes, 'minute')}`;
-        return 'Starting now';
-    };
-
-    const getStatusBadgeColor = (time: string) => {
-        if (time.includes('Live in')) return 'bg-green-500';
-        if (time.includes('h')) return 'bg-blue-500';
-        return 'bg-gray-400';
-    };
 
     return (
         <div>
@@ -296,7 +315,7 @@ function BidsContent() {
                             }
 
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-4">
+                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className="block mb-4">
                                     <div
                                         className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
@@ -358,23 +377,26 @@ function BidsContent() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {wonBids.map((bid) => (
-                            <Link href={`/bid/${bid.id}`} key={bid.id} className="block">
-                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
-                                    <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="text-base font-['Russo_One'] text-white truncate">
-                                            {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
-                                        </h3>
-                                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                            Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
-                                        </p>
+                        {wonBids.slice(0, visibleWonCount).map((bid, index) => {
+                            const isLast = index === wonBids.slice(0, visibleWonCount).length - 1;
+                            return (
+                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className="block">
+                                    <div ref={isLast ? lastWonElementRef : null} className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <h3 className="text-base font-['Russo_One'] text-white truncate">
+                                                {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
+                                            </h3>
+                                            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                                                Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
+                                            </p>
+                                        </div>
+                                        <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
+                                            info <span className="material-icons-round text-sm">chevron_right</span>
+                                        </button>
                                     </div>
-                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
-                                        info <span className="material-icons-round text-sm">chevron_right</span>
-                                    </button>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -394,7 +416,7 @@ function MarketContent() {
     return (
         <div className="space-y-4">
             {categories.map((category) => (
-                <Link href={`/${category.id}`} key={category.id} className="block mb-4">
+                <Link href={`/${category.id}`} key={category.id} prefetch={false} className="block mb-4">
                     <div
                         className="bg-white dark:bg-card-dark rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] relative overflow-hidden"
                         style={{
