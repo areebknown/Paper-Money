@@ -117,7 +117,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Folder Body */}
-                <div className={`flex-1 bg-[#1E293B]/20 backdrop-blur-md z-20 overflow-y-auto transition-all duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
+                <div className={`flex-1 bg-[#1E293B]/20 backdrop-blur-md z-20 overflow-y-auto transform-gpu will-change-transform transition-all duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
                     ? 'rounded-tr-3xl rounded-b-3xl'
                     : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
@@ -298,7 +298,7 @@ function BidsContent() {
                             return (
                                 <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-4">
                                     <div
-                                        className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 backdrop-blur-md rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
+                                        className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
                                             backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
                                             backgroundSize: 'cover',
