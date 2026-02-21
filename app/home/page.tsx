@@ -308,7 +308,7 @@ function BidsContent() {
                                         {/* Dark overlay for text visibility */}
                                         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl -z-10"></div>
                                         {/* Status badge */}
-                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[10px] font-bold px-4 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md`}>
                                             {badgeText}
                                         </div>
 
