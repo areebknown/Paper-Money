@@ -61,7 +61,7 @@ export default function HomePage() {
                         <img
                             src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                             alt="Bid Wars Logo"
-                            className="drop-shadow-lg object-contain h-14 w-auto"
+                            className="drop-shadow-lg object-contain h-[50px] w-auto"
                         />
                     </div>
 
@@ -308,9 +308,16 @@ function BidsContent() {
                                         {/* Dark overlay for text visibility */}
                                         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl -z-10"></div>
                                         {/* Status badge */}
-                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md`}>
                                             {badgeText}
                                         </div>
+
+                                        {/* Notification button — only for SCHEDULED auctions */}
+                                        {!isLiveOrWaiting && (
+                                            <button className="absolute top-3 right-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all z-10">
+                                                <span className="material-icons-round text-lg">notifications_active</span>
+                                            </button>
+                                        )}
 
                                         <div className="flex items-center gap-3">
                                             {/* Tier icon */}
@@ -331,13 +338,6 @@ function BidsContent() {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Notification button — only for SCHEDULED auctions */}
-                                            {!isLiveOrWaiting && (
-                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
-                                                    <span className="material-icons-round text-lg">notifications_active</span>
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 </Link>
