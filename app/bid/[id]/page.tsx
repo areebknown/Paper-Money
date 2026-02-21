@@ -1037,20 +1037,20 @@ export default function LiveBidPage() {
             )}
 
             {/* ── HEADER ── */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0 relative h-16">
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 pb-4 pt-5 rounded-b-3xl flex justify-between items-center px-4 relative">
                 <div className="flex flex-col gap-1 w-1/3">
                     <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 w-fit whitespace-nowrap">
-                        <span className="material-icons-round text-[#FBBF24] text-[12px] drop-shadow-md">currency_rupee</span>
+                        <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
                         <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide max-w-[70px] truncate">{balance.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10 w-fit">
-                        <span className="material-icons-round text-blue-400 text-[12px] drop-shadow-md">military_tech</span>
+                        <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
                         <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide truncate">{rankPoints}</span>
                     </div>
                 </div>
 
                 <div className="absolute left-1/2 -translate-x-1/2">
-                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-9 w-auto" />
+                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-14 w-auto" />
                 </div>
 
                 <div className="flex items-center justify-end gap-2 w-1/3">
