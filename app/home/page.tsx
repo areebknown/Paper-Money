@@ -40,7 +40,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-white bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
             {/* Header */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-40 pb-4 pt-5 rounded-b-3xl border-b-4 border-[#FBBF24]">
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-40 py-4 border-b-4 border-[#FBBF24]">
                 <div className="flex justify-between items-center px-4 mb-4 relative">
                     {/* Left: Balance + Rank Points */}
                     <div className="flex flex-col gap-1 w-auto">
@@ -89,13 +89,13 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('bids')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'bids'
-                                ? 'bg-gray-800 text-amber-400 z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.2)]'
-                                : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
+                            ? 'bg-[#FBBF24] text-[#1E3A8A] z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.2)]'
+                            : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >
                         BIDS
                         {activeTab === 'bids' && (
-                            <svg className="absolute -right-5 bottom-0 w-5 h-5 text-gray-800 z-30" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="absolute -right-5 bottom-0 w-5 h-5 text-[#FBBF24] z-30" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M 0 0 A 20 20 0 0 0 20 20 L 0 20 Z" />
                             </svg>
                         )}
@@ -103,13 +103,13 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('market')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'market'
-                                ? 'bg-gray-800 text-amber-400 z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.2)]'
-                                : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
+                            ? 'bg-[#FBBF24] text-[#1E3A8A] z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.2)]'
+                            : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >
                         MARKET
                         {activeTab === 'market' && (
-                            <svg className="absolute -left-5 bottom-0 w-5 h-5 text-gray-800 z-30" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="absolute -left-5 bottom-0 w-5 h-5 text-[#FBBF24] z-30" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M 20 0 A 20 20 0 0 1 0 20 L 20 20 Z" />
                             </svg>
                         )}
@@ -117,9 +117,9 @@ export default function HomePage() {
                 </div>
 
                 {/* Folder Body */}
-                <div className={`flex-1 bg-gray-800 z-20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-y-auto transition-all duration-300 relative min-h-0 mb-4 ${activeTab === 'bids'
-                        ? 'rounded-tr-3xl rounded-b-3xl'
-                        : 'rounded-tl-3xl rounded-b-3xl'
+                <div className={`flex-1 bg-[#1E293B] z-20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-y-auto transition-all duration-300 relative min-h-0 mb-4 ${activeTab === 'bids'
+                    ? 'rounded-tr-3xl rounded-b-3xl'
+                    : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
                     <div className="p-4">
                         {activeTab === 'bids' ? <BidsContent /> : <MarketContent />}
