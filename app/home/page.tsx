@@ -38,37 +38,35 @@ export default function HomePage() {
     const rankPoints = userData?.rankPoints || 0;
 
     return (
-        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col">
+        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-white bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
             {/* Header */}
             <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 pb-4 pt-5 rounded-b-3xl">
                 <div className="flex justify-between items-center px-4 mb-4 relative">
-                    {/* Left: User Balance & Rank */}
-                    {userData ? (
-                        <div className="flex flex-col justify-center bg-black/40 rounded-xl border border-white/10 h-10 px-2.5 z-10">
-                            <div className="flex items-center gap-1 mb-[2px]">
-                                <span className="material-icons-round text-[#FBBF24] text-[11px] leading-none">currency_rupee</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] truncate max-w-[70px] leading-none">{balance.toLocaleString()}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <span className="material-icons-round text-blue-400 text-[11px] leading-none">military_tech</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] truncate max-w-[70px] leading-none">{rankPoints}</span>
-                            </div>
+                    {/* Left: Balance + Rank Points */}
+                    <div className="flex flex-col gap-1 w-auto">
+                        <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
+                            <span className="material-icons-round text-[#FBBF24] text-[14px] drop-shadow-md">currency_rupee</span>
+                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
+                                {balance.toLocaleString()}
+                            </span>
                         </div>
-                    ) : (
-                        <div className="w-24"></div> // Placeholder
-                    )}
+                        <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
+                            <span className="material-icons-round text-blue-400 text-[14px] drop-shadow-md">military_tech</span>
+                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
+                        </div>
+                    </div>
 
                     {/* Center: Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
                         <img
-                            src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo"
+                            src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
                             alt="Bid Wars Logo"
-                            className="drop-shadow-lg object-contain h-10 w-auto"
+                            className="drop-shadow-lg object-contain h-14 w-auto"
                         />
                     </div>
 
                     {/* Right: Notifications + Profile */}
-                    <div className="flex items-center gap-3 w-24 justify-end z-10">
+                    <div className="flex items-center gap-3 w-24 justify-end">
                         <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
                             <span className="material-icons-round text-white">notifications</span>
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
@@ -264,43 +262,46 @@ function BidsContent() {
                             }
 
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-3">
+                                <Link href={`/bid/${bid.id}`} key={bid.id} className="block mb-4">
                                     <div
-                                        className="relative rounded-2xl p-3 shadow-lg border border-white/20 overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
+                                        className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 backdrop-blur-md rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
                                         style={{
-                                            backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('${getTierBg(bid.rankTier)}')`,
+                                            backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
                                             backgroundSize: 'cover',
                                             backgroundPosition: 'center'
                                         }}
                                     >
+                                        {/* Dark overlay for text visibility */}
+                                        <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl -z-10"></div>
                                         {/* Status badge */}
-                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[10px] font-bold px-4 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md`}>
                                             {badgeText}
                                         </div>
 
                                         <div className="flex items-center gap-3">
                                             {/* Tier icon */}
-                                            <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text}`} style={{ fontSize: '24px' }}>shield</span>
-                                                <div className={`absolute -bottom-2 ${colors.badge} text-white text-[9px] px-2 rounded-full font-bold uppercase`}>
+                                            <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
+                                                <span className={`material-icons-round ${colors.text} text-2xl`}>{bid.rankTier === 'DIAMOND' ? 'diamond' : 'shield'}</span>
+                                                <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
                                                     {bid.rankTier}
                                                 </div>
                                             </div>
 
                                             {/* Content */}
                                             <div className="flex-1">
-                                                <h3 className="text-lg font-['Russo_One'] text-white leading-tight truncate">{bid.name}</h3>
-                                                <div className="flex items-center gap-2 mt-1">
+                                                <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
+                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Rank: {bid.rankTier}</p>
+                                                <div className="flex items-center justify-between mt-2">
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-green-400 font-bold">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                        <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Notification button — only for SCHEDULED auctions */}
                                             {!isLiveOrWaiting && (
-                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
-                                                    <span className="material-icons-round text-xl">notifications_active</span>
+                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
+                                                    <span className="material-icons-round text-lg">notifications_active</span>
                                                 </button>
                                             )}
                                         </div>
@@ -322,20 +323,20 @@ function BidsContent() {
                         No won auctions yet
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {wonBids.map((bid) => (
                             <Link href={`/bid/${bid.id}`} key={bid.id} className="block">
-                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-2 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
                                     <div className="min-w-0 flex-1 pr-2">
-                                        <h3 className="text-sm font-['Russo_One'] text-white truncate">
-                                            {bid.name} <span className="text-[9px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
+                                        <h3 className="text-base font-['Russo_One'] text-white truncate">
+                                            {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
                                         </h3>
-                                        <p className="text-[10px] text-gray-400 mt-0.5 truncate">
+                                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                                             Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
                                         </p>
                                     </div>
-                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-[10px] uppercase tracking-wide flex items-center gap-0.5 shrink-0">
-                                        info <span className="material-icons-round text-xs">chevron_right</span>
+                                    <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
+                                        info <span className="material-icons-round text-sm">chevron_right</span>
                                     </button>
                                 </div>
                             </Link>
@@ -357,28 +358,30 @@ function MarketContent() {
     ];
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {categories.map((category) => (
-                <Link href={`/${category.id}`} key={category.id} className="block mb-3">
+                <Link href={`/${category.id}`} key={category.id} className="block mb-4">
                     <div
-                        className="relative rounded-2xl p-3 shadow-lg border border-white/20 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] overflow-hidden"
+                        className="bg-white dark:bg-card-dark rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] relative overflow-hidden"
                         style={{
-                            backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('${category.bg}')`,
+                            backgroundImage: `url('${category.bg}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}
                     >
+                        {/* Dark overlay for text visibility */}
+                        <div className="absolute inset-0 bg-black/35 dark:bg-black/45 rounded-2xl z-0"></div>
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 bg-gradient-to-b ${category.iconBg} rounded-[10px] flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
-                                    <span className={`material-icons-round ${category.iconColor} text-xl`}>{category.icon}</span>
+                                <div className={`w-14 h-14 bg-gradient-to-b ${category.iconBg} rounded-xl flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] border-2 ${category.iconBg.split(' ')[0].replace('from-', 'border-')}`}>
+                                    <span className={`material-icons-round ${category.iconColor} text-3xl`}>{category.icon}</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-['Russo_One'] text-white uppercase leading-tight">{category.name}</h3>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">{category.description}</p>
+                                    <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white uppercase">{category.name}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{category.description}</p>
                                 </div>
                             </div>
-                            <span className="material-icons-round text-gray-400 text-lg">chevron_right</span>
+                            <span className="material-icons-round text-gray-400 dark:text-gray-500 text-xl">chevron_right</span>
                         </div>
                     </div>
                 </Link>
