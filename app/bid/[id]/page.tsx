@@ -1040,11 +1040,11 @@ export default function LiveBidPage() {
             <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 py-3 px-4 flex justify-between items-center shrink-0 relative h-16">
                 <div className="flex flex-col gap-1 w-1/3">
                     <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 w-fit whitespace-nowrap">
-                        <span className="material-icons-round text-[#FBBF24] text-[14px] drop-shadow-md">currency_rupee</span>
+                        <span className="material-icons-round text-[#FBBF24] text-[12px] drop-shadow-md">currency_rupee</span>
                         <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide max-w-[70px] truncate">{balance.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10 w-fit">
-                        <span className="material-icons-round text-blue-400 text-[14px] drop-shadow-md">military_tech</span>
+                        <span className="material-icons-round text-blue-400 text-[12px] drop-shadow-md">military_tech</span>
                         <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide truncate">{rankPoints}</span>
                     </div>
                 </div>

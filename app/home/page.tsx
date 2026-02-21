@@ -45,13 +45,13 @@ export default function HomePage() {
                     {/* Left: Balance + Rank Points */}
                     <div className="flex flex-col gap-1 w-auto">
                         <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
-                            <span className="material-icons-round text-[#FBBF24] text-[14px] drop-shadow-md">currency_rupee</span>
+                            <span className="material-icons-round text-[#FBBF24] text-[12px] drop-shadow-md">currency_rupee</span>
                             <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
                                 {balance.toLocaleString()}
                             </span>
                         </div>
                         <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
-                            <span className="material-icons-round text-blue-400 text-[14px] drop-shadow-md">military_tech</span>
+                            <span className="material-icons-round text-blue-400 text-[12px] drop-shadow-md">military_tech</span>
                             <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
                         </div>
                     </div>
@@ -123,6 +123,7 @@ function BidsContent() {
     const [scheduledBids, setScheduledBids] = useState<any[]>([]);
     const [wonBids, setWonBids] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showExactTime, setShowExactTime] = useState(false);
 
     useEffect(() => {
         async function fetchAuctions() {
@@ -232,9 +233,14 @@ function BidsContent() {
         <div>
             {/* Scheduled Bids */}
             <div className="mb-8">
-                <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="material-icons-round">schedule</span> Scheduled Bids
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest flex items-center gap-2 m-0">
+                        <span className="material-icons-round">schedule</span> Scheduled Bids
+                    </h2>
+                    <button onClick={() => setShowExactTime(!showExactTime)} className="text-[#3B82F6] hover:text-blue-400 active:scale-95 transition-transform flex items-center justify-center p-1">
+                        <span className="material-icons-round text-xl">{showExactTime ? 'hourglass_empty' : 'alarm'}</span>
+                    </button>
+                </div>
                 {scheduledBids.length === 0 ? (
                     <div className="text-center py-8 text-gray-500 bg-gray-900/50 rounded-lg">
                         No scheduled auctions
@@ -256,9 +262,15 @@ function BidsContent() {
                                 badgeText = 'Waiting Room';
                                 badgeColor = 'bg-indigo-500';
                             } else {
-                                const timeText = getTimeUntil(bid.scheduledAt);
-                                badgeText = timeText;
-                                badgeColor = getStatusBadgeColor(timeText);
+                                if (showExactTime) {
+                                    const date = new Date(bid.scheduledAt);
+                                    badgeText = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + date.toLocaleDateString('en-GB');
+                                    badgeColor = 'bg-gray-700';
+                                } else {
+                                    const timeText = getTimeUntil(bid.scheduledAt);
+                                    badgeText = timeText;
+                                    badgeColor = getStatusBadgeColor(timeText);
+                                }
                             }
 
                             return (
@@ -281,7 +293,7 @@ function BidsContent() {
                                         <div className="flex items-center gap-3">
                                             {/* Tier icon */}
                                             <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text} text-2xl`}>{bid.rankTier === 'DIAMOND' ? 'diamond' : 'shield'}</span>
+                                                <span className={`material-icons-round ${colors.text} text-2xl`}>shield</span>
                                                 <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
                                                     {bid.rankTier}
                                                 </div>
