@@ -356,7 +356,7 @@ function BidsContent() {
                                             {/* Content */}
                                             <div className="flex-1">
                                                 <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
-                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Rank: {bid.rankTier}</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-normal">Rank: {bid.rankTier}</p>
                                                 <div className="flex items-center justify-between mt-2">
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
@@ -392,7 +392,7 @@ function BidsContent() {
                                             <h3 className="text-base font-['Russo_One'] text-white truncate">
                                                 {bid.name}
                                             </h3>
-                                            <div className="text-[10px] font-normal text-gray-400 uppercase tracking-wider mt-0.5 truncate">
+                                            <div className="text-xs font-normal text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                                                 RANK - {bid.rankTier}
                                             </div>
                                             <p className="text-[11px] text-gray-400 mt-0.5 truncate">
