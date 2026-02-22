@@ -117,7 +117,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Folder Body */}
-                <div className={`flex-1 bg-[#1E293B]/20 backdrop-blur-md z-20 overflow-y-auto transform-gpu will-change-transform transition-all duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
+                <div id="home-scroll-container" className={`flex-1 bg-[#1E293B]/20 backdrop-blur-md z-20 overflow-y-auto transform-gpu will-change-transform transition-all duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
                     ? 'rounded-tr-3xl rounded-b-3xl'
                     : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
@@ -224,6 +224,10 @@ function BidsContent() {
                 if (entries[0].isIntersecting) {
                     setVisibleWonCount(prev => prev + 5);
                 }
+            }, {
+                root: document.getElementById('home-scroll-container'),
+                rootMargin: '400px',
+                threshold: 0.1
             });
             if (node) observer.current.observe(node);
         }
@@ -325,35 +329,39 @@ function BidsContent() {
                                         }}
                                     >
                                         {/* Dark overlay for text visibility */}
-                                        <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl -z-10"></div>
-                                        {/* Status badge */}
-                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md`}>
-                                            {badgeText}
-                                        </div>
+                                        <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl z-0"></div>
 
-                                        {/* Notification button — only for SCHEDULED auctions */}
-                                        {!isLiveOrWaiting && (
-                                            <button className="absolute top-3 right-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all z-10">
-                                                <span className="material-icons-round text-lg">notifications_active</span>
-                                            </button>
-                                        )}
-
-                                        <div className="flex items-center gap-3">
-                                            {/* Tier icon */}
-                                            <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text} text-2xl`}>shield</span>
-                                                <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
-                                                    {bid.rankTier}
-                                                </div>
+                                        {/* Content inside the card */}
+                                        <div className="relative z-10">
+                                            {/* Status badge */}
+                                            <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md`}>
+                                                {badgeText}
                                             </div>
 
-                                            {/* Content */}
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
-                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Rank: {bid.rankTier}</p>
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                            {/* Notification button — only for SCHEDULED auctions */}
+                                            {!isLiveOrWaiting && (
+                                                <button className="absolute top-3 right-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all z-10">
+                                                    <span className="material-icons-round text-lg">notifications_active</span>
+                                                </button>
+                                            )}
+
+                                            <div className="flex items-center gap-3">
+                                                {/* Tier icon */}
+                                                <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
+                                                    <span className={`material-icons-round ${colors.text} text-2xl`}>shield</span>
+                                                    <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
+                                                        {bid.rankTier}
+                                                    </div>
+                                                </div>
+
+                                                {/* Content */}
+                                                <div className="flex-1">
+                                                    <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
+                                                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Rank: {bid.rankTier}</p>
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -378,10 +386,10 @@ function BidsContent() {
                 ) : (
                     <div className="space-y-4">
                         {wonBids.slice(0, visibleWonCount).map((bid, index) => {
-                            const isLast = index === wonBids.slice(0, visibleWonCount).length - 1;
+                            const delayClass = `delay-${((index % 5) + 1) * 100}`;
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className="block">
-                                    <div ref={isLast ? lastWonElementRef : null} className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
+                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className={`block animate-fade-in-up opacity-0 ${delayClass}`}>
+                                    <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
                                         <div className="min-w-0 flex-1 pr-2">
                                             <h3 className="text-base font-['Russo_One'] text-white truncate">
                                                 {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
@@ -397,10 +405,15 @@ function BidsContent() {
                                 </Link>
                             );
                         })}
+                        {visibleWonCount < wonBids.length && (
+                            <div ref={lastWonElementRef} className="py-6 flex justify-center items-center opacity-50">
+                                <span className="material-icons-round animate-spin text-[#FBBF24] text-3xl">refresh</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 
