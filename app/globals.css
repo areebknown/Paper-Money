@@ -64,6 +64,18 @@
     animation: fadeInUp 0.4s ease-out forwards;
   }
 
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .delay-100 {
     animation-delay: 100ms;
   }
@@ -82,10 +94,6 @@
 
   .delay-500 {
     animation-delay: 500ms;
-  }
-
-  @keyframes shimmer {
-    @apply bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900;
   }
 
   .badge-silver {
