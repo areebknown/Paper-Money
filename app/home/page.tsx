@@ -214,7 +214,7 @@ function BidsContent() {
     const [showExactTime, setShowExactTime] = useState(false);
 
     // Infinite Scroll State for Won Shutters
-    const [visibleWonCount, setVisibleWonCount] = useState(4);
+    const [visibleWonCount, setVisibleWonCount] = useState(6);
     const observer = useRef<IntersectionObserver | null>(null);
     const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
         if (loading) return;
@@ -226,7 +226,7 @@ function BidsContent() {
                 }
             }, {
                 root: document.getElementById('home-scroll-container'),
-                rootMargin: '400px',
+                rootMargin: '100px',
                 threshold: 0.1
             });
             if (node) observer.current.observe(node);
@@ -392,10 +392,13 @@ function BidsContent() {
                                     <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
                                         <div className="min-w-0 flex-1 pr-2">
                                             <h3 className="text-base font-['Russo_One'] text-white truncate">
-                                                {bid.name} <span className="text-[10px] font-normal text-gray-400 uppercase tracking-wider ml-1">RANK - {bid.rankTier}</span>
+                                                {bid.name}
                                             </h3>
-                                            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                                Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
+                                            <p className="text-[11px] text-gray-400 mt-0.5 truncate flex items-center gap-1">
+                                                <span className="text-[9px] font-bold text-gray-300 uppercase tracking-wider bg-gray-800 px-1.5 py-0.5 rounded mr-1 shadow-inner">
+                                                    RANK - {bid.rankTier}
+                                                </span>
+                                                Won <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
                                             </p>
                                         </div>
                                         <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
