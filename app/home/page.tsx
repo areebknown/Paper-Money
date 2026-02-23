@@ -336,6 +336,13 @@ function BidsContent() {
                                             {badgeText}
                                         </div>
 
+                                        {/* Notification button — only for SCHEDULED auctions */}
+                                        {!isLiveOrWaiting && (
+                                            <button className="absolute top-3 right-3 z-10 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all cursor-pointer hover:scale-[1.05]">
+                                                <span className="material-icons-round text-lg">notifications_active</span>
+                                            </button>
+                                        )}
+
                                         {/* Content inside the card */}
                                         <div className="relative z-10 flex items-center gap-3">
                                             {/* Tier icon */}
@@ -347,7 +354,7 @@ function BidsContent() {
                                             </div>
 
                                             {/* Content */}
-                                            <div className="flex-1">
+                                            <div className="flex-1 pr-6 pb-2">
                                                 <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
                                                 <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
                                                 <div className="flex items-center justify-between mt-2">
@@ -356,13 +363,6 @@ function BidsContent() {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Notification button — only for SCHEDULED auctions */}
-                                            {!isLiveOrWaiting && (
-                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all shrink-0">
-                                                    <span className="material-icons-round text-lg">notifications_active</span>
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 </Link>

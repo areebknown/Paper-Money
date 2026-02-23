@@ -7,8 +7,8 @@ import { qstash } from '@/lib/qstash';
 // GET /api/auctions - List auctions with optional status filter
 export async function GET(req: Request) {
     try {
-        // Lazy status check: transition auctions as needed
-        await checkAndUpdateAuctionStatuses();
+        // Legacy lazy-loading logic removed to strictly test QStash automation.
+
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status');

@@ -8,8 +8,7 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        // Trigger lazy status update before fetching
-        await checkAndUpdateAuctionStatuses();
+        // Legacy lazy-loading logic removed to strictly test QStash automation.
 
         const { id } = await params;
         const auction = await prisma.auction.findUnique({
