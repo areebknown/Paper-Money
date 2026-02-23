@@ -202,9 +202,7 @@ const getTimeUntil = (scheduledAt: string) => {
 };
 
 const getStatusBadgeColor = (time: string) => {
-    if (time.includes('Live in')) return 'bg-green-500';
-    if (time.includes('h')) return 'bg-blue-500';
-    return 'bg-gray-400';
+    return 'bg-gray-600';
 };
 
 function BidsContent() {
@@ -295,26 +293,28 @@ function BidsContent() {
                         {scheduledBids.map((bid) => {
                             const colors = getTierColors(bid.rankTier);
 
-                            // Determine badge text and color based on actual status
+                            // Determine badge text and color based on dynamic time
                             let badgeText = '';
-                            let badgeColor = '';
-                            const isLiveOrWaiting = bid.status === 'LIVE' || bid.status === 'WAITING_ROOM';
+                            let badgeColor = 'bg-gray-600'; // All badges gray
 
-                            if (bid.status === 'LIVE') {
+                            const now = new Date().getTime();
+                            const scheduled = new Date(bid.scheduledAt).getTime();
+                            const diff = scheduled - now;
+
+                            const isUiLive = bid.status === 'LIVE' || diff <= 0;
+                            const isUiWaiting = bid.status === 'WAITING_ROOM' || (diff > 0 && diff <= 5 * 60 * 1000);
+                            const isLiveOrWaiting = isUiLive || isUiWaiting;
+
+                            if (isUiLive) {
                                 badgeText = '🔴 Live';
-                                badgeColor = 'bg-red-600';
-                            } else if (bid.status === 'WAITING_ROOM') {
+                            } else if (isUiWaiting) {
                                 badgeText = 'Waiting Room';
-                                badgeColor = 'bg-indigo-500';
                             } else {
                                 if (showExactTime) {
                                     const date = new Date(bid.scheduledAt);
                                     badgeText = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + date.toLocaleDateString('en-GB');
-                                    badgeColor = 'bg-gray-700';
                                 } else {
-                                    const timeText = getTimeUntil(bid.scheduledAt);
-                                    badgeText = timeText;
-                                    badgeColor = getStatusBadgeColor(timeText);
+                                    badgeText = getTimeUntil(bid.scheduledAt);
                                 }
                             }
 
