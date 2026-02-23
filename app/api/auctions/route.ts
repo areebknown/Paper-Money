@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
 import { checkAndUpdateAuctionStatuses } from '@/lib/auction-service';
+import { qstash } from '@/lib/qstash';
 
 // GET /api/auctions - List auctions with optional status filter
 export async function GET(req: Request) {
@@ -117,6 +118,15 @@ export async function POST(req: Request) {
         });
 
         console.log('[API] Auction Created:', auction.id);
+
+        // Schedule auction start with QStash
+        try {
+            await qstash.scheduleAuctionStart(auction.id, auction.scheduledAt);
+            console.log('[API] QStash schedule requested for auction:', auction.id);
+        } catch (qError) {
+            console.error('[API] QStash scheduling failed (non-blocking):', qError);
+        }
+
         return NextResponse.json({ auction }, { status: 201 });
     } catch (error: any) {
         console.error('POST /api/auctions error:', error);
