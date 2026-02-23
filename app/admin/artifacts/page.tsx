@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Package, Layers, RefreshCw, AlertCircle } from 'lucide-react';
+import { Plus, Package, Layers, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 
 interface Artifact {
     id: string;
@@ -32,6 +32,32 @@ export default function ArtifactsListPage() {
             setError('Network error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!confirm(`Are you sure you want to PERMANENTLY delete artifact "${name}"? This will also remove it from any existing auctions.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/artifacts/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                alert('Artifact deleted successfully.');
+                fetchArtifacts();
+            } else {
+                const data = await res.json();
+                alert(`Failed to delete: ${data.error || 'Unknown error'}`);
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('A network error occurred while deleting.');
         }
     };
 
@@ -99,9 +125,19 @@ export default function ArtifactsListPage() {
                                         BP: {artifact.basePoints}
                                     </span>
                                 </div>
-                                <Link href={`/admin/artifacts/${artifact.id}`} className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition text-center block">
-                                    Edit Details
-                                </Link>
+                                <div className="flex gap-2">
+                                    <Link href={`/admin/artifacts/${artifact.id}`} className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition text-center block">
+                                        Edit Details
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleDelete(e, artifact.id, artifact.name)}
+                                        className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white rounded-lg transition border border-red-500/20 flex-shrink-0"
+                                        title="Delete Artifact"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))
                     )}

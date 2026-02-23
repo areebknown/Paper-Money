@@ -45,3 +45,33 @@ export async function GET(
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+import { getUserIdFromRequest } from '@/lib/auth';
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const userId = await getUserIdFromRequest();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user?.isAdmin) {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+        }
+
+        const { id } = await params;
+
+        await prisma.auction.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({ success: true, message: 'Auction deleted successfully' });
+    } catch (error) {
+        console.error('DELETE /api/auctions/[id] error:', error);
+        return NextResponse.json({ error: 'Failed to delete auction' }, { status: 500 });
+    }
+}

@@ -125,3 +125,34 @@ export async function PATCH(
         return NextResponse.json({ error: 'Failed to update artifact' }, { status: 500 });
     }
 }
+
+// DELETE /api/artifacts/[id] - Delete artifact (admin only)
+export async function DELETE(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
+    const userId = await getUserIdFromRequest();
+
+    if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user?.isAdmin) {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+        }
+
+        // Deleting the artifact will cascade to remove it from any existing auctions 
+        // due to `onDelete: Cascade` in AuctionArtifact
+        await prisma.artifact.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({ success: true, message: 'Artifact deleted successfully' });
+    } catch (error) {
+        console.error('DELETE /api/artifacts/[id] error:', error);
+        return NextResponse.json({ error: 'Failed to delete artifact' }, { status: 500 });
+    }
+}
