@@ -337,7 +337,7 @@ function BidsContent() {
                                         </div>
 
                                         {/* Viewers/Notification badge */}
-                                        <div className="absolute top-6 right-0 bg-black/40 backdrop-blur-md text-white/90 text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm border border-white/5 z-10">
+                                        <div className="absolute top-6 right-0 bg-blue-600 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10">
                                             <span className="material-icons-round text-[12px] text-white">notifications_active</span>
                                         </div>
 
