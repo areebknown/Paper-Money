@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Receiver } from '@upstash/qstash';
 import { updateMarketPrices } from '@/lib/market-engine';
 import { startAuctionService } from '@/lib/auction-service';
+import { prisma } from '@/lib/db';
+import { pusherServer } from '@/lib/pusher-server';
 
 // Initialize QStash Receiver for signature verification
 const receiver = new Receiver({
@@ -59,6 +61,26 @@ async function handleMessage(data: any) {
                 console.log('[QSTASH WEBHOOK] Triggering daily market sync...');
                 await updateMarketPrices(false); // false = scheduled (respects 20h limit)
                 return NextResponse.json({ success: true, message: 'Market sync complete' });
+
+            case 'auction-waiting-room':
+                if (!auctionId) {
+                    return NextResponse.json({ error: 'Missing auctionId' }, { status: 400 });
+                }
+                console.log(`[QSTASH WEBHOOK] Entering waiting room for auction: ${auctionId}`);
+
+                const auction = await prisma.auction.update({
+                    where: { id: auctionId },
+                    data: { status: 'WAITING_ROOM' }
+                });
+
+                await pusherServer.trigger('global-auctions', 'auction-waiting-room', {
+                    id: auction.id,
+                    name: auction.name,
+                    scheduledAt: auction.scheduledAt,
+                    status: 'WAITING_ROOM'
+                });
+
+                return NextResponse.json({ success: true, message: `Auction ${auctionId} in waiting room` });
 
             case 'auction-start':
                 if (!auctionId) {
