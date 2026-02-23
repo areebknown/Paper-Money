@@ -332,7 +332,7 @@ function BidsContent() {
                                         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl z-0"></div>
 
                                         {/* Status badge */}
-                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
+                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
                                             {badgeText}
                                         </div>
 
