@@ -336,12 +336,10 @@ function BidsContent() {
                                             {badgeText}
                                         </div>
 
-                                        {/* Notification button — only for SCHEDULED auctions */}
-                                        {!isLiveOrWaiting && (
-                                            <button className="absolute top-3 right-3 z-10 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all cursor-pointer hover:scale-[1.05]">
-                                                <span className="material-icons-round text-lg">notifications_active</span>
-                                            </button>
-                                        )}
+                                        {/* Viewers/Notification badge */}
+                                        <div className="absolute top-6 right-0 bg-black/40 backdrop-blur-md text-white/90 text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm border border-white/5 z-10">
+                                            <span className="material-icons-round text-[12px] text-white">notifications_active</span>
+                                        </div>
 
                                         {/* Content inside the card */}
                                         <div className="relative z-10 flex items-center gap-3">
