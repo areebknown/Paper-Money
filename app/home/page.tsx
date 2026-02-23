@@ -293,16 +293,12 @@ function BidsContent() {
                         {scheduledBids.map((bid) => {
                             const colors = getTierColors(bid.rankTier);
 
-                            // Determine badge text and color based on dynamic time
+                            // Determine badge text and color based on server status
                             let badgeText = '';
                             let badgeColor = '';
 
-                            const now = new Date().getTime();
-                            const scheduled = new Date(bid.scheduledAt).getTime();
-                            const diff = scheduled - now;
-
-                            const isUiLive = bid.status === 'LIVE' || diff <= 0;
-                            const isUiWaiting = bid.status === 'WAITING_ROOM' || (diff > 0 && diff <= 5 * 60 * 1000);
+                            const isUiLive = bid.status === 'LIVE';
+                            const isUiWaiting = bid.status === 'WAITING_ROOM';
                             const isLiveOrWaiting = isUiLive || isUiWaiting;
 
                             if (isUiLive) {
@@ -318,7 +314,7 @@ function BidsContent() {
                                     badgeColor = 'bg-gray-700'; // Dark color for exact time
                                 } else {
                                     badgeText = getTimeUntil(bid.scheduledAt);
-                                    badgeColor = 'bg-gray-400'; // Light grey for "Starts in X"
+                                    badgeColor = 'bg-blue-500'; // Blue for "Starts in X"
                                 }
                             }
 
