@@ -332,16 +332,9 @@ function BidsContent() {
                                         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl z-0"></div>
 
                                         {/* Status badge */}
-                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
+                                        <div className={`absolute top-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-bl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
                                             {badgeText}
                                         </div>
-
-                                        {/* Notification button — only for SCHEDULED auctions */}
-                                        {!isLiveOrWaiting && (
-                                            <button className="absolute top-3 right-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all z-10">
-                                                <span className="material-icons-round text-lg">notifications_active</span>
-                                            </button>
-                                        )}
 
                                         {/* Content inside the card */}
                                         <div className="relative z-10 flex items-center gap-3">
@@ -356,13 +349,20 @@ function BidsContent() {
                                             {/* Content */}
                                             <div className="flex-1">
                                                 <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
-                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-normal">Rank: {bid.rankTier}</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
                                                 <div className="flex items-center justify-between mt-2">
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* Notification button — only for SCHEDULED auctions */}
+                                            {!isLiveOrWaiting && (
+                                                <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg w-8 h-8 flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all shrink-0">
+                                                    <span className="material-icons-round text-lg">notifications_active</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>
@@ -392,7 +392,7 @@ function BidsContent() {
                                             <h3 className="text-base font-['Russo_One'] text-white truncate">
                                                 {bid.name}
                                             </h3>
-                                            <div className="text-xs font-normal text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                            <div className="text-xs font-normal text-gray-500 dark:text-gray-400 font-['Russo_One'] mt-0.5 truncate uppercase">
                                                 RANK - {bid.rankTier}
                                             </div>
                                             <p className="text-[11px] text-gray-400 mt-0.5 truncate">
