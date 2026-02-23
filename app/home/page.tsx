@@ -295,7 +295,7 @@ function BidsContent() {
 
                             // Determine badge text and color based on dynamic time
                             let badgeText = '';
-                            let badgeColor = 'bg-gray-600'; // All badges gray
+                            let badgeColor = '';
 
                             const now = new Date().getTime();
                             const scheduled = new Date(bid.scheduledAt).getTime();
@@ -307,14 +307,18 @@ function BidsContent() {
 
                             if (isUiLive) {
                                 badgeText = '🔴 Live';
+                                badgeColor = 'bg-red-500';
                             } else if (isUiWaiting) {
                                 badgeText = 'Waiting Room';
+                                badgeColor = 'bg-yellow-500';
                             } else {
                                 if (showExactTime) {
                                     const date = new Date(bid.scheduledAt);
                                     badgeText = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + date.toLocaleDateString('en-GB');
+                                    badgeColor = 'bg-gray-700'; // Dark color for exact time
                                 } else {
                                     badgeText = getTimeUntil(bid.scheduledAt);
+                                    badgeColor = 'bg-gray-400'; // Light grey for "Starts in X"
                                 }
                             }
 
