@@ -62,11 +62,13 @@ export default function NewAuctionPage() {
                 return;
             }
 
+            // Convert the datetime-local string (e.g., "2026-02-24T18:00") into a true Date object
+            // The browser will automatically interpret this as local time (IST)
+            const localDate = new Date(formData.scheduledAt);
+
             const payload = {
-                name: formData.name,
-                description: formData.description,
-                scheduledAt: new Date(formData.scheduledAt).toISOString(),
-                rankTier: formData.rankTier,
+                ...formData,
+                scheduledAt: localDate.toISOString(), // Convert precisely to UTC for the server
                 startingPrice: parseFloat(formData.startingPrice),
                 artifactIds: [formData.artifactId], // Wrap in array as expected by API
             };
