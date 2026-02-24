@@ -187,7 +187,8 @@ const getTimeUntil = (scheduledAt: string) => {
 
     if (diff < 0) return 'Starting soon';
 
-    const minutes = Math.floor(diff / (1000 * 60));
+    // Use Math.ceil so that 4 minutes and 59 seconds shows as "5 minutes" remaining
+    const minutes = Math.ceil(diff / (1000 * 60));
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     const months = Math.floor(days / 30);
