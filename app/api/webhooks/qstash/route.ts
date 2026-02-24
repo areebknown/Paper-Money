@@ -14,39 +14,41 @@ const receiver = new Receiver({
 export async function POST(req: NextRequest) {
     console.log('[QSTASH WEBHOOK] Received request');
 
-    // 1. Verify Signature (Security)
-    if (process.env.NODE_ENV === 'production') {
-        const signature = req.headers.get('upstash-signature');
-        if (!signature) {
-            return new NextResponse('Missing signature', { status: 401 });
-        }
+    // Always verify signature, even in development, to ensure keys match
+    const signature = req.headers.get('upstash-signature');
+    if (!signature) {
+        console.error('[QSTASH WEBHOOK] Missing signature header');
+        return new NextResponse('Missing signature', { status: 401 });
+    }
 
-        const body = await req.text();
-        const isValid = await receiver.verify({
-            signature,
-            body,
-        }).catch(err => {
-            console.error('[QSTASH WEBHOOK] Verification error:', err);
-            return false;
-        });
+    const body = await req.text();
 
-        if (!isValid) {
-            console.error('[QSTASH WEBHOOK] Invalid signature');
-            return new NextResponse('Invalid signature', { status: 401 });
-        }
+    // Log the first few characters of the signature and body to help debug
+    console.log(`[QSTASH WEBHOOK] Verifying... Signature Starts: ${signature.substring(0, 10)}... Body Starts: ${body.substring(0, 20)}...`);
+    console.log(`[QSTASH WEBHOOK] Current Key exists: ${!!process.env.QSTASH_CURRENT_SIGNING_KEY}, Next Key exists: ${!!process.env.QSTASH_NEXT_SIGNING_KEY}`);
 
-        // Parse body after verification
-        try {
-            const data = JSON.parse(body);
-            return await handleMessage(data);
-        } catch (error) {
-            console.error('[QSTASH WEBHOOK] JSON Parse Error:', error);
-            return new NextResponse('Invalid JSON', { status: 400 });
-        }
-    } else {
-        // Skip verification in development for easier testing
-        const data = await req.json();
+    const isValid = await receiver.verify({
+        signature,
+        body,
+    }).catch(err => {
+        console.error('[QSTASH WEBHOOK] Verification error thrown:', err.message || err);
+        return false;
+    });
+
+    if (!isValid) {
+        console.error('[QSTASH WEBHOOK] Invalid signature. The URL or payload was altered, or the Signing Keys in Vercel do not match the Upstash Dashboard.');
+        return new NextResponse('Invalid signature', { status: 401 });
+    }
+
+    console.log('[QSTASH WEBHOOK] Signature verified successfully');
+
+    // Parse body after verification
+    try {
+        const data = JSON.parse(body);
         return await handleMessage(data);
+    } catch (error) {
+        console.error('[QSTASH WEBHOOK] JSON Parse Error:', error);
+        return new NextResponse('Invalid JSON', { status: 400 });
     }
 }
 
