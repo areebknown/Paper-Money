@@ -5,7 +5,21 @@ const client = new Client({
     baseUrl: process.env.QSTASH_URL,
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://paper-money.vercel.app');
+// Helper to reliably get the base URL
+const getBaseUrl = () => {
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, ''); // Remove trailing slash if present
+    }
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+    }
+    if (typeof window !== 'undefined') {
+        return window.location.origin;
+    }
+    return 'https://paper-money.vercel.app';
+};
+
+const APP_URL = getBaseUrl();
 
 export const qstash = {
     /**
@@ -17,12 +31,17 @@ export const qstash = {
             return null;
         }
 
-        const startDelaySeconds = Math.max(0, Math.floor((scheduledAt.getTime() - Date.now()) / 1000));
-
-        // Waiting room triggers exactly 5 minutes (300 seconds) before start
+        const now = Date.now();
+        const startDelaySeconds = Math.max(0, Math.floor((scheduledAt.getTime() - now) / 1000));
         const waitingRoomDelaySeconds = Math.max(0, startDelaySeconds - 300);
 
-        console.log(`[QSTASH] Scheduling WAITING_ROOM for auction ${auctionId} (delay: ${waitingRoomDelaySeconds}s)`);
+        console.log(`[QSTASH] Scheduling Auction: ${auctionId}`);
+        console.log(`[QSTASH] Targeting URL Base: ${APP_URL}`);
+        console.log(`[QSTASH] Current Time (UTC): ${new Date(now).toISOString()}`);
+        console.log(`[QSTASH] Target Time (UTC): ${scheduledAt.toISOString()}`);
+        console.log(`[QSTASH] Calculated Delay: Waiting Room (${waitingRoomDelaySeconds}s), Live (${startDelaySeconds}s)`);
+
+        console.log(`[QSTASH] Scheduling WAITING_ROOM for auction ${auctionId}`);
         await client.publishJSON({
             url: `${APP_URL}/api/webhooks/qstash`,
             body: {
@@ -33,7 +52,7 @@ export const qstash = {
             retries: 3
         }).catch(err => console.error('[QSTASH] Failed to schedule waiting room webhook:', err));
 
-        console.log(`[QSTASH] Scheduling LIVE for auction ${auctionId} (delay: ${startDelaySeconds}s)`);
+        console.log(`[QSTASH] Scheduling LIVE for auction ${auctionId}`);
         return await client.publishJSON({
             url: `${APP_URL}/api/webhooks/qstash`,
             body: {
