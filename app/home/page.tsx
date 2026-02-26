@@ -217,23 +217,28 @@ function BidsContent() {
     const [visibleWonCount, setVisibleWonCount] = useState(4);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
+    // Guard: don't allow loading more until page has fully settled after initial render
+    const canLoadMore = useRef(false);
+    const isCurrentlyLoadingMore = useRef(false);
+
     const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
         if (loading) return;
         if (observer.current) observer.current.disconnect();
         if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
             observer.current = new IntersectionObserver(entries => {
-                if (entries[0].isIntersecting) {
+                // Only fire if: page has settled AND not already loading
+                if (entries[0].isIntersecting && canLoadMore.current && !isCurrentlyLoadingMore.current) {
+                    isCurrentlyLoadingMore.current = true;
                     setIsLoadingMore(true);
-                    // Brief delay so the loading bar is visible before new items appear
                     setTimeout(() => {
                         setVisibleWonCount(prev => prev + 4);
                         setIsLoadingMore(false);
+                        isCurrentlyLoadingMore.current = false;
                     }, 600);
                 }
             }, {
-                // Tight margin — only fires when the sentinel is truly on-screen
-                rootMargin: '50px',
-                threshold: 0.1
+                rootMargin: '0px',  // Must be at the very bottom
+                threshold: 0.5      // Sentinel must be 50% visible
             });
             if (node) observer.current.observe(node);
         }
@@ -265,6 +270,8 @@ function BidsContent() {
                 console.error('Failed to fetch auctions');
             } finally {
                 setLoading(false);
+                // Allow infinite scroll only after page has settled (prevents auto-loading on mount)
+                setTimeout(() => { canLoadMore.current = true; }, 1500);
             }
         }
         fetchAuctions();

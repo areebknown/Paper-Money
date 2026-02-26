@@ -119,12 +119,25 @@ export async function POST(req: Request) {
 
         console.log('[API] Auction Created:', auction.id);
 
+        const scheduledTime = new Date(scheduledAt);
+        const minutesUntilStart = (scheduledTime.getTime() - Date.now()) / (1000 * 60);
+
         // Schedule auction start with QStash
         try {
-            await qstash.scheduleAuctionStart(auction.id, auction.scheduledAt);
+            await qstash.scheduleAuctionStart(auction.id, scheduledTime);
             console.log('[API] QStash schedule requested for auction:', auction.id);
         } catch (qError) {
             console.error('[API] QStash scheduling failed (non-blocking):', qError);
+        }
+
+        // Edge case: if auction starts in < 5 minutes, immediately set to WAITING_ROOM
+        // Don't rely on QStash delay-0 delivery which can take 30-60 seconds
+        if (minutesUntilStart <= 5) {
+            console.log(`[API] Auction starts in ${minutesUntilStart.toFixed(1)} min — promoting directly to WAITING_ROOM`);
+            await prisma.auction.update({
+                where: { id: auction.id },
+                data: { status: 'WAITING_ROOM' }
+            });
         }
 
         return NextResponse.json({ auction }, { status: 201 });
