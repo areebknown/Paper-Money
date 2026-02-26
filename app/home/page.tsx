@@ -216,33 +216,41 @@ function BidsContent() {
     // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    // scrollReady: false on mount, true after 1.5s — prevents observer from auto-firing
+    // on initial render. Using STATE (not ref) is critical: when it flips to true, React
+    // re-calls lastWonElementRef, reattaching the observer so it fires fresh.
+    const [scrollReady, setScrollReady] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
-    // Guard: don't allow loading more until page has fully settled after initial render
-    const canLoadMore = useRef(false);
     const isCurrentlyLoadingMore = useRef(false);
 
-    const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
-        if (loading) return;
-        if (observer.current) observer.current.disconnect();
-        if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
-            observer.current = new IntersectionObserver(entries => {
-                // Only fire if: page has settled AND not already loading
-                if (entries[0].isIntersecting && canLoadMore.current && !isCurrentlyLoadingMore.current) {
-                    isCurrentlyLoadingMore.current = true;
-                    setIsLoadingMore(true);
-                    setTimeout(() => {
-                        setVisibleWonCount(prev => prev + 4);
-                        setIsLoadingMore(false);
-                        isCurrentlyLoadingMore.current = false;
-                    }, 600);
-                }
-            }, {
-                rootMargin: '0px',  // Must be at the very bottom
-                threshold: 0.5      // Sentinel must be 50% visible
-            });
-            if (node) observer.current.observe(node);
+    // Enable scroll-loading 1.5s after the main data finishes loading
+    useEffect(() => {
+        if (!loading) {
+            const timer = setTimeout(() => setScrollReady(true), 1500);
+            return () => clearTimeout(timer);
         }
     }, [loading]);
+
+    const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
+        if (!scrollReady) return; // Don't attach observer until page has settled
+        if (observer.current) observer.current.disconnect();
+        if (!node || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && !isCurrentlyLoadingMore.current) {
+                isCurrentlyLoadingMore.current = true;
+                setIsLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleWonCount(prev => prev + 4);
+                    setIsLoadingMore(false);
+                    isCurrentlyLoadingMore.current = false;
+                }, 600);
+            }
+        }, {
+            rootMargin: '0px',
+            threshold: 0.5
+        });
+        observer.current.observe(node);
+    }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
 
     useEffect(() => {
         async function fetchAuctions() {
@@ -270,8 +278,6 @@ function BidsContent() {
                 console.error('Failed to fetch auctions');
             } finally {
                 setLoading(false);
-                // Allow infinite scroll only after page has settled (prevents auto-loading on mount)
-                setTimeout(() => { canLoadMore.current = true; }, 1500);
             }
         }
         fetchAuctions();
