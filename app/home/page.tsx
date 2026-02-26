@@ -215,6 +215,7 @@ function BidsContent() {
 
     // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
     const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
         if (loading) return;
@@ -222,11 +223,16 @@ function BidsContent() {
         if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
             observer.current = new IntersectionObserver(entries => {
                 if (entries[0].isIntersecting) {
-                    setVisibleWonCount(prev => prev + 5);
+                    setIsLoadingMore(true);
+                    // Brief delay so the loading bar is visible before new items appear
+                    setTimeout(() => {
+                        setVisibleWonCount(prev => prev + 4);
+                        setIsLoadingMore(false);
+                    }, 600);
                 }
             }, {
-                root: document.getElementById('home-scroll-container'),
-                rootMargin: '400px',
+                // Tight margin — only fires when the sentinel is truly on-screen
+                rootMargin: '50px',
                 threshold: 0.1
             });
             if (node) observer.current.observe(node);
@@ -338,10 +344,12 @@ function BidsContent() {
                                             {badgeText}
                                         </div>
 
-                                        {/* Viewers/Notification badge */}
-                                        <div className="absolute top-6 right-0 bg-blue-600 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10">
-                                            <span className="material-icons-round text-[12px] text-white">notifications_active</span>
-                                        </div>
+                                        {/* Notification badge — only on SCHEDULED auctions (not when Live or in Waiting Room) */}
+                                        {!isLiveOrWaiting && (
+                                            <div className="absolute top-6 right-0 bg-blue-600 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10">
+                                                <span className="material-icons-round text-[12px] text-white">notifications_active</span>
+                                            </div>
+                                        )}
 
                                         {/* Content inside the card */}
                                         <div className="relative z-10 flex items-center gap-3">
@@ -407,8 +415,16 @@ function BidsContent() {
                             );
                         })}
                         {visibleWonCount < wonBids.length && (
-                            <div ref={lastWonElementRef} className="py-6 flex justify-center items-center opacity-50">
-                                <span className="material-icons-round animate-spin text-[#FBBF24] text-3xl">refresh</span>
+                            <div ref={lastWonElementRef}>
+                                {isLoadingMore && (
+                                    <div className="py-3 flex flex-col items-center gap-2">
+                                        {/* Thin Instagram-style loading bar */}
+                                        <div className="w-full h-0.5 bg-gray-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-[#FBBF24] animate-[loading-bar_0.6s_ease-in-out_forwards]" />
+                                        </div>
+                                        <span className="text-[10px] text-gray-500 font-['Russo_One'] uppercase tracking-widest">Loading more...</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
