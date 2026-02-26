@@ -7,8 +7,15 @@ const client = new Client({
 
 // Helper to reliably get the base URL
 const getBaseUrl = () => {
+    // If we have the public app URL set, use it (and strip any paths/slashes)
     if (process.env.NEXT_PUBLIC_APP_URL) {
-        return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, ''); // Remove trailing slash if present
+        try {
+            const url = new URL(process.env.NEXT_PUBLIC_APP_URL);
+            return url.origin;
+        } catch {
+            // Fallback for strings that aren't full URLs
+            return process.env.NEXT_PUBLIC_APP_URL.split('/api')[0].replace(/\/$/, '');
+        }
     }
     if (process.env.VERCEL_URL) {
         return `https://${process.env.VERCEL_URL}`;
@@ -16,7 +23,7 @@ const getBaseUrl = () => {
     if (typeof window !== 'undefined') {
         return window.location.origin;
     }
-    return 'https://paper-money.vercel.app';
+    return 'https://wars-bid.vercel.app';
 };
 
 const APP_URL = getBaseUrl();
