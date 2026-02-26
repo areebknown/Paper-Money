@@ -5,28 +5,10 @@ const client = new Client({
     baseUrl: process.env.QSTASH_URL,
 });
 
-// Helper to reliably get the base URL
-const getBaseUrl = () => {
-    // If we have the public app URL set, use it (and strip any paths/slashes)
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-        try {
-            const url = new URL(process.env.NEXT_PUBLIC_APP_URL);
-            return url.origin;
-        } catch {
-            // Fallback for strings that aren't full URLs
-            return process.env.NEXT_PUBLIC_APP_URL.split('/api')[0].replace(/\/$/, '');
-        }
-    }
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`;
-    }
-    if (typeof window !== 'undefined') {
-        return window.location.origin;
-    }
-    return 'https://wars-bid.vercel.app';
-};
-
-const APP_URL = getBaseUrl();
+// The URL QStash will POST webhooks to.
+// Set QSTASH_WEBHOOK_URL in Vercel to override (e.g., https://wars-bid.vercel.app).
+// This MUST be your production/public domain - NOT a preview deployment URL.
+const WEBHOOK_BASE_URL = process.env.QSTASH_WEBHOOK_URL || 'https://wars-bid.vercel.app';
 
 export const qstash = {
     /**
@@ -43,14 +25,14 @@ export const qstash = {
         const waitingRoomDelaySeconds = Math.max(0, startDelaySeconds - 300);
 
         console.log(`[QSTASH] Scheduling Auction: ${auctionId}`);
-        console.log(`[QSTASH] Targeting URL Base: ${APP_URL}`);
+        console.log(`[QSTASH] Targeting URL Base: ${WEBHOOK_BASE_URL}`);
         console.log(`[QSTASH] Current Time (UTC): ${new Date(now).toISOString()}`);
         console.log(`[QSTASH] Target Time (UTC): ${scheduledAt.toISOString()}`);
         console.log(`[QSTASH] Calculated Delay: Waiting Room (${waitingRoomDelaySeconds}s), Live (${startDelaySeconds}s)`);
 
         console.log(`[QSTASH] Scheduling WAITING_ROOM for auction ${auctionId}`);
         await client.publishJSON({
-            url: `${APP_URL}/api/webhooks/qstash`,
+            url: `${WEBHOOK_BASE_URL}/api/webhooks/qstash`,
             body: {
                 type: 'auction-waiting-room',
                 auctionId
@@ -61,7 +43,7 @@ export const qstash = {
 
         console.log(`[QSTASH] Scheduling LIVE for auction ${auctionId}`);
         return await client.publishJSON({
-            url: `${APP_URL}/api/webhooks/qstash`,
+            url: `${WEBHOOK_BASE_URL}/api/webhooks/qstash`,
             body: {
                 type: 'auction-start',
                 auctionId
@@ -81,7 +63,7 @@ export const qstash = {
 
         // QStash allows creating schedules via the API
         return await client.schedules.create({
-            destination: `${APP_URL}/api/webhooks/qstash`,
+            destination: `${WEBHOOK_BASE_URL}/api/webhooks/qstash`,
             cron: cronExpression,
             body: JSON.stringify({
                 type: 'market-sync'
