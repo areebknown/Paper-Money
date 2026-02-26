@@ -117,7 +117,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Folder Body */}
-                <div id="home-scroll-container" className={`flex-1 bg-[#1E293B]/20 backdrop-blur-md z-20 overflow-y-auto transform-gpu will-change-transform transition-all duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
+                <div id="home-scroll-container" className={`flex-1 bg-[#1E293B]/20 z-20 overflow-y-auto transition-[border-radius] duration-300 relative min-h-0 mb-4 border-t border-white/5 shadow-inner ${activeTab === 'bids'
                     ? 'rounded-tr-3xl rounded-b-3xl'
                     : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
@@ -252,6 +252,17 @@ function BidsContent() {
         observer.current.observe(node);
     }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
 
+    // Fetch userId ONE time on mount — never changes between polls.
+    // Previously this was called inside fetchAuctions (every 10s) which triggered
+    // a massive DB query (50 transactions + full portfolio) just to get an ID.
+    const userIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        fetch('/api/user')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data?.user?.id) userIdRef.current = data.user.id; })
+            .catch(() => { });
+    }, []);
+
     useEffect(() => {
         async function fetchAuctions() {
             try {
@@ -266,12 +277,9 @@ function BidsContent() {
                         a.status === 'LIVE'
                     ));
 
-                    // Get user's won auctions
-                    const userRes = await fetch('/api/user');
-                    if (userRes.ok) {
-                        const userData = await userRes.json();
-                        const userId = userData.user.id;
-                        setWonBids(auctions.filter((a: any) => a.winnerId === userId && a.status === 'COMPLETED'));
+                    // Filter won auctions using the cached userId (no extra API call needed)
+                    if (userIdRef.current) {
+                        setWonBids(auctions.filter((a: any) => a.winnerId === userIdRef.current && a.status === 'COMPLETED'));
                     }
                 }
             } catch (e) {
