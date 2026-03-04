@@ -328,8 +328,8 @@ function BidsContent() {
         // Register Beams SDK + request browser push permission on first tap
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
             try {
-                const { PusherPushNotifications } = await import('@pusher/push-notifications-web');
-                const beamsClient = new PusherPushNotifications.Client({
+                const { Client } = await import('@pusher/push-notifications-web');
+                const beamsClient = new Client({
                     instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '',
                 });
                 await beamsClient.start();
