@@ -507,7 +507,7 @@ function BidsContent() {
             {notificationDialog && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
                     <div className="absolute inset-0 bg-black/60" />
-                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-5 pb-8 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-5 pb-28 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
                         <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4"><span className="material-icons-round text-white text-3xl">notifications</span></div>
                         <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Get Notified?</h2>
