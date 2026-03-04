@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -211,7 +211,7 @@ function BidsContent() {
     // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    // scrollReady: false on mount, true after 1.5s — prevents observer from auto-firing
+    // scrollReady: false on mount, true after 1.5s â€” prevents observer from auto-firing
     // on initial render. Using STATE (not ref) is critical: when it flips to true, React
     // re-calls lastWonElementRef, reattaching the observer so it fires fresh.
     const [scrollReady, setScrollReady] = useState(false);
@@ -245,7 +245,7 @@ function BidsContent() {
             threshold: 0.5
         });
         observer.current.observe(node);
-    }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
+    }, [scrollReady]); // Re-creates observer when scrollReady flips â€” fires immediately on reattach
 
     // Tracks which auction IDs the user has subscribed to for push notifications
     const [subscribedAuctions, setSubscribedAuctions] = useState<Set<string>>(new Set());
@@ -253,9 +253,9 @@ function BidsContent() {
     const userIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        // ── ONE-TIME initial fetch ────────────────────────────────────────────
+        // â”€â”€ ONE-TIME initial fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Loads the current auction list from the DB. After this, all status
-        // changes arrive via Pusher WebSocket — no polling, no Neon hits.
+        // changes arrive via Pusher WebSocket â€” no polling, no Neon hits.
         async function loadInitialData() {
             try {
                 const res = await fetch('/api/auctions');
@@ -291,7 +291,7 @@ function BidsContent() {
         }
         loadInitialData();
 
-        // ── Pusher WebSocket subscription on global-auctions ─────────────────
+        // â”€â”€ Pusher WebSocket subscription on global-auctions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Replaces the old setInterval(fetchAuctions, 10000).
         // Events fired by lib/auction-service.ts and app/api/webhooks/qstash/route.ts.
         const { getPusherClient } = require('@/lib/pusher-client');
@@ -322,7 +322,7 @@ function BidsContent() {
         };
     }, []);
 
-    // Opens the confirmation dialog — does NOT call the API yet
+    // Opens the confirmation dialog â€” does NOT call the API yet
     const openNotificationDialog = (e: React.MouseEvent, bid: any) => {
         e.preventDefault();
         e.stopPropagation();
@@ -406,7 +406,7 @@ function BidsContent() {
                             const isLiveOrWaiting = isUiLive || isUiWaiting;
 
                             if (isUiLive) {
-                                badgeText = '🔴 Live';
+                                badgeText = 'ðŸ”´ Live';
                                 badgeColor = 'bg-red-500';
                             } else if (isUiWaiting) {
                                 badgeText = 'Waiting Room';
@@ -443,7 +443,7 @@ function BidsContent() {
                                                 {badgeText}
                                             </div>
 
-                                            {/* Bell placeholder — keeps layout spacing consistent */}
+                                            {/* Bell placeholder â€” keeps layout spacing consistent */}
                                             {!isLiveOrWaiting && <div className="absolute top-6 right-0 w-10 h-8" />}
 
                                             {/* Content inside the card */}
@@ -462,7 +462,7 @@ function BidsContent() {
                                                     <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
                                                     <div className="flex items-center justify-between mt-2">
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: â‚¹{Number(bid.startingPrice).toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -470,7 +470,7 @@ function BidsContent() {
                                         </div>
                                     </Link>
 
-                                    {/* Bell button is a SIBLING of Link — not inside it.
+                                    {/* Bell button is a SIBLING of Link â€” not inside it.
                                         This is the fix: button inside anchor = invalid HTML,
                                         mobile browsers swallow the tap into the anchor. */}
                                     {!isLiveOrWaiting && (
@@ -514,7 +514,7 @@ function BidsContent() {
                                                 RANK - {bid.rankTier}
                                             </div>
                                             <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                                Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
+                                                Won at <span className="font-bold text-[#FBBF24]">â‚¹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
                                             </p>
                                         </div>
                                         <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
@@ -540,9 +540,9 @@ function BidsContent() {
                     </div>
                 )}
             </div>
-        </div >
+        </div>
 
-            {/* ── Notification Confirmation Dialog */ }
+            {/* â”€â”€ Notification Confirmation Dialog */ }
     {
         notificationDialog && (
             <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
@@ -575,7 +575,7 @@ function BidsContent() {
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400 text-xs font-['Russo_One'] uppercase">Starting Price</span>
-                            <span className="text-green-400 text-sm font-bold">₹{Number(notificationDialog.startingPrice).toLocaleString()}</span>
+                            <span className="text-green-400 text-sm font-bold">â‚¹{Number(notificationDialog.startingPrice).toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="flex gap-3">
@@ -589,13 +589,12 @@ function BidsContent() {
                             onClick={confirmNotification}
                             className="flex-[2] py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-['Russo_One'] uppercase text-sm shadow-lg active:scale-95 transition-all"
                         >
-                            {subscribedAuctions.has(notificationDialog.id) ? 'Turn Off 🔕' : 'Notify Me 🔔'}
+                            {subscribedAuctions.has(notificationDialog.id) ? 'Turn Off ðŸ”•' : 'Notify Me ðŸ””'}
                         </button>
                     </div>
                 </div>
             </div>
-        )
-    }
+        )}
         </>
     );
 }
@@ -673,3 +672,5 @@ function BottomNav() {
         </nav>
     );
 }
+
+
