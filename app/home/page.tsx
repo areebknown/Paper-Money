@@ -402,58 +402,50 @@ function BidsContent() {
                             }
 
                             return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className="block mb-4">
-                                    <div
-                                        className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
-                                        style={{
-                                            backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center'
-                                        }}
-                                    >
-                                        {/* Dark overlay for text visibility */}
-                                        <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl z-0"></div>
-
-                                        {/* Status badge */}
-                                        <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
-                                            {badgeText}
-                                        </div>
-
-                                        {/* Notification bell — only on SCHEDULED auctions (not when Live or in Waiting Room) */}
-                                        {!isLiveOrWaiting && (
-                                            <button
-                                                onClick={(e) => openNotificationDialog(e, bid)}
-                                                className={`absolute top-6 right-0 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10 transition-colors ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-600'}`}
-                                            >
-                                                <span className="material-icons-round text-[12px] text-white">
-                                                    {subscribedAuctions.has(bid.id) ? 'notifications_active' : 'notifications'}
-                                                </span>
-                                            </button>
-                                        )}
-
-                                        {/* Content inside the card */}
-                                        <div className="relative z-10 flex items-center gap-3">
-                                            {/* Tier icon */}
-                                            <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
-                                                <span className={`material-icons-round ${colors.text} text-2xl`}>shield</span>
-                                                <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
-                                                    {bid.rankTier}
-                                                </div>
+                                <div key={bid.id} className="relative mb-4">
+                                    <Link href={`/bid/${bid.id}`} prefetch={false} className="block">
+                                        <div
+                                            className="bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-gray-800/90 dark:via-gray-800/70 dark:to-gray-800/50 rounded-2xl p-3 shadow-lg border border-white/20 dark:border-gray-600/30 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all"
+                                            style={{
+                                                backgroundImage: `url('${getTierBg(bid.rankTier)}')`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center'
+                                            }}
+                                        >
+                                            <div className="absolute inset-0 bg-black/50 dark:bg-black/70 rounded-2xl z-0"></div>
+                                            <div className={`absolute bottom-0 right-0 ${badgeColor} text-white text-[9px] font-bold px-3 py-0.5 rounded-tl-xl font-['Russo_One'] uppercase shadow-md z-10`}>
+                                                {badgeText}
                                             </div>
-
-                                            {/* Content */}
-                                            <div className="flex-1 pr-6 pb-2">
-                                                <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
-                                                <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                            <div className="relative z-10 flex items-center gap-3">
+                                                <div className={`w-12 h-12 bg-gradient-to-b ${colors.bg} rounded-xl flex items-center justify-center shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3)] border-2 ${colors.border} shrink-0 relative`}>
+                                                    <span className={`material-icons-round ${colors.text} text-2xl`}>shield</span>
+                                                    <div className={`absolute -bottom-1.5 ${colors.badge} text-white text-[8px] px-1.5 rounded-full font-bold uppercase`}>
+                                                        {bid.rankTier}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 pr-8 pb-2">
+                                                    <h3 className="text-lg font-['Russo_One'] text-gray-800 dark:text-white leading-tight">{bid.name}</h3>
+                                                    <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
+                                    </Link>
+                                    {!isLiveOrWaiting && (
+                                        <button
+                                            onClick={(e) => openNotificationDialog(e, bid)}
+                                            className={`absolute top-6 right-0 text-white px-2.5 py-1.5 rounded-l-xl flex items-center shadow-md z-20 transition-colors active:scale-95 ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-600'}`}
+                                        >
+                                            <span className="material-icons-round text-[14px] text-white">
+                                                {subscribedAuctions.has(bid.id) ? 'notifications_active' : 'notifications'}
+                                            </span>
+                                        </button>
+                                    )}
+                                </div>
                             );
                         })}
                     </div>
