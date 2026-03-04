@@ -336,18 +336,23 @@ function BidsContent() {
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
             try {
                 const { Client } = await import('@pusher/push-notifications-web');
-                // Explicitly register our service worker so the permission prompt fires correctly
                 const swReg = await navigator.serviceWorker.register('/service-worker.js');
+                // Wait for SW to be active
+                const activeSw = await navigator.serviceWorker.ready;
                 const beamsClient = new Client({
                     instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '',
-                    serviceWorkerRegistration: swReg,
+                    serviceWorkerRegistration: activeSw,
                 });
-                await beamsClient.start();  // <-- triggers the Chrome permission prompt
+                await beamsClient.start();
                 await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
                 console.log('[Beams] ✅ Registered for push with interest user-' + userIdRef.current);
-            } catch (err) {
+            } catch (err: any) {
+                // Show real error so we can diagnose — will remove once working
+                alert('[Beams Debug] Error: ' + (err?.message || String(err)));
                 console.error('[Beams] ❌ Registration failed:', err);
             }
+        } else {
+            alert('[Beams Debug] Push not supported — serviceWorker:' + ('serviceWorker' in navigator) + ' PushManager:' + ('PushManager' in window));
         }
 
         // Step 2: Save/toggle subscription in DB (independent of Beams success)
