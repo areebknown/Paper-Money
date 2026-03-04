@@ -252,16 +252,9 @@ function BidsContent() {
         observer.current.observe(node);
     }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
 
-    // Fetch userId ONE time on mount — never changes between polls.
-    // Previously this was called inside fetchAuctions (every 10s) which triggered
-    // a massive DB query (50 transactions + full portfolio) just to get an ID.
+    // userId ref: populated on first fetchAuctions call, then reused by all subsequent polls.
+    // Keeping it in a ref (not state) means setting it never causes a re-render.
     const userIdRef = useRef<string | null>(null);
-    useEffect(() => {
-        fetch('/api/user')
-            .then(r => r.ok ? r.json() : null)
-            .then(data => { if (data?.user?.id) userIdRef.current = data.user.id; })
-            .catch(() => { });
-    }, []);
 
     useEffect(() => {
         async function fetchAuctions() {
@@ -277,7 +270,16 @@ function BidsContent() {
                         a.status === 'LIVE'
                     ));
 
-                    // Filter won auctions using the cached userId (no extra API call needed)
+                    // Resolve userId if not yet cached (first run, or after re-mount).
+                    // Subsequent polls skip this — ref is already populated.
+                    if (!userIdRef.current) {
+                        const userRes = await fetch('/api/user');
+                        if (userRes.ok) {
+                            const userData = await userRes.json();
+                            userIdRef.current = userData.user.id;
+                        }
+                    }
+
                     if (userIdRef.current) {
                         setWonBids(auctions.filter((a: any) => a.winnerId === userIdRef.current && a.status === 'COMPLETED'));
                     }
@@ -294,6 +296,7 @@ function BidsContent() {
         const pollInterval = setInterval(fetchAuctions, 10000);
         return () => clearInterval(pollInterval);
     }, []);
+
 
     if (loading) {
         return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
