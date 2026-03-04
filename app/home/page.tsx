@@ -205,6 +205,7 @@ function BidsContent() {
     const [wonBids, setWonBids] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showExactTime, setShowExactTime] = useState(false);
+    const [notificationDialog, setNotificationDialog] = useState<any>(null);
 
     // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
@@ -320,43 +321,33 @@ function BidsContent() {
         };
     }, []);
 
-    // ── Notification bell toggle ──────────────────────────────────────────────
-    const toggleNotification = async (e: React.MouseEvent, auctionId: string, auctionName: string) => {
-        e.preventDefault(); // Don't navigate to bid page
+    const openNotificationDialog = (e: React.MouseEvent, bid: any) => {
+        e.preventDefault();
         e.stopPropagation();
+        setNotificationDialog(bid);
+    };
 
-        // Register Beams SDK + request browser push permission on first tap
+    const confirmNotification = async () => {
+        if (!notificationDialog) return;
+        const { id: auctionId } = notificationDialog;
+        setNotificationDialog(null);
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
             try {
                 const { Client } = await import('@pusher/push-notifications-web');
-                const beamsClient = new Client({
-                    instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '',
-                });
-                await beamsClient.start();
-                await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
-            } catch (err) {
-                console.warn('[Beams] Registration skipped or failed:', err);
-            }
+                const bc = new Client({ instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '' });
+                await bc.start();
+                await bc.addDeviceInterest(user-
+$
+{userIdRef.current});
+            } catch (err) { console.warn('[Beams] skipped'); }
         }
-
         try {
-            const res = await fetch('/api/notifications/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ auctionId }),
-            });
+            const res = await fetch('/api/notifications/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ auctionId }) });
             if (res.ok) {
                 const { subscribed } = await res.json();
-                setSubscribedAuctions(prev => {
-                    const next = new Set(prev);
-                    if (subscribed) next.add(auctionId);
-                    else next.delete(auctionId);
-                    return next;
-                });
+                setSubscribedAuctions(prev => { const n = new Set(prev); if (subscribed) n.add(auctionId); else n.delete(auctionId); return n; });
             }
-        } catch (err) {
-            console.error('[Notification] Toggle failed:', err);
-        }
+        } catch (err) { console.error('[Notification] failed'); }
     };
 
 
@@ -433,7 +424,7 @@ function BidsContent() {
                                         {/* Notification bell — only on SCHEDULED auctions (not when Live or in Waiting Room) */}
                                         {!isLiveOrWaiting && (
                                             <button
-                                                onClick={(e) => toggleNotification(e, bid.id, bid.name)}
+                                                onClick={(e) => openNotificationDialog(e, bid)}
                                                 className={`absolute top-6 right-0 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10 transition-colors ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-600'}`}
                                             >
                                                 <span className="material-icons-round text-[12px] text-white">
@@ -521,7 +512,29 @@ function BidsContent() {
                     </div>
                 )}
             </div>
-        </div >
+
+            {/* Notification Confirmation Dialog */}
+            {notificationDialog && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-6 pb-10" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
+                        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4"><span className="material-icons-round text-white text-3xl">notifications</span></div>
+                        <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Get Notified?</h2>
+                        <p className="text-center text-gray-400 text-xs mb-5">We'll ping you when the waiting room opens and when bidding goes live.</p>
+                        <div className="bg-gray-800 rounded-2xl p-4 mb-6 space-y-2">
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Auction</span><span className="text-white text-sm font-bold truncate max-w-[50%]">{notificationDialog.name}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starts At</span><span className="text-white text-sm font-bold">{new Date(notificationDialog.scheduledAt).toLocaleString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true,day:'numeric',month:'short'})}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starting Price</span><span className="text-green-400 text-sm font-bold">Rs.{Number(notificationDialog.startingPrice).toLocaleString()}</span></div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setNotificationDialog(null)} className="flex-1 py-3 rounded-2xl border border-gray-600 text-gray-400 text-sm">Cancel</button>
+                            <button onClick={confirmNotification} className="flex-[2] py-3 rounded-2xl bg-blue-600 text-white text-sm">{subscribedAuctions.has(notificationDialog.id)?'Turn Off':'Notify Me'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 
