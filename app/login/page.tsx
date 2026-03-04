@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, User as UserIcon } from 'lucide-react';
+import { LOGO_URL } from '@/lib/cloudinary';
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
@@ -49,7 +50,7 @@ export default function LoginPage() {
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
                     <img
-                        src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto,f_auto/ui/bid-wars-logo"
+                        src={LOGO_URL}
                         alt="Bid Wars"
                         className="object-contain h-24 w-auto"
                     />

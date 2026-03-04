@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getPusherClient } from '@/lib/pusher-client';
 import WaitingRoom from '@/components/auction/WaitingRoom';
+import { LOGO_URL } from '@/lib/cloudinary';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type AuctionPhase = 'WAITING' | 'PRE_OPEN' | 'OPENING' | 'REVEAL' | 'CLOSING' | 'BIDDING' | 'SOLD';
@@ -1050,7 +1051,7 @@ export default function LiveBidPage() {
                 </div>
 
                 <div className="absolute left-1/2 -translate-x-1/2">
-                    <img src="https://res.cloudinary.com/dzsr4olmn/image/upload/q_auto:eco,f_auto,w_400/ui/bid-wars-logo" alt="Bid Wars" className="object-contain drop-shadow-lg h-[50px] w-auto" />
+                    <img src={LOGO_URL} alt="Bid Wars" className="object-contain drop-shadow-lg h-[50px] w-auto" />
                 </div>
 
                 <div className="flex items-center justify-end gap-2 w-1/3">
