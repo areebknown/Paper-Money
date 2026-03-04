@@ -514,13 +514,13 @@ function BidsContent() {
                         <p className="text-center text-gray-400 text-xs mb-5">We'll ping you when the waiting room opens and when bidding goes live.</p>
                         <div className="bg-gray-800 rounded-2xl p-4 mb-6 space-y-2">
                             <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Auction</span><span className="text-white text-sm font-bold truncate max-w-[50%]">{notificationDialog.name}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starts At</span><span className="text-white text-sm font-bold">{new Date(notificationDialog.scheduledAt).toLocaleString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true,day:'numeric',month:'short'})}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starts At</span><span className="text-white text-sm font-bold">{new Date(notificationDialog.scheduledAt).toLocaleString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, day: 'numeric', month: 'short' })}</span></div>
                             <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starting Price</span><span className="text-green-400 text-sm font-bold">Rs.{Number(notificationDialog.startingPrice).toLocaleString()}</span></div>
                         </div>
-                        <div className="flex gap-3">
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => setNotificationDialog(null)} className="flex-1 py-3.5 rounded-2xl border-2 border-gray-500 text-gray-300 font-bold text-sm active:scale-95 transition-transform">Cancel</button>
-                            <button onClick={confirmNotification} className="flex-[2] py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-lg active:scale-95 transition-all">{subscribedAuctions.has(notificationDialog.id)?'Turn Off':'Notify Me'}</button>
+                            <button onClick={confirmNotification} className="flex-[2] py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-lg active:scale-95 transition-all">{subscribedAuctions.has(notificationDialog.id) ? 'Turn Off' : 'Notify Me'}</button>
+                        </div>
                     </div>
                 </div>
             )}
