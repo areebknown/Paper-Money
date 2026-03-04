@@ -542,32 +542,23 @@ function BidsContent() {
             </div>
         </div >
 
-            {/* ── Notification Confirmation Dialog ────────────────────────── */ }
+            {/* ── Notification Confirmation Dialog */ }
     {
         notificationDialog && (
             <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
-                {/* Backdrop */}
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-                {/* Bottom sheet */}
                 <div
                     className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-6 pb-10 animate-fade-in-up"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Drag handle */}
                     <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
-
-                    {/* Bell icon */}
                     <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                         <span className="material-icons-round text-white text-3xl">notifications</span>
                     </div>
-
                     <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Get Notified?</h2>
                     <p className="text-center text-gray-400 text-xs mb-5">
                         We'll ping you when the waiting room opens and when bidding goes live.
                     </p>
-
-                    {/* Auction info card */}
                     <div className="bg-gray-800 rounded-2xl p-4 mb-6 space-y-2">
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400 text-xs font-['Russo_One'] uppercase">Auction</span>
@@ -587,8 +578,6 @@ function BidsContent() {
                             <span className="text-green-400 text-sm font-bold">₹{Number(notificationDialog.startingPrice).toLocaleString()}</span>
                         </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="flex gap-3">
                         <button
                             onClick={() => setNotificationDialog(null)}
@@ -598,7 +587,7 @@ function BidsContent() {
                         </button>
                         <button
                             onClick={confirmNotification}
-                            className="flex-2 flex-grow-[2] py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-['Russo_One'] uppercase text-sm shadow-lg active:scale-95 transition-all"
+                            className="flex-[2] py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-['Russo_One'] uppercase text-sm shadow-lg active:scale-95 transition-all"
                         >
                             {subscribedAuctions.has(notificationDialog.id) ? 'Turn Off 🔕' : 'Notify Me 🔔'}
                         </button>
