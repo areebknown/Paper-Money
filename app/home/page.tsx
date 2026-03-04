@@ -331,21 +331,42 @@ function BidsContent() {
         if (!notificationDialog) return;
         const { id: auctionId } = notificationDialog;
         setNotificationDialog(null);
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+
+        // Step 1: Register browser for push notifications via Pusher Beams
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
             try {
                 const { Client } = await import('@pusher/push-notifications-web');
-                const bc = new Client({ instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '' });
-                await bc.start();
-                await bc.addDeviceInterest(`user-${userIdRef.current}`);
-            } catch (err) { console.warn('[Beams] skipped'); }
+                // Explicitly register our service worker so the permission prompt fires correctly
+                const swReg = await navigator.serviceWorker.register('/service-worker.js');
+                const beamsClient = new Client({
+                    instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '',
+                    serviceWorkerRegistration: swReg,
+                });
+                await beamsClient.start();  // <-- triggers the Chrome permission prompt
+                await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
+                console.log('[Beams] ✅ Registered for push with interest user-' + userIdRef.current);
+            } catch (err) {
+                console.error('[Beams] ❌ Registration failed:', err);
+            }
         }
+
+        // Step 2: Save/toggle subscription in DB (independent of Beams success)
         try {
-            const res = await fetch('/api/notifications/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ auctionId }) });
+            const res = await fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ auctionId }),
+            });
             if (res.ok) {
                 const { subscribed } = await res.json();
-                setSubscribedAuctions(prev => { const n = new Set(prev); if (subscribed) n.add(auctionId); else n.delete(auctionId); return n; });
+                setSubscribedAuctions(prev => {
+                    const n = new Set(prev);
+                    if (subscribed) n.add(auctionId);
+                    else n.delete(auctionId);
+                    return n;
+                });
             }
-        } catch (err) { console.error('[Notification] failed'); }
+        } catch (err) { console.error('[Notification] DB subscription failed:', err); }
     };
 
 

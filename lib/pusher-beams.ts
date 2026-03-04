@@ -21,7 +21,7 @@ export async function sendAuctionBeamsNotification(
         return;
     }
     try {
-        await beams.publishToUsers([userId], {
+        await beams.publishToInterests(['user-' + userId], {
             web: {
                 notification: {
                     title,
