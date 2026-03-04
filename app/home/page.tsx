@@ -507,7 +507,7 @@ function BidsContent() {
             {notificationDialog && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
                     <div className="absolute inset-0 bg-black/60" />
-                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-6 pb-10" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-5 pb-8 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
                         <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4"><span className="material-icons-round text-white text-3xl">notifications</span></div>
                         <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Get Notified?</h2>
@@ -518,9 +518,9 @@ function BidsContent() {
                             <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Starting Price</span><span className="text-green-400 text-sm font-bold">Rs.{Number(notificationDialog.startingPrice).toLocaleString()}</span></div>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setNotificationDialog(null)} className="flex-1 py-3 rounded-2xl border border-gray-600 text-gray-400 text-sm">Cancel</button>
-                            <button onClick={confirmNotification} className="flex-[2] py-3 rounded-2xl bg-blue-600 text-white text-sm">{subscribedAuctions.has(notificationDialog.id)?'Turn Off':'Notify Me'}</button>
-                        </div>
+                        <div className="flex gap-3 mt-4">
+                            <button onClick={() => setNotificationDialog(null)} className="flex-1 py-3.5 rounded-2xl border-2 border-gray-500 text-gray-300 font-bold text-sm active:scale-95 transition-transform">Cancel</button>
+                            <button onClick={confirmNotification} className="flex-[2] py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-lg active:scale-95 transition-all">{subscribedAuctions.has(notificationDialog.id)?'Turn Off':'Notify Me'}</button>
                     </div>
                 </div>
             )}
