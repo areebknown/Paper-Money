@@ -33,6 +33,7 @@ model User {
   pawnShop             PawnShop?
   contracts            Contract[]
   wonAuctions          Auction[]     @relation("AuctionWinner")
+  notificationSubs     AuctionNotificationSubscription[]
 }
 
 enum AuctionStatus {
@@ -182,6 +183,7 @@ model Auction {
   // Relations
   artifacts    AuctionArtifact[]
   bids         AuctionBid[]
+  notificationSubs AuctionNotificationSubscription[]
   
   @@index([status])
   @@index([scheduledAt])
@@ -251,4 +253,19 @@ model Contract {
   
   @@index([fromUserId])
   @@index([isVerified])
+}
+
+// Stores which users opted into push notifications for a specific auction.
+// Created when the user taps the bell icon on an auction card.
+model AuctionNotificationSubscription {
+  id        String  @id @default(cuid())
+  userId    String
+  auctionId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auction Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, auctionId])
+  @@index([auctionId])
 }

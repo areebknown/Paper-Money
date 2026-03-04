@@ -4,6 +4,7 @@ import { updateMarketPrices } from '@/lib/market-engine';
 import { startAuctionService } from '@/lib/auction-service';
 import { prisma } from '@/lib/db';
 import { pusherServer } from '@/lib/pusher-server';
+import { sendAuctionBeamsNotification } from '@/lib/pusher-beams';
 
 // Initialize QStash Receiver for signature verification
 const receiver = new Receiver({
@@ -82,6 +83,19 @@ async function handleMessage(data: any) {
                     status: 'WAITING_ROOM'
                 });
 
+                // Send push notifications to everyone who tapped the bell (fire-and-forget)
+                const subs = await prisma.auctionNotificationSubscription.findMany({
+                    where: { auctionId },
+                    select: { userId: true },
+                });
+                subs.forEach(({ userId }) =>
+                    sendAuctionBeamsNotification(
+                        userId,
+                        `🔔 ${auction.name} — Waiting Room Open`,
+                        'The auction waiting room is now open. Get ready to bid!',
+                    )
+                );
+
                 return NextResponse.json({ success: true, message: `Auction ${auctionId} in waiting room` });
 
             case 'auction-start':
@@ -90,6 +104,20 @@ async function handleMessage(data: any) {
                 }
                 console.log(`[QSTASH WEBHOOK] Starting auction: ${auctionId}`);
                 await startAuctionService(auctionId);
+
+                // Notify subscribers that the auction is now LIVE
+                const liveSubs = await prisma.auctionNotificationSubscription.findMany({
+                    where: { auctionId },
+                    select: { userId: true },
+                });
+                liveSubs.forEach(({ userId }) =>
+                    sendAuctionBeamsNotification(
+                        userId,
+                        `🔴 LIVE NOW — Auction Started!`,
+                        'The auction is live! Place your bid now.',
+                    )
+                );
+
                 return NextResponse.json({ success: true, message: `Auction ${auctionId} started` });
 
             default:

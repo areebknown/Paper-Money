@@ -245,12 +245,16 @@ function BidsContent() {
         observer.current.observe(node);
     }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
 
-    // userId ref: populated on first fetchAuctions call, then reused by all subsequent polls.
-    // Keeping it in a ref (not state) means setting it never causes a re-render.
+    // Tracks which auction IDs the user has subscribed to for push notifications
+    const [subscribedAuctions, setSubscribedAuctions] = useState<Set<string>>(new Set());
+    // userId ref: populated on first fetch, reused without triggering re-renders
     const userIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        async function fetchAuctions() {
+        // ── ONE-TIME initial fetch ────────────────────────────────────────────
+        // Loads the current auction list from the DB. After this, all status
+        // changes arrive via Pusher WebSocket — no polling, no Neon hits.
+        async function loadInitialData() {
             try {
                 const res = await fetch('/api/auctions');
                 if (res.ok) {
@@ -263,8 +267,6 @@ function BidsContent() {
                         a.status === 'LIVE'
                     ));
 
-                    // Resolve userId if not yet cached (first run, or after re-mount).
-                    // Subsequent polls skip this — ref is already populated.
                     if (!userIdRef.current) {
                         const userRes = await fetch('/api/user');
                         if (userRes.ok) {
@@ -274,21 +276,88 @@ function BidsContent() {
                     }
 
                     if (userIdRef.current) {
-                        setWonBids(auctions.filter((a: any) => a.winnerId === userIdRef.current && a.status === 'COMPLETED'));
+                        setWonBids(auctions.filter((a: any) =>
+                            a.winnerId === userIdRef.current && a.status === 'COMPLETED'
+                        ));
                     }
                 }
             } catch (e) {
-                console.error('Failed to fetch auctions');
+                console.error('[Home] Failed to load initial auction data');
             } finally {
                 setLoading(false);
             }
         }
-        fetchAuctions();
+        loadInitialData();
 
-        // Poll every 10 seconds so statuses update without manual refresh
-        const pollInterval = setInterval(fetchAuctions, 10000);
-        return () => clearInterval(pollInterval);
+        // ── Pusher WebSocket subscription on global-auctions ─────────────────
+        // Replaces the old setInterval(fetchAuctions, 10000).
+        // Events fired by lib/auction-service.ts and app/api/webhooks/qstash/route.ts.
+        const { getPusherClient } = require('@/lib/pusher-client');
+        const pusher = getPusherClient();
+        const channel = pusher.subscribe('global-auctions');
+
+        channel.bind('auction-waiting-room', (data: any) => {
+            setScheduledBids(prev => prev.map(b =>
+                b.id === data.id ? { ...b, status: 'WAITING_ROOM' } : b
+            ));
+        });
+
+        channel.bind('auction-started', (data: any) => {
+            setScheduledBids(prev => prev.map(b =>
+                b.id === data.id ? { ...b, status: 'LIVE', startedAt: data.startedAt } : b
+            ));
+        });
+
+        channel.bind('auction-ended', (data: any) => {
+            // Remove from scheduled list; won bids are only visible after a full reload
+            // (we don't have winnerId in the global event to avoid privacy leak)
+            setScheduledBids(prev => prev.filter(b => b.id !== data.id));
+        });
+
+        return () => {
+            channel.unbind_all();
+            pusher.unsubscribe('global-auctions');
+        };
     }, []);
+
+    // ── Notification bell toggle ──────────────────────────────────────────────
+    const toggleNotification = async (e: React.MouseEvent, auctionId: string, auctionName: string) => {
+        e.preventDefault(); // Don't navigate to bid page
+        e.stopPropagation();
+
+        // Register Beams SDK + request browser push permission on first tap
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            try {
+                const { PusherPushNotifications } = await import('@pusher/push-notifications-web');
+                const beamsClient = new PusherPushNotifications.Client({
+                    instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '',
+                });
+                await beamsClient.start();
+                await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
+            } catch (err) {
+                console.warn('[Beams] Registration skipped or failed:', err);
+            }
+        }
+
+        try {
+            const res = await fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ auctionId }),
+            });
+            if (res.ok) {
+                const { subscribed } = await res.json();
+                setSubscribedAuctions(prev => {
+                    const next = new Set(prev);
+                    if (subscribed) next.add(auctionId);
+                    else next.delete(auctionId);
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error('[Notification] Toggle failed:', err);
+        }
+    };
 
 
     if (loading) {
@@ -361,11 +430,16 @@ function BidsContent() {
                                             {badgeText}
                                         </div>
 
-                                        {/* Notification badge — only on SCHEDULED auctions (not when Live or in Waiting Room) */}
+                                        {/* Notification bell — only on SCHEDULED auctions (not when Live or in Waiting Room) */}
                                         {!isLiveOrWaiting && (
-                                            <div className="absolute top-6 right-0 bg-blue-600 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10">
-                                                <span className="material-icons-round text-[12px] text-white">notifications_active</span>
-                                            </div>
+                                            <button
+                                                onClick={(e) => toggleNotification(e, bid.id, bid.name)}
+                                                className={`absolute top-6 right-0 text-white text-[10px] font-medium px-2.5 py-1 rounded-l-xl flex items-center gap-1.5 shadow-sm z-10 transition-colors ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-600'}`}
+                                            >
+                                                <span className="material-icons-round text-[12px] text-white">
+                                                    {subscribedAuctions.has(bid.id) ? 'notifications_active' : 'notifications'}
+                                                </span>
+                                            </button>
                                         )}
 
                                         {/* Content inside the card */}
