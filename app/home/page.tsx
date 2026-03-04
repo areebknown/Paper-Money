@@ -336,8 +336,7 @@ function BidsContent() {
                 const { Client } = await import('@pusher/push-notifications-web');
                 const bc = new Client({ instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID || '' });
                 await bc.start();
-                await bc.addDeviceInterest(user-
-$
+                await bc.addDeviceInterest(`user-${userIdRef.current}`);
 {userIdRef.current});
             } catch (err) { console.warn('[Beams] skipped'); }
         }
