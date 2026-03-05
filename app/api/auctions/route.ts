@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
 import { checkAndUpdateAuctionStatuses } from '@/lib/auction-service';
 import { qstash } from '@/lib/qstash';
+import { pusherServer } from '@/lib/pusher-server';
 
 // GET /api/auctions - List auctions with optional status filter
 export async function GET(req: Request) {
@@ -118,6 +119,16 @@ export async function POST(req: Request) {
         });
 
         console.log('[API] Auction Created:', auction.id);
+
+        // Notify all connected home-page clients instantly
+        pusherServer.trigger('global-auctions', 'auction-created', {
+            id: auction.id,
+            name: auction.name,
+            status: auction.status,
+            scheduledAt: auction.scheduledAt,
+            startingPrice: auction.startingPrice,
+            rankTier: auction.rankTier,
+        }).catch(err => console.error('[API] Pusher auction-created failed:', err));
 
         const scheduledTime = new Date(scheduledAt);
         const minutesUntilStart = (scheduledTime.getTime() - Date.now()) / (1000 * 60);

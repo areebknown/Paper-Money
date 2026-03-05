@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/notifications/subscribe?auctionId=xxx
- *
- * Returns whether the calling user is subscribed to notifications for a given auction.
+ * GET /api/notifications/subscribe
+ * - With ?auctionId=xxx → returns { subscribed: boolean } for that auction.
+ * - Without query param  → returns { subscribedAuctionIds: string[] } for ALL subscriptions.
+ *   Used on home page load to restore bell UI state without extra round trips.
  */
 export async function GET(req: NextRequest) {
     const userId = await getUserIdFromRequest();
@@ -53,8 +54,14 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const auctionId = searchParams.get('auctionId');
+
+    // No auctionId → return all subscribed auction IDs (for home page initialisation)
     if (!auctionId) {
-        return NextResponse.json({ error: 'auctionId is required' }, { status: 400 });
+        const subs = await prisma.auctionNotificationSubscription.findMany({
+            where: { userId },
+            select: { auctionId: true },
+        });
+        return NextResponse.json({ subscribedAuctionIds: subs.map(s => s.auctionId) });
     }
 
     const existing = await prisma.auctionNotificationSubscription.findUnique({

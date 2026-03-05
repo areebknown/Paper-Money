@@ -206,6 +206,8 @@ function BidsContent() {
     const [loading, setLoading] = useState(true);
     const [showExactTime, setShowExactTime] = useState(false);
     const [notificationDialog, setNotificationDialog] = useState<any>(null);
+    // Tick: increments every 30s — no data fetch, just forces countdown labels to re-render
+    const [, setTick] = useState(0);
 
     // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
@@ -251,48 +253,61 @@ function BidsContent() {
     // userId ref: populated on first fetch, reused without triggering re-renders
     const userIdRef = useRef<string | null>(null);
 
-    useEffect(() => {
-        // ── ONE-TIME initial fetch ────────────────────────────────────────────
-        // Loads the current auction list from the DB. After this, all status
-        // changes arrive via Pusher WebSocket — no polling, no Neon hits.
-        async function loadInitialData() {
-            try {
-                const res = await fetch('/api/auctions');
-                if (res.ok) {
-                    const data = await res.json();
-                    const auctions = data.auctions || [];
+    // ── loadInitialData: fetches auctions + user + subscriptions ──────────────
+    // Extracted as useCallback so visibilitychange can call it without stale closures.
+    const loadInitialData = useCallback(async () => {
+        try {
+            const [auctionsRes, userRes, subsRes] = await Promise.all([
+                fetch('/api/auctions'),
+                userIdRef.current ? Promise.resolve(null) : fetch('/api/user'),
+                fetch('/api/notifications/subscribe'),
+            ]);
 
-                    setScheduledBids(auctions.filter((a: any) =>
-                        a.status === 'SCHEDULED' ||
-                        a.status === 'WAITING_ROOM' ||
-                        a.status === 'LIVE'
+            if (auctionsRes.ok) {
+                const data = await auctionsRes.json();
+                const auctions = data.auctions || [];
+                setScheduledBids(auctions.filter((a: any) =>
+                    a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM' || a.status === 'LIVE'
+                ));
+                if (userIdRef.current) {
+                    setWonBids(auctions.filter((a: any) =>
+                        a.winnerId === userIdRef.current && a.status === 'COMPLETED'
                     ));
-
-                    if (!userIdRef.current) {
-                        const userRes = await fetch('/api/user');
-                        if (userRes.ok) {
-                            const userData = await userRes.json();
-                            userIdRef.current = userData.user.id;
-                        }
-                    }
-
-                    if (userIdRef.current) {
-                        setWonBids(auctions.filter((a: any) =>
-                            a.winnerId === userIdRef.current && a.status === 'COMPLETED'
-                        ));
-                    }
                 }
-            } catch (e) {
-                console.error('[Home] Failed to load initial auction data');
-            } finally {
-                setLoading(false);
             }
+
+            if (userRes && userRes.ok) {
+                const userData = await userRes.json();
+                userIdRef.current = userData.user.id;
+            }
+
+            // Bug 1: restore bell state from DB on every load
+            if (subsRes && subsRes.ok) {
+                const subsData = await subsRes.json();
+                if (subsData.subscribedAuctionIds) {
+                    setSubscribedAuctions(new Set(subsData.subscribedAuctionIds));
+                }
+            }
+        } catch (e) {
+            console.error('[Home] Failed to load initial data:', e);
+        } finally {
+            setLoading(false);
         }
+    }, []);
+
+    useEffect(() => {
         loadInitialData();
 
+        // Bug 2: countdown tick — forces re-render every 30s, zero DB hits
+        const tickId = setInterval(() => setTick(t => t + 1), 30_000);
+
+        // Bug 3: refetch data when user returns to the tab/app after minimising
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') loadInitialData();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+
         // ── Pusher WebSocket subscription on global-auctions ─────────────────
-        // Replaces the old setInterval(fetchAuctions, 10000).
-        // Events fired by lib/auction-service.ts and app/api/webhooks/qstash/route.ts.
         const { getPusherClient } = require('@/lib/pusher-client');
         const pusher = getPusherClient();
         const channel = pusher.subscribe('global-auctions');
@@ -310,16 +325,24 @@ function BidsContent() {
         });
 
         channel.bind('auction-ended', (data: any) => {
-            // Remove from scheduled list; won bids are only visible after a full reload
-            // (we don't have winnerId in the global event to avoid privacy leak)
             setScheduledBids(prev => prev.filter(b => b.id !== data.id));
         });
 
+        // Bug 4: new auction added by admin appears instantly without refresh
+        channel.bind('auction-created', (data: any) => {
+            setScheduledBids(prev => {
+                if (prev.some(b => b.id === data.id)) return prev; // dedup
+                return [data, ...prev];
+            });
+        });
+
         return () => {
+            clearInterval(tickId);
+            document.removeEventListener('visibilitychange', onVisibility);
             channel.unbind_all();
             pusher.unsubscribe('global-auctions');
         };
-    }, []);
+    }, [loadInitialData]);
 
     const openNotificationDialog = (e: React.MouseEvent, bid: any) => {
         e.preventDefault();
