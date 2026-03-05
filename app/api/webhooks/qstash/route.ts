@@ -83,16 +83,18 @@ async function handleMessage(data: any) {
                     status: 'WAITING_ROOM'
                 });
 
-                // Send push notifications to everyone who tapped the bell (fire-and-forget)
+                // Send push notifications — MUST await so serverless fn doesn't terminate first
                 const subs = await prisma.auctionNotificationSubscription.findMany({
                     where: { auctionId },
                     select: { userId: true },
                 });
-                subs.forEach(({ userId }) =>
-                    sendAuctionBeamsNotification(
-                        userId,
-                        `🔔 ${auction.name} — Waiting Room Open`,
-                        'The auction waiting room is now open. Get ready to bid!',
+                await Promise.allSettled(
+                    subs.map(({ userId }) =>
+                        sendAuctionBeamsNotification(
+                            userId,
+                            `🔔 ${auction.name} — Waiting Room Open`,
+                            'The auction waiting room is now open. Get ready to bid!',
+                        )
                     )
                 );
 
@@ -105,16 +107,18 @@ async function handleMessage(data: any) {
                 console.log(`[QSTASH WEBHOOK] Starting auction: ${auctionId}`);
                 await startAuctionService(auctionId);
 
-                // Notify subscribers that the auction is now LIVE
+                // Send live notifications — MUST await so serverless fn doesn't terminate first
                 const liveSubs = await prisma.auctionNotificationSubscription.findMany({
                     where: { auctionId },
                     select: { userId: true },
                 });
-                liveSubs.forEach(({ userId }) =>
-                    sendAuctionBeamsNotification(
-                        userId,
-                        `🔴 LIVE NOW — Auction Started!`,
-                        'The auction is live! Place your bid now.',
+                await Promise.allSettled(
+                    liveSubs.map(({ userId }) =>
+                        sendAuctionBeamsNotification(
+                            userId,
+                            `🔴 LIVE NOW — Auction Started!`,
+                            'The auction is live! Place your bid now.',
+                        )
                     )
                 );
 
