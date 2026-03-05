@@ -263,6 +263,12 @@ function BidsContent() {
                 fetch('/api/notifications/subscribe'),
             ]);
 
+            // Set userId FIRST so won bids filter below can use it
+            if (userRes && userRes.ok) {
+                const userData = await userRes.json();
+                userIdRef.current = userData.user.id;
+            }
+
             if (auctionsRes.ok) {
                 const data = await auctionsRes.json();
                 const auctions = data.auctions || [];
@@ -276,12 +282,7 @@ function BidsContent() {
                 }
             }
 
-            if (userRes && userRes.ok) {
-                const userData = await userRes.json();
-                userIdRef.current = userData.user.id;
-            }
-
-            // Bug 1: restore bell state from DB on every load
+            // Restore bell state from DB on every load
             if (subsRes && subsRes.ok) {
                 const subsData = await subsRes.json();
                 if (subsData.subscribedAuctionIds) {
