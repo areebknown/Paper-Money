@@ -347,12 +347,8 @@ function BidsContent() {
                 await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
                 console.log('[Beams] ✅ Registered for push with interest user-' + userIdRef.current);
             } catch (err: any) {
-                // Show real error so we can diagnose — will remove once working
-                alert('[Beams Debug] Error: ' + (err?.message || String(err)));
                 console.error('[Beams] ❌ Registration failed:', err);
             }
-        } else {
-            alert('[Beams Debug] Push not supported — serviceWorker:' + ('serviceWorker' in navigator) + ' PushManager:' + ('PushManager' in window));
         }
 
         // Step 2: Save/toggle subscription in DB (independent of Beams success)
