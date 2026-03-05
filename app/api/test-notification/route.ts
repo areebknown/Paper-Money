@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
                     body: `This is a test push from Beams to interest: ${interest}`,
                     icon: 'https://wars-bid.vercel.app/icon-192.png',
                     requireInteraction: true,
-                },
+                } as any,
             },
         });
         return NextResponse.json({

@@ -29,7 +29,7 @@ export async function sendAuctionBeamsNotification(
                     icon: 'https://wars-bid.vercel.app/icon-192.png',
                     deep_link: 'https://wars-bid.vercel.app/home',
                     requireInteraction: true,
-                },
+                } as any,
             },
         });
         console.log(`[Beams] ✅ Sent "${title}" to user ${userId}`);
