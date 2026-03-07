@@ -71,6 +71,21 @@ async function handleMessage(data: any) {
                 }
                 console.log(`[QSTASH WEBHOOK] Entering waiting room for auction: ${auctionId}`);
 
+                const currentAuction = await prisma.auction.findUnique({
+                    where: { id: auctionId },
+                    select: { status: true, name: true, scheduledAt: true }
+                });
+
+                if (!currentAuction) {
+                    return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
+                }
+
+                // If auction is already LIVE, COMPLETED, or VOID (usually manually started by admin), skip waiting room
+                if (currentAuction.status !== 'SCHEDULED') {
+                    console.log(`[QSTASH WEBHOOK] Skipping Waiting Room — auction is already ${currentAuction.status}`);
+                    return NextResponse.json({ success: true, message: `Skipped: Auction is ${currentAuction.status}` });
+                }
+
                 const auction = await prisma.auction.update({
                     where: { id: auctionId },
                     data: { status: 'WAITING_ROOM' }
@@ -105,6 +120,22 @@ async function handleMessage(data: any) {
                     return NextResponse.json({ error: 'Missing auctionId' }, { status: 400 });
                 }
                 console.log(`[QSTASH WEBHOOK] Starting auction: ${auctionId}`);
+
+                const startAuctionDb = await prisma.auction.findUnique({
+                    where: { id: auctionId },
+                    select: { status: true }
+                });
+
+                if (!startAuctionDb) {
+                    return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
+                }
+
+                // If auction is already LIVE, COMPLETED, or VOID, skip start
+                if (startAuctionDb.status !== 'SCHEDULED' && startAuctionDb.status !== 'WAITING_ROOM') {
+                    console.log(`[QSTASH WEBHOOK] Skipping Start — auction is already ${startAuctionDb.status}`);
+                    return NextResponse.json({ success: true, message: `Skipped: Auction is ${startAuctionDb.status}` });
+                }
+
                 await startAuctionService(auctionId);
 
                 // Send live notifications — MUST await so serverless fn doesn't terminate first

@@ -148,7 +148,7 @@ export default function HomePage() {
                     : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
                     <div className="p-4">
-                        {activeTab === 'bids' ? <BidsContent /> : <MarketContent />}
+                        {activeTab === 'bids' ? <BidsContent onBalanceUpdate={(b: number) => setUserData((prev: any) => prev ? { ...prev, balance: b } : prev)} /> : <MarketContent />}
                     </div>
                 </div>
             </main>
@@ -225,7 +225,7 @@ const getStatusBadgeColor = (time: string) => {
     return 'bg-gray-600';
 };
 
-function BidsContent() {
+function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) => void }) {
     const [scheduledBids, setScheduledBids] = useState<any[]>([]);
     const [wonBids, setWonBids] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -631,6 +631,7 @@ function BidsContent() {
                                                     setPayNowState('paid');
                                                     setWonBids(prev => prev.map(b => b.id === payNowDialog.id ? { ...b, isClaimed: true } : b));
                                                     if (data.newBalance !== undefined) {
+                                                        if (onBalanceUpdate) onBalanceUpdate(data.newBalance);
                                                         window.dispatchEvent(new CustomEvent('balance-update-local', { detail: { balance: data.newBalance } }));
                                                     }
                                                 } else {
