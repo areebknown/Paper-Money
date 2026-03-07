@@ -54,6 +54,23 @@ export const qstash = {
     },
 
     /**
+     * Schedules a 24-hour claim expiry check for a completed auction.
+     * If the winner hasn't paid by then, the auction will be voided.
+     */
+    async scheduleClaimExpiry(auctionId: string, delaySeconds: number = 86400) {
+        if (!process.env.QSTASH_TOKEN) {
+            console.warn('[QSTASH] Missing token — claim expiry not scheduled');
+            return null;
+        }
+        return await client.publishJSON({
+            url: `${WEBHOOK_BASE_URL}/api/webhooks/qstash`,
+            body: { type: 'auction-claim-check', auctionId },
+            delay: delaySeconds,
+            retries: 2,
+        });
+    },
+
+    /**
      * Schedules or updates the daily market sync cron job.
      */
     async scheduleDailyMarketSync(cronExpression: string = '0 0 * * *') {

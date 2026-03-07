@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { pusherServer } from '@/lib/pusher-server';
+import { qstash } from '@/lib/qstash';
 
 /**
  * Service to handle the logic of starting an auction.
@@ -23,7 +24,6 @@ export async function startAuctionService(auctionId: string) {
     if (auction.status === 'COMPLETED') {
         throw new Error('Cannot start a COMPLETED auction');
     }
-
     // 2. Update DB transactionally
     const updatedAuction = await prisma.auction.update({
         where: { id: auctionId },
@@ -97,11 +97,22 @@ export async function checkAndStartDueAuctions() {
 export async function endAuctionService(auctionId: string) {
     const auction = await prisma.auction.findUnique({
         where: { id: auctionId },
-        select: { id: true, status: true, name: true, currentPrice: true, winnerId: true }
+        select: { id: true, status: true, name: true, currentPrice: true, winnerId: true, lastBidAt: true }
     });
 
     if (!auction) throw new Error("Auction not found");
     if (auction.status === 'COMPLETED') return { success: false, message: "Already completed" };
+    if (auction.status === 'VOID') return { success: false, message: "Auction was voided" };
+
+    // Server-side 10s guard: reject the end call if a bid arrived in the last 9.5s.
+    // This stops a race where the client countdown hits 0 before Pusher delivers the
+    // reset from a last-second bid.
+    if (auction.lastBidAt) {
+        const msSinceLastBid = Date.now() - new Date(auction.lastBidAt).getTime();
+        if (msSinceLastBid < 9500) {
+            return { success: false, message: 'Bid placed too recently — countdown still active' };
+        }
+    }
 
     // Find the highest bidder to set as winner
     const highestBid = await prisma.auctionBid.findFirst({
@@ -117,15 +128,24 @@ export async function endAuctionService(auctionId: string) {
     const finalPrice = highestBid ? Number(highestBid.amount) : Number(auction.currentPrice);
 
     // Update auction with winner and COMPLETED status
+    const now = new Date();
+    const claimExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24-hour claim window
+
     const updated = await prisma.auction.update({
         where: { id: auctionId },
         data: {
             status: 'COMPLETED',
-            endedAt: new Date(),
+            endedAt: now,
+            claimExpiresAt,
             ...(winnerId ? { winnerId } : {}),
             ...(highestBid ? { currentPrice: highestBid.amount } : {}),
         }
     });
+
+    // Schedule the 24-hour void check via QStash
+    qstash.scheduleClaimExpiry(auctionId, 24 * 60 * 60).catch(err =>
+        console.error('[EndAuction] Failed to schedule claim expiry:', err)
+    );
 
     console.log(`[EndAuction] Winner: ${winnerUsername ?? 'none'} (${winnerId ?? 'no bids'}), Final: ₹${finalPrice}`);
 

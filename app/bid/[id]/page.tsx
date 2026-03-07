@@ -92,20 +92,23 @@ function SoldDialog({
     const isWinner = currentUserId && soldInfo.winnerId === currentUserId;
     const [claiming, setClaiming] = useState(false);
     const [claimed, setClaimed] = useState(false);
+    const [payLater, setPayLater] = useState(false);
+    const [claimError, setClaimError] = useState<string | null>(null);
 
-    const handleClaim = async () => {
+    const handlePayAndClaim = async () => {
         setClaiming(true);
+        setClaimError(null);
         try {
             const res = await fetch(`/api/auctions/${auctionId}/claim`, { method: 'POST' });
+            const data = await res.json();
             if (res.ok) {
                 setClaimed(true);
                 onClaim();
             } else {
-                const err = await res.json();
-                alert(err.error || 'Failed to claim');
+                setClaimError(data.error || 'Failed to pay & claim');
             }
         } catch {
-            alert('Network error');
+            setClaimError('Network error — please try again');
         } finally {
             setClaiming(false);
         }
@@ -114,14 +117,10 @@ function SoldDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="relative w-full max-w-sm bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700 rounded-3xl overflow-hidden shadow-2xl">
-                {/* Top accent */}
                 <div className={`h-1.5 w-full ${isWinner ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400' : 'bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600'}`} />
 
                 <div className="p-6 text-center">
-                    {/* Gavel icon */}
                     <div className="text-6xl mb-3">🔨</div>
-
-                    {/* Auctioneer announcement */}
                     <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-mono">SOLD!</p>
                     <div className="bg-gray-800/60 border border-gray-700 rounded-2xl px-4 py-3 mb-4">
                         <p className="text-white text-sm leading-relaxed">
@@ -144,22 +143,42 @@ function SoldDialog({
                             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-2 mb-4">
                                 <p className="text-yellow-400 font-bold text-sm">🏆 You won this auction!</p>
                             </div>
+
                             {claimed ? (
-                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2 mb-4">
-                                    <p className="text-green-400 font-bold text-sm">✅ Added to your inventory!</p>
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-3 mb-4">
+                                    <p className="text-green-400 font-bold text-sm">✅ Paid & added to your inventory!</p>
+                                    <p className="text-green-600 text-xs mt-1">₹{soldInfo.finalPrice.toLocaleString()} deducted from your balance.</p>
+                                </div>
+                            ) : payLater ? (
+                                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-3 mb-4">
+                                    <p className="text-blue-400 font-bold text-sm">⏳ Saved to Won Shutters</p>
+                                    <p className="text-blue-600 text-xs mt-1">You have 24 hours to pay ₹{soldInfo.finalPrice.toLocaleString()} or the prize will be forfeited.</p>
                                 </div>
                             ) : (
-                                <button
-                                    onClick={handleClaim}
-                                    disabled={claiming}
-                                    className="w-full py-3.5 bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 disabled:opacity-50 text-gray-900 font-black rounded-xl text-sm uppercase tracking-wide shadow-lg shadow-yellow-900/30 active:scale-95 transition mb-3"
-                                >
-                                    {claiming ? 'Adding...' : '📦 Add to Inventory'}
-                                </button>
+                                <>
+                                    {claimError && (
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 mb-3">
+                                            <p className="text-red-400 text-xs">{claimError}</p>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={handlePayAndClaim}
+                                        disabled={claiming}
+                                        className="w-full py-3.5 bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 disabled:opacity-50 text-gray-900 font-black rounded-xl text-sm uppercase tracking-wide shadow-lg shadow-yellow-900/30 active:scale-95 transition mb-2"
+                                    >
+                                        {claiming ? 'Processing...' : `💳 Pay & Claim — ₹${soldInfo.finalPrice.toLocaleString()}`}
+                                    </button>
+                                    <button
+                                        onClick={() => setPayLater(true)}
+                                        className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-semibold rounded-xl text-sm transition mb-3"
+                                    >
+                                        Pay Later (24h window)
+                                    </button>
+                                </>
                             )}
                             <button
                                 onClick={onGoHome}
-                                className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl text-sm transition"
+                                className="w-full py-2.5 bg-gray-800/50 hover:bg-gray-700 text-gray-500 text-xs rounded-xl transition"
                             >
                                 Return to Home
                             </button>
@@ -444,7 +463,8 @@ export default function LiveBidPage() {
     const [lastBidderId, setLastBidderId] = useState<string | null>(null);
     // Deduplicate bids: track IDs we've already added optimistically
     const seenBidIds = useRef<Set<string>>(new Set());
-    // Stable channel ref so we never re-subscribe on StrictMode double-mount
+    // Tracks time of last bid (ours OR received via Pusher) for the countdown guard
+    const lastBidTimeRef = useRef<number>(0);
     const channelRef = useRef<any>(null);
     const globalChannelRef = useRef<any>(null);
     // Debug logger — logs to console only (debug panel removed)
@@ -670,6 +690,7 @@ export default function LiveBidPage() {
                 seenBidIds.current.add(bidId);
 
                 setCurrentPrice(data.amount);
+                lastBidTimeRef.current = Date.now(); // track for countdown guard
                 setBidCountdown(10);
                 setLastBidderId(data.userId ?? null);
 
@@ -876,9 +897,12 @@ export default function LiveBidPage() {
             const t = setTimeout(() => setBidCountdown(p => (p !== null ? Math.max(0, p - 1) : null)), 1000);
             return () => clearTimeout(t);
         } else {
-            // Countdown hit zero — call end API and use response for soldInfo
-            // Don't set phase=SOLD yet; wait for the API to return winner data
-            // so the dialog has the right info immediately
+            // Client-side guard: if a bid just arrived within 2s, the Pusher
+            // reset is still in flight — don't end yet, give it time to reset.
+            if (Date.now() - lastBidTimeRef.current < 2000) {
+                setBidCountdown(10);
+                return;
+            }
             const endAuction = async () => {
                 try {
                     const res = await fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' });
@@ -938,9 +962,9 @@ export default function LiveBidPage() {
             // Mark this bid as seen so Pusher doesn't double-add it
             seenBidIds.current.add(bidId);
 
-            // Update price, balance, countdown, leading state
+            // Update price, countdown, leading state (balance stays same until Pay & Claim)
             setCurrentPrice(newPrice);
-            setBalance(data.newBalance);
+            lastBidTimeRef.current = Date.now();
             setBidCountdown(10);
             setLastBidderId(me.id);
 

@@ -42,6 +42,7 @@ enum AuctionStatus {
   LIVE
   COMPLETED
   ENDED
+  VOID
 }
 
 model Transaction {
@@ -172,12 +173,19 @@ model Auction {
   currentPrice  Decimal @db.Decimal(10, 2)
   
   // State
-  status       String  @default("SCHEDULED") // SCHEDULED, LIVE, REVEALING, BIDDING, COMPLETED, CANCELLED
+  status       String  @default("SCHEDULED")
   
   // Winner
   winnerId     String?
   winner       User?   @relation("AuctionWinner", fields: [winnerId], references: [id])
-  
+
+  // Pay & Claim — deduction is deferred to claim time
+  isClaimed       Boolean   @default(false)
+  claimExpiresAt  DateTime? // 24h window; null until auction COMPLETED
+
+  // Last bid timestamp — used server-side to reject premature end calls
+  lastBidAt    DateTime?
+
   createdAt    DateTime @default(now())
   
   // Relations

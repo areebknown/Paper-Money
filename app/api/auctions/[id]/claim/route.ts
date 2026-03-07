@@ -4,8 +4,9 @@ import { getUserFromToken } from '@/lib/auth';
 
 /**
  * POST /api/auctions/[id]/claim
- * Transfers all artifacts from a completed auction to the winner's inventory.
- * Only the winner can call this.
+ * "Pay & Claim" — deducts the winning price from the winner's balance
+ * and transfers all auction artifacts to their inventory.
+ * Only the winner can call this, and only within the 24-hour claim window.
  */
 export async function POST(
     req: Request,
@@ -22,9 +23,7 @@ export async function POST(
         const auction = await prisma.auction.findUnique({
             where: { id: auctionId },
             include: {
-                artifacts: {
-                    include: { artifact: true }
-                }
+                artifacts: { include: { artifact: true } }
             }
         });
 
@@ -40,20 +39,56 @@ export async function POST(
             return NextResponse.json({ error: 'Only the winner can claim artifacts' }, { status: 403 });
         }
 
-        // Transfer all artifacts to the winner
+        if (auction.isClaimed) {
+            return NextResponse.json({ error: 'Already claimed', claimed: true }, { status: 400 });
+        }
+
+        // Check claim window hasn't expired
+        if (auction.claimExpiresAt && new Date() > auction.claimExpiresAt) {
+            return NextResponse.json({ error: 'Claim window has expired (24h limit)' }, { status: 400 });
+        }
+
+        // Check winner still has sufficient balance
+        const winner = await prisma.user.findUnique({ where: { id: user.userId } });
+        if (!winner) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+        const finalPrice = Number(auction.currentPrice);
+        if (Number(winner.balance) < finalPrice) {
+            return NextResponse.json({
+                error: `Insufficient balance. You need ₹${finalPrice.toLocaleString()} but have ₹${Number(winner.balance).toLocaleString()}`,
+                required: finalPrice,
+                available: Number(winner.balance),
+            }, { status: 400 });
+        }
+
+        // Deduct balance, set isClaimed, transfer artifacts — all in one transaction
         const artifactIds = auction.artifacts.map(a => a.artifactId);
 
-        await prisma.artifact.updateMany({
-            where: { id: { in: artifactIds } },
-            data: { ownerId: user.userId }
-        });
+        await prisma.$transaction([
+            // 1. Deduct winning price from winner's balance
+            prisma.user.update({
+                where: { id: user.userId },
+                data: { balance: { decrement: finalPrice } },
+            }),
+            // 2. Mark auction as claimed
+            prisma.auction.update({
+                where: { id: auctionId },
+                data: { isClaimed: true },
+            }),
+            // 3. Transfer all artifacts to winner
+            prisma.artifact.updateMany({
+                where: { id: { in: artifactIds } },
+                data: { ownerId: user.userId },
+            }),
+        ]);
 
-        console.log(`[Claim] User ${user.userId} claimed ${artifactIds.length} artifacts from auction ${auctionId}`);
+        console.log(`[Claim] ✅ User ${user.userId} paid ₹${finalPrice} and claimed ${artifactIds.length} artifacts from auction ${auctionId}`);
 
         return NextResponse.json({
             success: true,
             claimed: artifactIds.length,
-            message: `${artifactIds.length} artifact(s) added to your inventory!`
+            amountPaid: finalPrice,
+            message: `₹${finalPrice.toLocaleString()} paid. ${artifactIds.length} artifact(s) added to your inventory!`
         });
 
     } catch (error: any) {

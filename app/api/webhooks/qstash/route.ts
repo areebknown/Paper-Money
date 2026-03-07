@@ -124,6 +124,28 @@ async function handleMessage(data: any) {
 
                 return NextResponse.json({ success: true, message: `Auction ${auctionId} started` });
 
+            case 'auction-claim-check':
+                if (!auctionId) {
+                    return NextResponse.json({ error: 'Missing auctionId' }, { status: 400 });
+                }
+                console.log(`[QSTASH WEBHOOK] Claim expiry check for auction: ${auctionId}`);
+                const expiredAuction = await prisma.auction.findUnique({
+                    where: { id: auctionId },
+                    select: { id: true, isClaimed: true, status: true, name: true },
+                });
+                if (!expiredAuction) {
+                    return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
+                }
+                if (expiredAuction.status === 'COMPLETED' && !expiredAuction.isClaimed) {
+                    await prisma.auction.update({
+                        where: { id: auctionId },
+                        data: { status: 'VOID' },
+                    });
+                    console.log(`[QSTASH WEBHOOK] ⚠️ Auction ${auctionId} voided — winner did not pay within 24h`);
+                    return NextResponse.json({ success: true, message: `Auction ${auctionId} voided (unclaimed within 24h)` });
+                }
+                return NextResponse.json({ success: true, message: 'Already claimed or not applicable' });
+
             default:
                 console.warn(`[QSTASH WEBHOOK] Unknown task type: ${type}`);
                 return NextResponse.json({ error: 'Unknown task type' }, { status: 400 });

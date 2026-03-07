@@ -81,7 +81,8 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
-        // Create bid
+
+        // Create bid & update auction price + lastBidAt in one shot
         const bid = await prisma.auctionBid.create({
             data: {
                 auctionId,
@@ -90,21 +91,13 @@ export async function POST(req: Request) {
             },
         });
 
-        // Deduct bid amount from user balance
-        await prisma.user.update({
-            where: { id: user.userId },
-            data: {
-                balance: {
-                    decrement: amount,
-                },
-            },
-        });
-
-        // Update auction current bid
+        // NOTE: Balance is NOT deducted here. It is deducted when the winner
+        // clicks "Pay & Claim" after the auction ends.
         await prisma.auction.update({
             where: { id: auctionId },
             data: {
                 currentPrice: amount,
+                lastBidAt: new Date(),
             },
         });
 
@@ -131,8 +124,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             bid,
-            newBalance: userBalance - amount,
-            // Extra fields for optimistic UI update (so client doesn't need to wait for Pusher)
+            newBalance: userBalance, // balance unchanged — deducted only at claim time
             newPrice: amount,
             bidId: bid.id,
             bidderId: user.userId,
