@@ -11,107 +11,97 @@ export async function POST(req: Request) {
         }
 
         const { auctionId, amount } = await req.json();
-
         if (!auctionId || !amount || amount <= 0) {
             return NextResponse.json({ error: 'Invalid bid data' }, { status: 400 });
         }
 
-        // Get auction with artifacts
+        // Quick pre-checks (no lock yet — just read-only validation)
         const auction = await prisma.auction.findUnique({
             where: { id: auctionId },
-            include: {
-                artifacts: {
-                    include: {
-                        artifact: true,
-                    },
-                },
-            },
+            select: { id: true, status: true, endedAt: true, startingPrice: true },
         });
 
-        if (!auction) {
-            return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
-        }
+        if (!auction) return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
+        if (auction.status !== 'LIVE') return NextResponse.json({ error: 'Auction is not live' }, { status: 400 });
 
-        // Verify auction is live
-        if (auction.status !== 'LIVE') {
-            return NextResponse.json({ error: 'Auction is not live' }, { status: 400 });
-        }
-
-        // Check if auction has ended (server time validation)
         const now = new Date();
-        if (!auction.endedAt) {
-            return NextResponse.json({ error: 'Auction end time not set' }, { status: 400 });
-        }
-        const endedAt = new Date(auction.endedAt);
-        if (now >= endedAt) {
-            return NextResponse.json({ error: 'Auction has ended' }, { status: 400 });
-        }
+        const endedAt = auction.endedAt ? new Date(auction.endedAt) : null;
+        if (!endedAt) return NextResponse.json({ error: 'Auction end time not set' }, { status: 400 });
+        if (now >= endedAt) return NextResponse.json({ error: 'Auction has ended' }, { status: 400 });
 
-        // Get current user balance
-        const currentUser = await prisma.user.findUnique({
-            where: { id: user.userId },
-        });
+        // Balance check (read-only, outside lock — fast path)
+        const currentUser = await prisma.user.findUnique({ where: { id: user.userId } });
+        if (!currentUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        if (!currentUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
-
-        // Check if user has sufficient balance
         const userBalance = Number(currentUser.balance);
         if (userBalance < amount) {
             return NextResponse.json({
                 error: 'Insufficient balance',
                 required: amount,
-                available: userBalance
+                available: userBalance,
             }, { status: 400 });
         }
 
-        // Get current highest bid
-        const highestBid = await prisma.auctionBid.findFirst({
-            where: { auctionId },
-            orderBy: { amount: 'desc' },
-        });
+        // ── Atomic bid placement with PostgreSQL row lock ────────────────────────
+        // SELECT ... FOR UPDATE acquires an exclusive lock on the auction row.
+        // This means only ONE bid request can proceed at a time per auction —
+        // preventing the "twin-bubble" race where two users bid simultaneously
+        // and both pass the minimum check before either has written.
+        let bid: any;
+        try {
+            bid = await prisma.$transaction(async (tx) => {
+                // Lock the auction row exclusively for this transaction
+                await tx.$queryRaw`SELECT id FROM "Auction" WHERE id = ${auctionId} FOR UPDATE`;
 
-        const minBidAmount = highestBid ? Number(highestBid.amount) + 100 : Number(auction.startingPrice);
+                // Re-check minimum INSIDE the lock (race-safe)
+                const highest = await tx.auctionBid.findFirst({
+                    where: { auctionId },
+                    orderBy: { amount: 'desc' },
+                });
+                const minBid = highest
+                    ? Number(highest.amount) + 100
+                    : Number(auction.startingPrice);
 
-        if (amount < minBidAmount) {
-            return NextResponse.json({
-                error: 'Bid too low',
-                minimum: minBidAmount
-            }, { status: 400 });
+                if (amount < minBid) {
+                    const err: any = new Error('BID_TOO_LOW');
+                    err.minimum = minBid;
+                    throw err;
+                }
+
+                // Create the bid (only person inside the lock can do this now)
+                const newBid = await tx.auctionBid.create({
+                    data: { auctionId, bidderId: user.userId, amount },
+                });
+
+                // Update auction price + lastBidAt via raw SQL
+                // (bypasses any stale Prisma type cache for lastBidAt field)
+                await tx.$executeRaw`
+                    UPDATE "Auction"
+                    SET "currentPrice" = ${amount}::numeric, "lastBidAt" = now()
+                    WHERE id = ${auctionId}
+                `;
+
+                return newBid;
+            });
+        } catch (err: any) {
+            if (err.message === 'BID_TOO_LOW') {
+                return NextResponse.json(
+                    { error: 'Bid too low', minimum: err.minimum },
+                    { status: 400 }
+                );
+            }
+            throw err;
         }
 
-
-        // Create bid & update auction price + lastBidAt in one shot
-        const bid = await prisma.auctionBid.create({
-            data: {
-                auctionId,
-                bidderId: user.userId,
-                amount,
-            },
-        });
-
-        // NOTE: Balance is NOT deducted here. It is deducted when the winner
-        // clicks "Pay & Claim" after the auction ends.
-        await prisma.auction.update({
-            where: { id: auctionId },
-            data: {
-                currentPrice: amount,
-                lastBidAt: new Date(),
-            },
-        });
-
-        // Extend countdown if bid placed in last 30 seconds
+        // Extend endedAt by 10s if bid placed in last 30s (non-critical, outside lock)
         const timeRemaining = endedAt.getTime() - now.getTime();
         if (timeRemaining > 0 && timeRemaining < 30000) {
-            const newEndedAt = new Date(now.getTime() + 10000); // Add 10 seconds
-            await prisma.auction.update({
-                where: { id: auctionId },
-                data: { endedAt: newEndedAt },
-            });
+            await prisma.$executeRaw`
+                UPDATE "Auction" SET "endedAt" = now() + interval '10 seconds' WHERE id = ${auctionId}
+            `;
         }
 
-        // Trigger Pusher event for real-time update
+        // Broadcast to all connected clients
         await triggerPusherEvent(`auction-${auctionId}`, 'new-bid', {
             bidId: bid.id,
             userId: user.userId,
@@ -124,7 +114,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             bid,
-            newBalance: userBalance, // balance unchanged — deducted only at claim time
+            newBalance: userBalance, // unchanged — deducted only at Pay & Claim
             newPrice: amount,
             bidId: bid.id,
             bidderId: user.userId,
