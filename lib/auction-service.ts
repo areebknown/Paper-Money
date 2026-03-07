@@ -110,7 +110,8 @@ export async function endAuctionService(auctionId: string) {
     if (auction.lastBidAt) {
         const msSinceLastBid = Date.now() - new Date(auction.lastBidAt).getTime();
         if (msSinceLastBid < 12000) {
-            const remainingSeconds = Math.ceil((12000 - msSinceLastBid) / 1000);
+            // Map the remaining time relative to the 10s window for the client, padded to min 1s
+            const remainingSeconds = Math.max(1, Math.ceil((10000 - msSinceLastBid) / 1000));
             return { success: false, message: 'Bid placed too recently — countdown still active', remainingSeconds };
         }
     }

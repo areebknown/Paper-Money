@@ -82,12 +82,14 @@ function SoldDialog({
     auctionId,
     onClaim,
     onGoHome,
+    onPaySuccess,
 }: {
     soldInfo: SoldInfo;
     currentUserId: string | null;
     auctionId: string;
     onClaim: () => void;
     onGoHome: () => void;
+    onPaySuccess?: (newBalance: number) => void;
 }) {
     const isWinner = currentUserId && soldInfo.winnerId === currentUserId;
     const [claiming, setClaiming] = useState(false);
@@ -110,6 +112,11 @@ function SoldDialog({
             if (res.ok) {
                 setClaimed(true);
                 onClaim();
+                // Update balance immediately: parent bid page via prop, home page via window event
+                if (data.newBalance !== undefined) {
+                    onPaySuccess?.(data.newBalance);
+                    window.dispatchEvent(new CustomEvent('balance-update-local', { detail: { balance: data.newBalance } }));
+                }
             } else {
                 setClaimError(data.error || 'Failed to pay & claim');
             }
@@ -461,6 +468,7 @@ export default function LiveBidPage() {
     const [shutterCountdown, setShutterCountdown] = useState(5);
     // bidCountdown: null = hasn't started yet (no bids placed), number = counting down
     const [bidCountdown, setBidCountdown] = useState<number | null>(null);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     // Refs
     const serverStartTime = useRef<number | null>(null);
@@ -566,6 +574,7 @@ export default function LiveBidPage() {
                         const highestBidderId = highestBid.user?.id ?? highestBid.bidderId;
                         setLastBidderId(highestBidderId ?? null);
                     }
+                    setIsVerifying(false);
                 }
 
                 setLoading(false);
@@ -921,36 +930,42 @@ export default function LiveBidPage() {
         if (bidCountdown > 0) {
             const t = setTimeout(() => setBidCountdown(p => (p !== null ? Math.max(0, p - 1) : null)), 1000);
             return () => clearTimeout(t);
-        } else {
+        } else if (!isVerifying) {
             // Client-side guard: if a bid just arrived within 2s, the Pusher
             // reset is still in flight — don't end yet, give it time to reset.
             if (Date.now() - lastBidTimeRef.current < 2000) {
                 setBidCountdown(10);
                 return;
             }
+            setIsVerifying(true);
             const endAuction = async () => {
                 try {
                     const res = await fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' });
                     if (res.ok) {
                         const data = await res.json();
-                        // Set soldInfo from API response so dialog shows correctly
+                        // Server rejected end — bid placed too recently, reset countdown
+                        if (data.success === false && data.remainingSeconds > 0) {
+                            setBidCountdown(data.remainingSeconds);
+                            setIsVerifying(false);
+                            return; // Don't show SOLD screen
+                        }
+                        // Auction genuinely ended — show SOLD dialog
                         setSoldInfo({
                             winnerId: data.winnerId ?? null,
                             winnerUsername: data.winnerUsername ?? null,
                             finalPrice: data.finalPrice ?? currentPrice,
                             auctionName: data.auctionName ?? auctionData?.name ?? 'This Auction',
                         });
+                        setPhase('SOLD');
                     }
+                    // Non-ok: poll/Pusher will deliver COMPLETED status, don't set SOLD here
                 } catch (e) {
                     console.error('[BidPage] End auction error:', e);
-                } finally {
-                    // Always show SOLD phase regardless of API success
-                    setPhase('SOLD');
                 }
             };
             endAuction();
         }
-    }, [phase, bidCountdown, auctionId, currentPrice, auctionData]);
+    }, [phase, bidCountdown, isVerifying, auctionId, currentPrice, auctionData]);
 
     // ── Handlers ───────────────────────────────────────────────────────────────
     const placeBid = async (amount: number) => {
@@ -1081,8 +1096,9 @@ export default function LiveBidPage() {
                     soldInfo={soldInfo}
                     currentUserId={currentUser?.id ?? null}
                     auctionId={auctionId}
-                    onClaim={() => { /* already handled inside */ }}
+                    onClaim={() => { /* handled inside */ }}
                     onGoHome={() => router.push('/home')}
+                    onPaySuccess={(nb) => setBalance(nb)}
                 />
             )}
 
@@ -1149,15 +1165,15 @@ export default function LiveBidPage() {
                 <div className="sticky top-0 flex justify-center mb-2 z-10">
                     {phase === 'BIDDING' && (
                         <div className="flex items-center gap-2 bg-gray-900/90 border border-gray-700 rounded-full px-3 py-1 backdrop-blur-sm">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                            <span className="text-xs font-bold text-gray-300 font-mono">LIVE</span>
-                            {bidCountdown !== null ? (
+                            <div className={`w-2 h-2 ${isVerifying ? 'bg-orange-500' : 'bg-red-500'} rounded-full animate-pulse`} />
+                            <span className={`text-xs font-bold font-mono ${isVerifying ? 'text-orange-500' : 'text-gray-300'}`}>{isVerifying ? 'VERIFYING BIDS' : 'LIVE'}</span>
+                            {!isVerifying && bidCountdown !== null ? (
                                 <span className={`text-xs font-black font-mono ml-1 ${bidCountdown <= 3 ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>
                                     {bidCountdown}s
                                 </span>
-                            ) : (
+                            ) : !isVerifying ? (
                                 <span className="text-xs font-mono ml-1 text-gray-500">Place first bid!</span>
-                            )}
+                            ) : null}
                         </div>
                     )}
                     {(phase === 'WAITING' || phase === 'PRE_OPEN') && (
@@ -1232,8 +1248,8 @@ export default function LiveBidPage() {
 
                             <button
                                 onClick={handleCustomBid}
-                                disabled={!customBidAmount || parseInt(customBidAmount) <= currentPrice || !isConnected}
-                                className={`px-6 rounded-xl font-bold uppercase tracking-wide flex items-center gap-2 transition-all ${!customBidAmount || parseInt(customBidAmount) <= currentPrice
+                                disabled={!customBidAmount || parseInt(customBidAmount) <= currentPrice || !isConnected || isVerifying}
+                                className={`px-6 rounded-xl font-bold uppercase tracking-wide flex items-center gap-2 transition-all ${!customBidAmount || parseInt(customBidAmount) <= currentPrice || isVerifying
                                     ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
                                     : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 active:scale-95'
                                     }`}
@@ -1248,11 +1264,12 @@ export default function LiveBidPage() {
                             {[1000, 5000, 10000].map((inc) => (
                                 <button
                                     key={inc}
+                                    disabled={isVerifying}
                                     onClick={() => {
                                         const base = customBidAmount ? parseInt(customBidAmount) : currentPrice;
                                         setCustomBidAmount((base + inc).toString());
                                     }}
-                                    className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 rounded-lg py-3 flex flex-col items-center justify-center transition-all active:scale-95"
+                                    className={`border rounded-lg py-3 flex flex-col items-center justify-center transition-all ${isVerifying ? 'bg-gray-800 border-gray-700 opacity-50 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-gray-500 active:scale-95'}`}
                                 >
                                     <span className="text-[10px] text-gray-400 uppercase font-bold">Add</span>
                                     <span className="text-white font-bold font-['Russo_One']">+₹{(inc / 1000)}k</span>
@@ -1264,7 +1281,7 @@ export default function LiveBidPage() {
                     <div className="grid grid-cols-3 gap-2">
                         {/* Loan */}
                         <button
-                            disabled={!canBid}
+                            disabled={!canBid || isVerifying}
                             onClick={() => alert('Loan feature coming soon')}
                             className="h-14 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 rounded-xl flex flex-col items-center justify-center gap-0.5 transition active:scale-95"
                         >
@@ -1274,16 +1291,18 @@ export default function LiveBidPage() {
 
                         {/* Quick Bid — shows actual bid amount, or leading state */}
                         <button
-                            disabled={!canBid || bidding || isLeading}
+                            disabled={!canBid || bidding || isLeading || isVerifying}
                             onClick={() => placeBid(quickBidAmount)}
-                            className={`h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg active:scale-95 transition ${isLeading
+                            className={`h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-lg transition ${isLeading
                                 ? 'bg-gradient-to-b from-green-700 to-green-900 opacity-80 cursor-not-allowed'
-                                : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 disabled:opacity-30 disabled:grayscale shadow-red-900/40'
+                                : isVerifying
+                                    ? 'bg-gray-800 opacity-50 cursor-not-allowed border border-gray-700'
+                                    : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:scale-95 shadow-red-900/40 disabled:opacity-30 disabled:grayscale'
                                 }`}
                         >
-                            <span className="text-lg">{isLeading ? '🏆' : '⚡'}</span>
+                            <span className="text-lg">{isLeading ? '🏆' : isVerifying ? '⏳' : '⚡'}</span>
                             <span className="text-[9px] font-black text-white uppercase tracking-wide leading-none">
-                                {isLeading ? 'Leading' : bidding ? '...' : `₹${quickBidAmount.toLocaleString()}`}
+                                {isLeading ? 'Leading' : isVerifying ? 'Verifying' : bidding ? '...' : `₹${quickBidAmount.toLocaleString()}`}
                             </span>
                         </button>
 
