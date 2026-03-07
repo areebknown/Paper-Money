@@ -859,7 +859,23 @@ export default function LiveBidPage() {
         return () => clearInterval(interval);
     }, [auctionId, phase]);
 
-    // ── 3. Animation ticker ────────────────────────────────────────────────────
+    // ── 3. User channel — real-time balance updates ─────────────────────────────
+    // Subscribes once currentUser is known. Fires whenever the claim route
+    // broadcasts 'balance-update' on user-${userId}, keeping the header in sync.
+    useEffect(() => {
+        if (!currentUser?.id) return;
+        const pusher = getPusherClient();
+        const ch = pusher.subscribe(`user-${currentUser.id}`);
+        ch.bind('balance-update', ({ balance: newBal }: { balance: number }) => {
+            setBalance(newBal);
+        });
+        return () => {
+            ch.unbind('balance-update');
+            pusher.unsubscribe(`user-${currentUser.id}`);
+        };
+    }, [currentUser?.id]);
+
+    // ── 4. Animation ticker ────────────────────────────────────────────────────
     useEffect(() => {
         if (!serverStartTime.current) {
             if (phase !== 'BIDDING' && phase !== 'SOLD') setPhase('WAITING');

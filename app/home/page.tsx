@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LOGO_URL, getTierBg, MARKET_BG_URLS } from '@/lib/cloudinary';
+import { getPusherClient } from '@/lib/pusher-client';
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'bids' | 'market'>('bids');
@@ -26,6 +27,21 @@ export default function HomePage() {
         }
         fetchUser();
     }, []);
+
+    // Subscribe to real-time balance updates from Pusher
+    // Fires whenever claim/payment routes emit 'balance-update' on user-${id}
+    useEffect(() => {
+        if (!userData?.id) return;
+        const pusher = getPusherClient();
+        const ch = pusher.subscribe(`user-${userData.id}`);
+        ch.bind('balance-update', ({ balance }: { balance: number }) => {
+            setUserData((prev: any) => prev ? { ...prev, balance } : prev);
+        });
+        return () => {
+            ch.unbind('balance-update');
+            pusher.unsubscribe(`user-${userData.id}`);
+        };
+    }, [userData?.id]);
 
     if (loading) {
         return (

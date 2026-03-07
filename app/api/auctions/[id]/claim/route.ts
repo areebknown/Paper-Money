@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserFromToken } from '@/lib/auth';
+import { pusherServer } from '@/lib/pusher-server';
 
 /**
  * POST /api/auctions/[id]/claim
@@ -91,6 +92,14 @@ export async function POST(
 
         console.log(`[Claim] ✅ User ${user.userId} paid ₹${finalPrice} and claimed ${artifactIds.length} artifact(s) from auction ${auctionId}`);
 
+        // Broadcast new balance to all connected clients (home page header + bid page)
+        const updatedUser = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { balance: true },
+        });
+        pusherServer.trigger(`user-${user.userId}`, 'balance-update', {
+            balance: Number(updatedUser?.balance ?? 0),
+        }).catch(err => console.error('[Claim] Pusher balance broadcast failed:', err));
         return NextResponse.json({
             success: true,
             claimed: artifactIds.length,
