@@ -92,7 +92,13 @@ function SoldDialog({
     const isWinner = currentUserId && soldInfo.winnerId === currentUserId;
     const [claiming, setClaiming] = useState(false);
     const [claimed, setClaimed] = useState(false);
-    const [payLater, setPayLater] = useState(false);
+    // Persist payLater across page revisits so user isn't re-prompted
+    const [payLater, setPayLater] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(`auction_payLater_${auctionId}`) === 'true';
+        }
+        return false;
+    });
     const [claimError, setClaimError] = useState<string | null>(null);
 
     const handlePayAndClaim = async () => {
@@ -169,7 +175,10 @@ function SoldDialog({
                                         {claiming ? 'Processing...' : `💳 Pay & Claim — ₹${soldInfo.finalPrice.toLocaleString()}`}
                                     </button>
                                     <button
-                                        onClick={() => setPayLater(true)}
+                                        onClick={() => {
+                                            localStorage.setItem(`auction_payLater_${auctionId}`, 'true');
+                                            setPayLater(true);
+                                        }}
                                         className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-semibold rounded-xl text-sm transition mb-3"
                                     >
                                         Pay Later (24h window)

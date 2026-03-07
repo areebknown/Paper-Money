@@ -206,6 +206,9 @@ function BidsContent() {
     const [loading, setLoading] = useState(true);
     const [showExactTime, setShowExactTime] = useState(false);
     const [notificationDialog, setNotificationDialog] = useState<any>(null);
+    const [payNowDialog, setPayNowDialog] = useState<any>(null);
+    const [payNowState, setPayNowState] = useState<'idle' | 'paying' | 'paid' | 'error'>('idle');
+    const [payNowError, setPayNowError] = useState<string | null>(null);
     // Tick: increments every 30s — no data fetch, just forces countdown labels to re-render
     const [, setTick] = useState(0);
 
@@ -511,25 +514,35 @@ function BidsContent() {
                     <div className="space-y-4">
                         {wonBids.slice(0, visibleWonCount).map((bid, index) => {
                             const delayClass = `delay-${((index % 5) + 1) * 100}`;
-                            return (
-                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className={`block animate-fade-in-up opacity-0 ${delayClass}`}>
-                                    <div className="bg-gradient-to-r from-[#FBBF24]/10 to-transparent rounded-2xl p-3 border-l-4 border-[#FBBF24] shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all">
-                                        <div className="min-w-0 flex-1 pr-2">
-                                            <h3 className="text-base font-['Russo_One'] text-white truncate">
-                                                {bid.name}
-                                            </h3>
-                                            <div className="text-xs font-normal text-gray-500 dark:text-gray-400 font-['Russo_One'] mt-0.5 truncate uppercase">
-                                                RANK - {bid.rankTier}
-                                            </div>
-                                            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                                Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span> on <span className="font-bold text-[#FBBF24]">{new Date(bid.endedAt).toLocaleDateString()}</span>
-                                            </p>
-                                        </div>
+                            const isUnclaimed = bid.isClaimed === false && bid.status === 'COMPLETED';
+                            const cardContent = (
+                                <div className={`bg-gradient-to-r ${isUnclaimed ? 'from-yellow-500/20 to-transparent border-l-4 border-yellow-400' : 'from-[#FBBF24]/10 to-transparent border-l-4 border-[#FBBF24]'} rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-lg transition-all`}>
+                                    <div className="min-w-0 flex-1 pr-2">
+                                        <h3 className="text-base font-['Russo_One'] text-white truncate">{bid.name}</h3>
+                                        <div className="text-xs font-normal text-gray-500 font-['Russo_One'] mt-0.5 truncate uppercase">RANK - {bid.rankTier}</div>
+                                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                                            Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span>
+                                            {isUnclaimed && <span className="text-yellow-500 font-bold"> · Payment pending</span>}
+                                        </p>
+                                    </div>
+                                    {isUnclaimed ? (
+                                        <button
+                                            onClick={e => { e.preventDefault(); e.stopPropagation(); setPayNowState('idle'); setPayNowError(null); setPayNowDialog(bid); }}
+                                            className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-black text-xs uppercase tracking-wide px-3 py-1.5 rounded-lg shrink-0 active:scale-95 transition"
+                                        >
+                                            PAY NOW
+                                        </button>
+                                    ) : (
                                         <button className="text-[#FBBF24] hover:text-yellow-600 font-bold text-xs uppercase tracking-wide flex items-center gap-1 shrink-0">
                                             info <span className="material-icons-round text-sm">chevron_right</span>
                                         </button>
-                                    </div>
-                                </Link>
+                                    )}
+                                </div>
+                            );
+                            return isUnclaimed ? (
+                                <div key={bid.id} className={`animate-fade-in-up opacity-0 ${delayClass}`}>{cardContent}</div>
+                            ) : (
+                                <Link href={`/bid/${bid.id}`} key={bid.id} prefetch={false} className={`block animate-fade-in-up opacity-0 ${delayClass}`}>{cardContent}</Link>
                             );
                         })}
                         {visibleWonCount < wonBids.length && (
@@ -548,6 +561,69 @@ function BidsContent() {
                     </div>
                 )}
             </div>
+
+            {/* Pay Now Dialog */}
+            {payNowDialog && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setPayNowDialog(null)}>
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-5 pb-28 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
+                        <div className="w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center mx-auto mb-4">
+                            <span className="material-icons-round text-gray-900 text-3xl">emoji_events</span>
+                        </div>
+                        <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Pay &amp; Claim</h2>
+                        <p className="text-center text-gray-400 text-xs mb-5">Complete payment to receive your items in inventory.</p>
+                        <div className="bg-gray-800 rounded-2xl p-4 mb-5 space-y-2">
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Auction</span><span className="text-white text-sm font-bold truncate max-w-[55%]">{payNowDialog.name}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Winning Bid</span><span className="text-green-400 text-sm font-bold">₹{Number(payNowDialog.currentPrice).toLocaleString()}</span></div>
+                            {payNowDialog.claimExpiresAt && (
+                                <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Expires</span><span className="text-yellow-400 text-xs font-bold">{new Date(payNowDialog.claimExpiresAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}</span></div>
+                            )}
+                        </div>
+                        {payNowState === 'paid' ? (
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-3 mb-4 text-center">
+                                <p className="text-green-400 font-bold text-sm">✅ Paid &amp; added to inventory!</p>
+                                <p className="text-green-600 text-xs mt-1">₹{Number(payNowDialog.currentPrice).toLocaleString()} deducted from your balance.</p>
+                            </div>
+                        ) : (
+                            <>
+                                {payNowState === 'error' && payNowError && (
+                                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 mb-3">
+                                        <p className="text-red-400 text-xs">{payNowError}</p>
+                                    </div>
+                                )}
+                                <div className="flex gap-3">
+                                    <button onClick={() => setPayNowDialog(null)} className="flex-1 py-3.5 rounded-2xl border-2 border-gray-500 text-gray-300 font-bold text-sm active:scale-95 transition-transform">Cancel</button>
+                                    <button
+                                        disabled={payNowState === 'paying'}
+                                        onClick={async () => {
+                                            setPayNowState('paying');
+                                            setPayNowError(null);
+                                            try {
+                                                const res = await fetch(`/api/auctions/${payNowDialog.id}/claim`, { method: 'POST' });
+                                                const data = await res.json();
+                                                if (res.ok) {
+                                                    setPayNowState('paid');
+                                                    setWonBids(prev => prev.map(b => b.id === payNowDialog.id ? { ...b, isClaimed: true } : b));
+                                                } else {
+                                                    setPayNowState('error');
+                                                    setPayNowError(data.error || 'Payment failed');
+                                                }
+                                            } catch {
+                                                setPayNowState('error');
+                                                setPayNowError('Network error — please try again');
+                                            }
+                                        }}
+                                        className="flex-[2] py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-gray-900 font-black text-sm shadow-lg active:scale-95 transition-all"
+                                    >
+                                        {payNowState === 'paying' ? 'Processing...' : `💳 Pay ₹${Number(payNowDialog.currentPrice).toLocaleString()}`}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Notification Confirmation Dialog */}
             {notificationDialog && (
