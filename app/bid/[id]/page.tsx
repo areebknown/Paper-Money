@@ -939,6 +939,7 @@ export default function LiveBidPage() {
             }
             setIsVerifying(true);
             let isActive = true;
+            let timeoutId: NodeJS.Timeout;
             const endAuction = async () => {
                 if (!isActive || phase !== 'BIDDING') return;
                 try {
@@ -955,7 +956,7 @@ export default function LiveBidPage() {
                             } else {
                                 // No sniper, but we are inside the 2s server buffer (10s to 12s).
                                 // Keep 'VERIFYING BIDS' active and silently poll again in 1s.
-                                setTimeout(endAuction, 1000);
+                                timeoutId = setTimeout(endAuction, 1000);
                             }
                             return; // Don't show SOLD screen
                         }
@@ -976,7 +977,7 @@ export default function LiveBidPage() {
             endAuction();
             return () => {
                 isActive = false;
-                clearTimeout(t);
+                if (timeoutId) clearTimeout(timeoutId);
             };
         }
     }, [phase, bidCountdown, isVerifying, auctionId, currentPrice, auctionData]);
