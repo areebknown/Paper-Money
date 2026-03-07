@@ -938,15 +938,25 @@ export default function LiveBidPage() {
                 return;
             }
             setIsVerifying(true);
+            let isActive = true;
             const endAuction = async () => {
+                if (!isActive || phase !== 'BIDDING') return;
                 try {
                     const res = await fetch(`/api/auctions/${auctionId}/end`, { method: 'POST' });
+                    if (!isActive) return;
                     if (res.ok) {
                         const data = await res.json();
-                        // Server rejected end — bid placed too recently, reset countdown
-                        if (data.success === false && data.remainingSeconds > 0) {
-                            setBidCountdown(data.remainingSeconds);
-                            setIsVerifying(false);
+                        // Server rejected end — either sniper found, or we're in the buffer
+                        if (data.success === false) {
+                            if (data.remainingSeconds > 0) {
+                                // Sniper spotted! Reset countdown back to required time.
+                                setBidCountdown(data.remainingSeconds);
+                                setIsVerifying(false);
+                            } else {
+                                // No sniper, but we are inside the 2s server buffer (10s to 12s).
+                                // Keep 'VERIFYING BIDS' active and silently poll again in 1s.
+                                setTimeout(endAuction, 1000);
+                            }
                             return; // Don't show SOLD screen
                         }
                         // Auction genuinely ended — show SOLD dialog
@@ -964,6 +974,10 @@ export default function LiveBidPage() {
                 }
             };
             endAuction();
+            return () => {
+                isActive = false;
+                clearTimeout(t);
+            };
         }
     }, [phase, bidCountdown, isVerifying, auctionId, currentPrice, auctionData]);
 
