@@ -104,13 +104,14 @@ export async function endAuctionService(auctionId: string) {
     if (auction.status === 'COMPLETED') return { success: false, message: "Already completed" };
     if (auction.status === 'VOID') return { success: false, message: "Auction was voided" };
 
-    // Server-side 10s guard: reject the end call if a bid arrived in the last 9.5s.
-    // This stops a race where the client countdown hits 0 before Pusher delivers the
-    // reset from a last-second bid.
+    // Server-side 12s guard (client shows 10s — extra 2s covers Pusher delivery latency).
+    // Returns remainingSeconds so the client can reset its visible countdown to the
+    // server's authoritative value instead of prematurely showing the SOLD screen.
     if (auction.lastBidAt) {
         const msSinceLastBid = Date.now() - new Date(auction.lastBidAt).getTime();
-        if (msSinceLastBid < 9500) {
-            return { success: false, message: 'Bid placed too recently — countdown still active' };
+        if (msSinceLastBid < 12000) {
+            const remainingSeconds = Math.ceil((12000 - msSinceLastBid) / 1000);
+            return { success: false, message: 'Bid placed too recently — countdown still active', remainingSeconds };
         }
     }
 

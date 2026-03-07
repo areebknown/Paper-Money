@@ -37,9 +37,18 @@ export default function HomePage() {
         ch.bind('balance-update', ({ balance }: { balance: number }) => {
             setUserData((prev: any) => prev ? { ...prev, balance } : prev);
         });
+
+        const handleLocalBalance = (e: any) => {
+            if (e.detail?.balance !== undefined) {
+                setUserData((prev: any) => prev ? { ...prev, balance: e.detail.balance } : prev);
+            }
+        };
+        window.addEventListener('balance-update-local', handleLocalBalance);
+
         return () => {
             ch.unbind('balance-update');
             pusher.unsubscribe(`user-${userData.id}`);
+            window.removeEventListener('balance-update-local', handleLocalBalance);
         };
     }, [userData?.id]);
 
@@ -621,6 +630,9 @@ function BidsContent() {
                                                 if (res.ok) {
                                                     setPayNowState('paid');
                                                     setWonBids(prev => prev.map(b => b.id === payNowDialog.id ? { ...b, isClaimed: true } : b));
+                                                    if (data.newBalance !== undefined) {
+                                                        window.dispatchEvent(new CustomEvent('balance-update-local', { detail: { balance: data.newBalance } }));
+                                                    }
                                                 } else {
                                                     setPayNowState('error');
                                                     setPayNowError(data.error || 'Payment failed');
