@@ -304,9 +304,10 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
                     a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM' || a.status === 'LIVE'
                 ));
                 if (userIdRef.current) {
-                    setWonBids(auctions.filter((a: any) =>
-                        a.winnerId === userIdRef.current && a.status === 'COMPLETED'
-                    ));
+                    setWonBids(auctions
+                        .filter((a: any) => a.winnerId === userIdRef.current && a.status === 'COMPLETED')
+                        .sort((a: any, b: any) => new Date(b.endedAt || 0).getTime() - new Date(a.endedAt || 0).getTime())
+                    );
                 }
             }
 
@@ -355,6 +356,13 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
 
         channel.bind('auction-ended', (data: any) => {
             setScheduledBids(prev => prev.filter(b => b.id !== data.id));
+            if (userIdRef.current && data.winnerId === userIdRef.current) {
+                setWonBids(prev => {
+                    if (prev.some(b => b.id === data.id)) return prev;
+                    const newBid = { ...data, isClaimed: false };
+                    return [newBid, ...prev].sort((a: any, b: any) => new Date(b.endedAt || 0).getTime() - new Date(a.endedAt || 0).getTime());
+                });
+            }
         });
 
         // Bug 4: new auction added by admin appears instantly without refresh
@@ -547,6 +555,11 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
                                         <div className="text-xs font-normal text-gray-500 font-['Russo_One'] mt-0.5 truncate uppercase">RANK - {bid.rankTier}</div>
                                         <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                                             Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span>
+                                            {bid.endedAt ? (
+                                                <span className="font-bold text-[#FBBF24]">
+                                                    {` on ${new Date(bid.endedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`}
+                                                </span>
+                                            ) : null}
                                             {isUnclaimed && <span className="text-yellow-500 font-bold"> · Payment pending</span>}
                                         </p>
                                     </div>
