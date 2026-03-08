@@ -556,9 +556,9 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
                                         <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                                             Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span>
                                             {bid.endedAt ? (
-                                                <span className="font-bold text-[#FBBF24]">
-                                                    {` on ${new Date(bid.endedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`}
-                                                </span>
+                                                <> on <span className="font-bold text-[#FBBF24]">
+                                                    {new Date(bid.endedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                </span></>
                                             ) : null}
                                             {isUnclaimed && <span className="text-yellow-500 font-bold"> · Payment pending</span>}
                                         </p>
