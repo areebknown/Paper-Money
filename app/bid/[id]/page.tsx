@@ -446,6 +446,7 @@ export default function LiveBidPage() {
 
     // Core state
     const [phase, setPhase] = useState<AuctionPhase>('WAITING');
+    const isVerifyingRef = useRef(false);
     const [balance, setBalance] = useState(0);
     const [rankPoints, setRankPoints] = useState(0);
     const [currentPrice, setCurrentPrice] = useState(0);
@@ -710,6 +711,8 @@ export default function LiveBidPage() {
                 setCurrentPrice(data.amount);
                 lastBidTimeRef.current = Date.now(); // track for countdown guard
                 setBidCountdown(10);
+                setIsVerifying(false);
+                isVerifyingRef.current = false;
                 setLastBidderId(data.userId ?? null);
 
                 const newBid: BidMessage = {
@@ -836,6 +839,10 @@ export default function LiveBidPage() {
                     const elapsedSinceBid = (data.serverTime - data.lastBidAt) / 1000;
                     const remaining = Math.max(0, Math.ceil(10 - elapsedSinceBid));
                     setBidCountdown(remaining);
+                    if (remaining > 0) {
+                        setIsVerifying(false);
+                        isVerifyingRef.current = false;
+                    }
                 }
 
                 if (data.status === 'LIVE' && data.startedAt) {
@@ -930,13 +937,14 @@ export default function LiveBidPage() {
         if (bidCountdown > 0) {
             const t = setTimeout(() => setBidCountdown(p => (p !== null ? Math.max(0, p - 1) : null)), 1000);
             return () => clearTimeout(t);
-        } else if (!isVerifying) {
+        } else if (!isVerifyingRef.current) {
             // Client-side guard: if a bid just arrived within 2s, the Pusher
             // reset is still in flight — don't end yet, give it time to reset.
             if (Date.now() - lastBidTimeRef.current < 2000) {
                 setBidCountdown(10);
                 return;
             }
+            isVerifyingRef.current = true;
             setIsVerifying(true);
             let isActive = true;
             let timeoutId: NodeJS.Timeout;
@@ -951,8 +959,9 @@ export default function LiveBidPage() {
                         if (data.success === false) {
                             if (data.remainingSeconds > 0) {
                                 // Sniper spotted! Reset countdown back to required time.
-                                setBidCountdown(data.remainingSeconds);
+                                isVerifyingRef.current = false;
                                 setIsVerifying(false);
+                                setBidCountdown(data.remainingSeconds);
                             } else {
                                 // No sniper, but we are inside the 2s server buffer (10s to 12s).
                                 // Keep 'VERIFYING BIDS' active and silently poll again in 1s.
@@ -977,10 +986,12 @@ export default function LiveBidPage() {
             endAuction();
             return () => {
                 isActive = false;
+                isVerifyingRef.current = false;
                 if (timeoutId) clearTimeout(timeoutId);
             };
         }
-    }, [phase, bidCountdown, isVerifying, auctionId, currentPrice, auctionData]);
+    }, [phase, bidCountdown, auctionId, currentPrice, auctionData]);
+
 
     // ── Handlers ───────────────────────────────────────────────────────────────
     const placeBid = async (amount: number) => {

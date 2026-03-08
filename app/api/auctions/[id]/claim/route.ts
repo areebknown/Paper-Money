@@ -97,13 +97,17 @@ export async function POST(
             where: { id: user.userId },
             select: { balance: true },
         });
-        pusherServer.trigger(`user-${user.userId}`, 'balance-update', {
-            balance: Number(updatedUser?.balance ?? 0),
+        const newBalance = Number(updatedUser?.balance ?? 0);
+        // await — serverless function must not terminate before push fires
+        await pusherServer.trigger(`user-${user.userId}`, 'balance-update', {
+            balance: newBalance,
         }).catch(err => console.error('[Claim] Pusher balance broadcast failed:', err));
+
         return NextResponse.json({
             success: true,
             claimed: artifactIds.length,
             amountPaid: finalPrice,
+            newBalance,
             message: `₹${finalPrice.toLocaleString()} paid. ${artifactIds.length} artifact(s) added to your inventory!`,
         });
 
