@@ -6,6 +6,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, ShoppingCart, DollarSign, Activity
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getPusherClient } from '@/lib/pusher-client';
+import { LOGO_URL } from '@/lib/cloudinary';
 import {
     XAxis,
     YAxis,
@@ -88,7 +89,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
     };
 
     return (
-        <main className="min-h-screen bg-slate-950 text-white relative pb-24 lg:pb-0 overflow-x-hidden selection:bg-red-500/30 selection:text-red-200">
+        <main className="min-h-screen bg-slate-950 text-white relative flex flex-col pb-24 lg:pb-0 overflow-x-hidden selection:bg-red-500/30 selection:text-red-200">
             {/* Background Effects */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[100px] mix-blend-screen transform translate-x-1/3 -translate-y-1/3"></div>
@@ -96,31 +97,63 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                 <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
             </div>
 
-            <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
+            <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col flex-1 pt-0">
+                {/* Header */}
+                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 rounded-b-3xl md:rounded-3xl mb-4">
+                    <div className="flex justify-between items-center px-4 mb-2 relative">
+                        {/* Left: Back Button + Arrow */}
+                        <div className="flex flex-col gap-1 w-auto z-50">
+                            <Link href="/invest" className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full border border-white/10 whitespace-nowrap group hover:bg-black/50 transition">
+                                <ArrowLeft size={16} className="text-[#FBBF24] group-hover:-translate-x-1 transition-transform" />
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide uppercase">
+                                    Market
+                                </span>
+                            </Link>
+                        </div>
 
-                {/* Header Navbar */}
-                <header className="flex items-center justify-between sticky top-4 z-50 bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20 mb-6">
-                    <div className="flex items-center gap-4">
-                        <Link href="/invest" className="p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-95 group">
-                            <ArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
-                        </Link>
+                        {/* Center: Logo */}
+                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
+                            <img
+                                src={LOGO_URL}
+                                alt="Bid Wars Logo"
+                                className="drop-shadow-lg object-contain h-[50px] w-auto"
+                            />
+                        </div>
+
+                        {/* Right: Notifications + Profile */}
+                        <div className="flex items-center gap-3 w-24 justify-end z-50">
+                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
+                                <span className="material-icons-round text-white">notifications</span>
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                            </button>
+                            <Link href="/profile">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
+                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
+                                        <span className="material-icons-round text-white text-xl">person</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+                </header>
+
+                <div className="px-4 pb-6 space-y-4 flex-1 w-full max-w-4xl mx-auto">
+                    {/* Floating Asset Title Bar */}
+                    <div className="flex items-center justify-between bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
                         <div>
                             <h1 className="text-lg md:text-xl font-bold tracking-tight text-white">{asset.name}</h1>
                             <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest">{asset.unit}</p>
                         </div>
+                        <div className={cn(
+                            "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border md:text-sm",
+                            isPositive
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                                : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+                        )}>
+                            {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                            {Math.abs(asset.change24h).toFixed(2)}%
+                        </div>
                     </div>
-                    <div className={cn(
-                        "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border backdrop-blur-xl",
-                        isPositive
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                            : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
-                    )}>
-                        {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                        {Math.abs(asset.change24h).toFixed(2)}%
-                    </div>
-                </header>
-
-                <div className="space-y-4 flex-1">
 
                     {/* Suspension Warning */}
                     {isSuspended && (
@@ -393,33 +426,32 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
 
 function BottomNav() {
     return (
-        <nav className="fixed bottom-0 w-full bg-[#111827] border-t border-white/5 pb-safe z-40 shadow-[0_-5px_10px_rgba(0,0,0,0.5)]">
+        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
             <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'bids'); }} className="flex flex-col items-center gap-1 w-1/5 text-slate-400 group">
+                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
                     <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </Link>
-                <div className="flex flex-col items-center gap-1 w-1/5 text-blue-500 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">storefront</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Market</span>
-                </div>
-                {/* Center Pay button */}
+                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+                </Link>
                 <div className="relative w-1/5 flex justify-center -top-6">
                     <Link href="/pay">
-                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-[#111827] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
+                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
                             <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
                         </button>
                     </Link>
                     <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
                 </div>
-                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
-                </Link>
                 <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">person</span>
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
                 </Link>
+                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
+                </button>
             </div>
         </nav>
     );

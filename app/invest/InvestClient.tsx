@@ -7,6 +7,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Briefcase, Activity } from
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { getPusherClient } from '@/lib/pusher-client';
+import { LOGO_URL } from '@/lib/cloudinary';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -53,199 +54,228 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
             </div>
 
-            <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-                {/* Header Navbar */}
-                <header className="flex items-center justify-between sticky top-4 z-50 bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
-                    <div className="flex items-center gap-4 text-white">
-                        <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-95 group cursor-pointer">
-                            <ArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
-                        </Link>
-                        <div>
-                            <h1 className="text-lg md:text-xl font-['Russo_One'] tracking-tight text-white flex justify-center items-center gap-2 uppercase">
-                                <Activity className="text-red-500 w-5 h-5" />
-                                Global Market
-                            </h1>
-                            <p className="text-[10px] md:text-xs text-red-500/80 font-medium uppercase tracking-widest mt-0.5">Live Trading Exchange</p>
+            <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6 pt-0 px-0 md:px-6">
+                {/* Header */}
+                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 rounded-b-3xl md:rounded-3xl mb-4">
+                    <div className="flex justify-between items-center px-4 mb-2 relative">
+                        {/* Left: Balance + Rank Points */}
+                        <div className="flex flex-col gap-1 w-auto">
+                            <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
+                                <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
+                                    {(user?.balance ? Number(user.balance) : 0).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
+                                <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{user?.rankPoints || 0}</span>
+                            </div>
+                        </div>
+
+                        {/* Center: Logo */}
+                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
+                            <img
+                                src={LOGO_URL}
+                                alt="Bid Wars Logo"
+                                className="drop-shadow-lg object-contain h-[50px] w-auto"
+                            />
+                        </div>
+
+                        {/* Right: Notifications + Profile */}
+                        <div className="flex items-center gap-3 w-24 justify-end">
+                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
+                                <span className="material-icons-round text-white">notifications</span>
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                            </button>
+                            <Link href="/profile">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
+                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
+                                        <span className="material-icons-round text-white text-xl">person</span>
+                                    </div>
+                                </div>
+                            </Link>
                         </div>
                     </div>
                 </header>
 
-                {/* Dashboard Stats */}
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div
-                        onClick={() => setFocusedStat('balance')}
-                        className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
-                    >
-                        <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
-                            <Wallet size={16} className="text-red-500" />
-                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
+                <div className="px-4 space-y-6">
+                    {/* Dashboard Stats */}
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                        <div
+                            onClick={() => setFocusedStat('balance')}
+                            className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                        >
+                            <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
+                                <Wallet size={16} className="text-red-500" />
+                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
+                            </div>
+                            <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
+                                ₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}
+                            </p>
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
-                            ₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}
-                        </p>
+
+                        <div
+                            onClick={() => setFocusedStat('invested')}
+                            className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                        >
+                            <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
+                                <Briefcase size={16} className="text-orange-500" />
+                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
+                            </div>
+                            <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
+                                ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                            </p>
+                        </div>
                     </div>
 
-                    <div
-                        onClick={() => setFocusedStat('invested')}
-                        className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
-                    >
-                        <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
-                            <Briefcase size={16} className="text-orange-500" />
-                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
-                        </div>
-                        <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
-                            ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                        </p>
-                    </div>
-                </div>
+                    {/* Portfolio Summary Section */}
+                    {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-2 px-1">
+                                <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
+                                <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Portfolio</h2>
+                            </div>
 
-                {/* Portfolio Summary Section */}
-                {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
+                            <div className="flex overflow-x-auto snap-x gap-3 pb-4 hidden-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                                {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {
+                                    const currentValue = p.units * Number(p.asset.currentPrice);
+                                    const profit = currentValue - Number(p.totalCost);
+                                    const isProfit = profit >= 0;
+
+                                    return (
+                                        <Link
+                                            href={`/invest/${p.assetId}`}
+                                            key={p.id}
+                                            className="min-w-[75vw] sm:min-w-[280px] bg-[#1e293b] p-4 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden snap-start"
+                                        >
+                                            {/* Glow effect on hover */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                                            <div className="flex justify-between items-start relative z-10">
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{p.asset.name}</p>
+                                                <div className={cn(
+                                                    "text-[9px] font-black px-2 py-1 rounded-md border backdrop-blur-xl",
+                                                    isProfit
+                                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                                                        : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                                                )}>
+                                                    {isProfit ? 'PROFIT' : 'LOSS'}
+                                                </div>
+                                            </div>
+
+                                            <div className="relative z-10">
+                                                <div className="flex items-baseline gap-1">
+                                                    <p className="text-xl font-black text-white font-mono">{p.units.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{p.asset.unit.split(' ')[1]}s</span>
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-400 mt-1">Value: <span className="text-white font-mono">₹{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+                                            </div>
+
+                                            <div className="mt-2 pt-3 border-t border-white/5 flex justify-between items-center relative z-10">
+                                                <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">P/L</span>
+                                                <span className={cn(
+                                                    "text-xs font-black font-mono",
+                                                    isProfit ? "text-emerald-400" : "text-red-400"
+                                                )}>
+                                                    {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Asset Market Section */}
                     <section className="space-y-4">
                         <div className="flex items-center gap-2 px-1">
                             <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
-                            <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Portfolio</h2>
+                            <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Market Assets</h2>
                         </div>
 
-                        <div className="flex overflow-x-auto snap-x gap-3 pb-4 hidden-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-                            {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {
-                                const currentValue = p.units * Number(p.asset.currentPrice);
-                                const profit = currentValue - Number(p.totalCost);
-                                const isProfit = profit >= 0;
-
+                        <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
+                            {assets.map((asset: any) => {
+                                const isPositive = asset.change24h >= 0;
                                 return (
                                     <Link
-                                        href={`/invest/${p.assetId}`}
-                                        key={p.id}
-                                        className="min-w-[75vw] sm:min-w-[280px] bg-[#1e293b] p-4 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden snap-start"
+                                        key={asset.id}
+                                        href={`/invest/${asset.id}`}
+                                        className="bg-[#1e293b] p-4 rounded-2xl md:rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden"
                                     >
-                                        {/* Glow effect on hover */}
+                                        {/* Hover Gradient */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                                         <div className="flex justify-between items-start relative z-10">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{p.asset.name}</p>
+                                            <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/30 transition-colors shadow-inner">
+                                                <Activity size={16} />
+                                            </div>
                                             <div className={cn(
-                                                "text-[9px] font-black px-2 py-1 rounded-md border backdrop-blur-xl",
-                                                isProfit
-                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                                                    : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                                                "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border backdrop-blur-xl shadow-lg",
+                                                isPositive
+                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                                                    : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
                                             )}>
-                                                {isProfit ? 'PROFIT' : 'LOSS'}
+                                                {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                                {Math.abs(asset.change24h).toFixed(2)}%
                                             </div>
                                         </div>
 
                                         <div className="relative z-10">
-                                            <div className="flex items-baseline gap-1">
-                                                <p className="text-xl font-black text-white font-mono">{p.units.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{p.asset.unit.split(' ')[1]}s</span>
-                                            </div>
-                                            <p className="text-sm font-medium text-gray-400 mt-1">Value: <span className="text-white font-mono">₹{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+                                            <h3 className="text-lg font-bold text-white tracking-tight">{asset.name}</h3>
+                                            <p className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mt-0.5">{asset.unit}</p>
                                         </div>
 
-                                        <div className="mt-2 pt-3 border-t border-white/5 flex justify-between items-center relative z-10">
-                                            <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">P/L</span>
-                                            <span className={cn(
-                                                "text-xs font-black font-mono",
-                                                isProfit ? "text-emerald-400" : "text-red-400"
-                                            )}>
-                                                {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
+                                        <div className="mt-2 pt-3 border-t border-white/5 flex flex-col items-start gap-1 relative z-10 pb-1">
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Current Price</span>
+                                            <p className="text-lg font-black text-white font-mono break-all leading-tight">₹{Number(asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                         </div>
                                     </Link>
                                 )
                             })}
                         </div>
                     </section>
-                )}
 
-                {/* Asset Market Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2 px-1">
-                        <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
-                        <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Market Assets</h2>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
-                        {assets.map((asset: any) => {
-                            const isPositive = asset.change24h >= 0;
-                            return (
-                                <Link
-                                    key={asset.id}
-                                    href={`/invest/${asset.id}`}
-                                    className="bg-[#1e293b] p-4 rounded-2xl md:rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden"
-                                >
-                                    {/* Hover Gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                                    <div className="flex justify-between items-start relative z-10">
-                                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/30 transition-colors shadow-inner">
-                                            <Activity size={16} />
-                                        </div>
-                                        <div className={cn(
-                                            "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border backdrop-blur-xl shadow-lg",
-                                            isPositive
-                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                                                : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
-                                        )}>
-                                            {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                                            {Math.abs(asset.change24h).toFixed(2)}%
-                                        </div>
-                                    </div>
-
-                                    <div className="relative z-10">
-                                        <h3 className="text-lg font-bold text-white tracking-tight">{asset.name}</h3>
-                                        <p className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mt-0.5">{asset.unit}</p>
-                                    </div>
-
-                                    <div className="mt-2 pt-3 border-t border-white/5 flex flex-col items-start gap-1 relative z-10 pb-1">
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Current Price</span>
-                                        <p className="text-lg font-black text-white font-mono break-all leading-tight">₹{Number(asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                                    </div>
-                                </Link>
-                            )
-                        })}
-                    </div>
-                </section>
-
-                <div className="pt-6 pb-20 text-center">
-                    <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center gap-2">
-                            <Activity size={12} className="text-red-500/50" />
-                            <span>Market updates daily at 12:00 AM IST.</span>
+                    <div className="pt-6 pb-20 text-center">
+                        <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-1">
+                            <div className="flex items-center gap-2">
+                                <Activity size={12} className="text-red-500/50" />
+                                <span>Market updates daily at 12:00 AM IST.</span>
+                            </div>
+                            <span>Investing involves risk.</span>
                         </div>
-                        <span>Investing involves risk.</span>
                     </div>
                 </div>
-            </div>
 
-            {/* Full Value Modal */}
-            {focusedStat && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-                    onClick={() => setFocusedStat(null)}
-                >
+                {/* Full Value Modal */}
+                {focusedStat && (
                     <div
-                        className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200"
-                        onClick={e => e.stopPropagation()}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                        onClick={() => setFocusedStat(null)}
                     >
-                        <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
-                            {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
-                            <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
-                                {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
-                            </span>
-                        </div>
-                        <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
-                            ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                        </p>
+                        <div
+                            className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
+                                {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
+                                <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
+                                    {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
+                                </span>
+                            </div>
+                            <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
+                                ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                            </p>
 
-                        {/* Decorative background glow */}
-                        <div className={cn(
-                            "absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none",
-                            focusedStat === 'balance' ? "bg-red-500" : "bg-orange-500"
-                        )} />
+                            {/* Decorative background glow */}
+                            <div className={cn(
+                                "absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none",
+                                focusedStat === 'balance' ? "bg-red-500" : "bg-orange-500"
+                            )} />
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             <BottomNav />
         </main>
@@ -254,33 +284,32 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
 function BottomNav() {
     return (
-        <nav className="fixed bottom-0 w-full bg-[#111827] border-t border-white/5 pb-safe z-40 shadow-[0_-5px_10px_rgba(0,0,0,0.5)]">
+        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
             <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'bids'); }} className="flex flex-col items-center gap-1 w-1/5 text-slate-400 group">
+                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
                     <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </Link>
-                <div className="flex flex-col items-center gap-1 w-1/5 text-blue-500 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">storefront</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Market</span>
-                </div>
-                {/* Center Pay button */}
+                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+                </Link>
                 <div className="relative w-1/5 flex justify-center -top-6">
                     <Link href="/pay">
-                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-[#111827] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
+                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
                             <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
                         </button>
                     </Link>
                     <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
                 </div>
-                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
-                </Link>
                 <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">person</span>
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
                 </Link>
+                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
+                </button>
             </div>
         </nav>
     );

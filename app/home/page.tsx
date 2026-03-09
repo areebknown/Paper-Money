@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import useSWR from 'swr';
 import { LOGO_URL, getTierBg, MARKET_BG_URLS } from '@/lib/cloudinary';
 import { getPusherClient } from '@/lib/pusher-client';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function HomePage() {
     const [activeTab, setActiveTab] = useState<'bids' | 'market'>(() => {
@@ -13,8 +16,13 @@ export default function HomePage() {
         }
         return 'bids';
     });
-    const [userData, setUserData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+
+    // Fetch user data via SWR
+    const { data: userDataObj, mutate: mutateUser, isLoading: userLoading } = useSWR('/api/user', fetcher, {
+        revalidateOnFocus: false, // Rely on pusher for real-time
+        refreshInterval: 0
+    });
+    const userData = userDataObj?.user || null;
 
     // Persist tab change
     useEffect(() => {
@@ -23,23 +31,6 @@ export default function HomePage() {
         }
     }, [activeTab]);
 
-    useEffect(() => {
-        async function fetchUser() {
-            try {
-                const res = await fetch('/api/user');
-                if (res.ok) {
-                    const data = await res.json();
-                    setUserData(data.user);
-                }
-            } catch (e) {
-                console.error('Failed to fetch user');
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchUser();
-    }, []);
-
     // Subscribe to real-time balance updates from Pusher
     // Fires whenever claim/payment routes emit 'balance-update' on user-${id}
     useEffect(() => {
@@ -47,12 +38,12 @@ export default function HomePage() {
         const pusher = getPusherClient();
         const ch = pusher.subscribe(`user-${userData.id}`);
         ch.bind('balance-update', ({ balance }: { balance: number }) => {
-            setUserData((prev: any) => prev ? { ...prev, balance } : prev);
+            mutateUser((prev: any) => prev ? { ...prev, user: { ...prev.user, balance } } : prev, false);
         });
 
         const handleLocalBalance = (e: any) => {
             if (e.detail?.balance !== undefined) {
-                setUserData((prev: any) => prev ? { ...prev, balance: e.detail.balance } : prev);
+                mutateUser((prev: any) => prev ? { ...prev, user: { ...prev.user, balance: e.detail.balance } } : prev, false);
             }
         };
         window.addEventListener('balance-update-local', handleLocalBalance);
@@ -62,12 +53,12 @@ export default function HomePage() {
             pusher.unsubscribe(`user-${userData.id}`);
             window.removeEventListener('balance-update-local', handleLocalBalance);
         };
-    }, [userData?.id]);
+    }, [userData?.id, mutateUser]);
 
-    if (loading) {
+    if (userLoading) {
         return (
             <div className="min-h-screen bg-[#111827] flex items-center justify-center">
-                <div className="text-white text-lg">Loading...</div>
+                <div className="text-white text-lg font-['Russo_One'] animate-pulse">Loading...</div>
             </div>
         );
     }
@@ -160,7 +151,7 @@ export default function HomePage() {
                     : 'rounded-tl-3xl rounded-b-3xl'
                     }`}>
                     <div className="p-4">
-                        {activeTab === 'bids' ? <BidsContent onBalanceUpdate={(b: number) => setUserData((prev: any) => prev ? { ...prev, balance: b } : prev)} /> : <MarketContent />}
+                        {activeTab === 'bids' ? <BidsContent userId={userData?.id} /> : <MarketContent />}
                     </div>
                 </div>
             </main>
@@ -237,38 +228,41 @@ const getStatusBadgeColor = (time: string) => {
     return 'bg-gray-600';
 };
 
-function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) => void }) {
+function BidsContent({ userId }: { userId?: string }) {
+    const { data: auctionsData, mutate: mutateAuctions, isLoading: loadingAuctions } = useSWR('/api/auctions', fetcher, {
+        revalidateOnFocus: false, // Pusher handles updates
+        refreshInterval: 0,
+        compare: (a, b) => JSON.stringify(a) === JSON.stringify(b)
+    });
+
+    const { data: subsData } = useSWR('/api/notifications/subscribe', fetcher, {
+        revalidateOnFocus: false
+    });
+
     const [scheduledBids, setScheduledBids] = useState<any[]>([]);
     const [wonBids, setWonBids] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [showExactTime, setShowExactTime] = useState(false);
     const [notificationDialog, setNotificationDialog] = useState<any>(null);
     const [payNowDialog, setPayNowDialog] = useState<any>(null);
     const [payNowState, setPayNowState] = useState<'idle' | 'paying' | 'paid' | 'error'>('idle');
     const [payNowError, setPayNowError] = useState<string | null>(null);
-    // Tick: increments every 30s — no data fetch, just forces countdown labels to re-render
     const [, setTick] = useState(0);
 
-    // Infinite Scroll State for Won Shutters
     const [visibleWonCount, setVisibleWonCount] = useState(4);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    // scrollReady: false on mount, true after 1.5s — prevents observer from auto-firing
-    // on initial render. Using STATE (not ref) is critical: when it flips to true, React
-    // re-calls lastWonElementRef, reattaching the observer so it fires fresh.
     const [scrollReady, setScrollReady] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
     const isCurrentlyLoadingMore = useRef(false);
 
-    // Enable scroll-loading 1.5s after the main data finishes loading
     useEffect(() => {
-        if (!loading) {
+        if (!loadingAuctions) {
             const timer = setTimeout(() => setScrollReady(true), 1500);
             return () => clearTimeout(timer);
         }
-    }, [loading]);
+    }, [loadingAuctions]);
 
     const lastWonElementRef = useCallback((node: HTMLDivElement | null) => {
-        if (!scrollReady) return; // Don't attach observer until page has settled
+        if (!scrollReady) return;
         if (observer.current) observer.current.disconnect();
         if (!node || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
         observer.current = new IntersectionObserver(entries => {
@@ -286,66 +280,39 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
             threshold: 0.5
         });
         observer.current.observe(node);
-    }, [scrollReady]); // Re-creates observer when scrollReady flips — fires immediately on reattach
+    }, [scrollReady]);
 
-    // Tracks which auction IDs the user has subscribed to for push notifications
     const [subscribedAuctions, setSubscribedAuctions] = useState<Set<string>>(new Set());
-    // userId ref: populated on first fetch, reused without triggering re-renders
-    const userIdRef = useRef<string | null>(null);
 
-    // ── loadInitialData: fetches auctions + user + subscriptions ──────────────
-    // Extracted as useCallback so visibilitychange can call it without stale closures.
-    const loadInitialData = useCallback(async () => {
-        try {
-            const [auctionsRes, userRes, subsRes] = await Promise.all([
-                fetch('/api/auctions'),
-                userIdRef.current ? Promise.resolve(null) : fetch('/api/user'),
-                fetch('/api/notifications/subscribe'),
-            ]);
+    // Sync SWR payload to local state exactly once on update
+    useEffect(() => {
+        if (auctionsData?.auctions) {
+            setScheduledBids(auctionsData.auctions.filter((a: any) =>
+                a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM' || a.status === 'LIVE'
+            ));
 
-            // Set userId FIRST so won bids filter below can use it
-            if (userRes && userRes.ok) {
-                const userData = await userRes.json();
-                userIdRef.current = userData.user.id;
+            if (userId) {
+                setWonBids(auctionsData.auctions
+                    .filter((a: any) => a.winnerId === userId && a.status === 'COMPLETED')
+                    .sort((a: any, b: any) => new Date(b.endedAt || 0).getTime() - new Date(a.endedAt || 0).getTime())
+                );
             }
-
-            if (auctionsRes.ok) {
-                const data = await auctionsRes.json();
-                const auctions = data.auctions || [];
-                setScheduledBids(auctions.filter((a: any) =>
-                    a.status === 'SCHEDULED' || a.status === 'WAITING_ROOM' || a.status === 'LIVE'
-                ));
-                if (userIdRef.current) {
-                    setWonBids(auctions
-                        .filter((a: any) => a.winnerId === userIdRef.current && a.status === 'COMPLETED')
-                        .sort((a: any, b: any) => new Date(b.endedAt || 0).getTime() - new Date(a.endedAt || 0).getTime())
-                    );
-                }
-            }
-
-            // Restore bell state from DB on every load
-            if (subsRes && subsRes.ok) {
-                const subsData = await subsRes.json();
-                if (subsData.subscribedAuctionIds) {
-                    setSubscribedAuctions(new Set(subsData.subscribedAuctionIds));
-                }
-            }
-        } catch (e) {
-            console.error('[Home] Failed to load initial data:', e);
-        } finally {
-            setLoading(false);
         }
-    }, []);
+    }, [auctionsData, userId]);
+
+    // Sync Notification Bell State
+    useEffect(() => {
+        if (subsData?.subscribedAuctionIds) {
+            setSubscribedAuctions(new Set(subsData.subscribedAuctionIds));
+        }
+    }, [subsData]);
 
     useEffect(() => {
-        loadInitialData();
-
-        // Bug 2: countdown tick — forces re-render every 30s, zero DB hits
         const tickId = setInterval(() => setTick(t => t + 1), 30_000);
 
         // Bug 3: refetch data when user returns to the tab/app after minimising
         const onVisibility = () => {
-            if (document.visibilityState === 'visible') loadInitialData();
+            if (document.visibilityState === 'visible') mutateAuctions();
         };
         document.addEventListener('visibilitychange', onVisibility);
 
@@ -368,7 +335,7 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
 
         channel.bind('auction-ended', (data: any) => {
             setScheduledBids(prev => prev.filter(b => b.id !== data.id));
-            if (userIdRef.current && data.winnerId === userIdRef.current) {
+            if (userId && data.winnerId === userId) {
                 setWonBids(prev => {
                     if (prev.some(b => b.id === data.id)) return prev;
                     const newBid = { ...data, isClaimed: false };
@@ -391,7 +358,7 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
             channel.unbind_all();
             pusher.unsubscribe('global-auctions');
         };
-    }, [loadInitialData]);
+    }, [userId, mutateAuctions]);
 
     const openNotificationDialog = (e: React.MouseEvent, bid: any) => {
         e.preventDefault();
@@ -416,8 +383,8 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
                     serviceWorkerRegistration: activeSw,
                 });
                 await beamsClient.start();
-                await beamsClient.addDeviceInterest(`user-${userIdRef.current}`);
-                console.log('[Beams] ✅ Registered for push with interest user-' + userIdRef.current);
+                await beamsClient.addDeviceInterest(`user-${userId}`);
+                console.log('[Beams] ✅ Registered for push with interest user-' + userId);
             } catch (err: any) {
                 console.error('[Beams] ❌ Registration failed:', err);
             }
@@ -443,8 +410,8 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
     };
 
 
-    if (loading) {
-        return <div className="text-center py-10 text-gray-500">Loading auctions...</div>;
+    if (loadingAuctions && scheduledBids.length === 0 && wonBids.length === 0) {
+        return <div className="text-center py-10 text-gray-500 font-['Russo_One'] animate-pulse">Loading auctions...</div>;
     }
 
 
@@ -656,7 +623,6 @@ function BidsContent({ onBalanceUpdate }: { onBalanceUpdate?: (balance: number) 
                                                     setPayNowState('paid');
                                                     setWonBids(prev => prev.map(b => b.id === payNowDialog.id ? { ...b, isClaimed: true } : b));
                                                     if (data.newBalance !== undefined) {
-                                                        if (onBalanceUpdate) onBalanceUpdate(data.newBalance);
                                                         window.dispatchEvent(new CustomEvent('balance-update-local', { detail: { balance: data.newBalance } }));
                                                     }
                                                 } else {
