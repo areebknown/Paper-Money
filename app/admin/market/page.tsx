@@ -122,10 +122,10 @@ export default function AdminMarketPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center bg-[#1e293b] p-6 rounded-2xl shadow-sm border border-gray-800">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Market Management</h1>
-                    <p className="text-sm text-gray-500 mt-1">Control paper money trading assets, schedule events and view analytics.</p>
+                    <h1 className="text-2xl font-bold text-white">Market Management</h1>
+                    <p className="text-sm text-gray-400 mt-1">Control paper money trading assets, schedule events and view analytics.</p>
                 </div>
             </div>
 
@@ -133,14 +133,14 @@ export default function AdminMarketPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Event Scheduler */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
-                    <h2 className="text-lg font-bold mb-1 text-gray-800 flex items-center gap-2">
+                <div className="bg-[#1e293b] p-6 rounded-2xl border border-gray-800 flex flex-col h-full">
+                    <h2 className="text-lg font-bold mb-1 text-white flex items-center gap-2">
                         <ShieldAlert size={20} className={cn(eventType === 'CRASH' ? "text-red-500" : "text-emerald-500")} /> Market Control Override
                     </h2>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6">Schedule Next Day Event</p>
 
                     <div className="space-y-5 mt-auto">
-                        <div className="flex p-1 bg-gray-50/50 border border-gray-100 rounded-xl">
+                        <div className="flex p-1 bg-gray-900/50 border border-gray-800 rounded-xl">
                             <button
                                 onClick={() => setEventType('CRASH')}
                                 className={cn(
@@ -167,7 +167,7 @@ export default function AdminMarketPage() {
                                 <select
                                     value={selectedAssetId}
                                     onChange={(e) => setSelectedAssetId(e.target.value)}
-                                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 outline-none focus:ring-2 ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
+                                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm font-bold text-white outline-none focus:ring-2 ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
                                 >
                                     <option value="ALL">ALL ASSETS (GLOBAL)</option>
                                     <option value="IRON">IRON</option>
@@ -186,7 +186,7 @@ export default function AdminMarketPage() {
                                         step="0.0001"
                                         value={crashMagnitude}
                                         onChange={(e) => setCrashMagnitude(e.target.value)}
-                                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-black text-gray-900 outline-none focus:ring-2 ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm font-black text-white outline-none focus:ring-2 ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                         placeholder="20"
                                     />
                                     <span className="absolute right-3 top-2.5 text-xs font-black text-gray-400">%</span>
@@ -208,11 +208,11 @@ export default function AdminMarketPage() {
                 </div>
 
                 {/* Direct Action Sync */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
+                <div className="bg-[#1e293b] p-6 rounded-2xl border border-gray-800 flex flex-col h-full">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-1">
-                            <Activity size={20} className="text-indigo-600" />
-                            <h2 className="text-lg font-bold text-gray-800">Forced System Sync</h2>
+                            <Activity size={20} className="text-indigo-500" />
+                            <h2 className="text-lg font-bold text-white">Forced System Sync</h2>
                         </div>
                         <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-sm">
                             Manually trigger the 12:00 AM Cron job. This updates all prices and processes any pending BOOM/CRASH events immediately.
@@ -243,10 +243,10 @@ export default function AdminMarketPage() {
                             <RefreshCcw size={16} /> Execute Daily Sync Now
                         </button>
 
-                        <div className="p-4 bg-red-50/50 rounded-xl border border-red-100 flex items-center justify-between">
+                        <div className="p-4 bg-red-900/20 rounded-xl border border-red-900/50 flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-red-900 uppercase tracking-wide">Danger Zone</p>
-                                <p className="text-[10px] font-medium text-red-600">This action requires direct database access in V2.</p>
+                                <p className="text-xs font-bold text-red-500 uppercase tracking-wide">Danger Zone</p>
+                                <p className="text-[10px] font-medium text-red-400/80">This action requires direct database access in V2.</p>
                             </div>
                             <button
                                 disabled
@@ -260,21 +260,21 @@ export default function AdminMarketPage() {
             </div>
 
             {/* Mineral Analytics */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-[#1e293b] p-6 rounded-2xl border border-gray-800">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <BarChart3 size={20} className="text-indigo-500" />
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <BarChart3 size={20} className="text-indigo-400" />
                             Asset Analytics
                         </h2>
                         <p className="text-xs text-gray-500 font-medium mt-1">Real-time lifetime performance tracking across all synchronized data points.</p>
                     </div>
-                    <div className="flex items-center gap-3 bg-gray-50 py-1.5 px-2 rounded-xl border border-gray-100">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Select</label>
+                    <div className="flex items-center gap-3 bg-gray-900 py-1.5 px-2 rounded-xl border border-gray-800">
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Select</label>
                         <select
                             value={trackerAssetId}
                             onChange={(e) => setTrackerAssetId(e.target.value)}
-                            className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-900 outline-none shadow-sm cursor-pointer hover:bg-gray-50 transition min-w-[120px]"
+                            className="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white outline-none shadow-sm cursor-pointer hover:bg-gray-700 transition min-w-[120px]"
                         >
                             <option value="IRON">IRON</option>
                             <option value="COPPER">COPPER</option>
@@ -308,18 +308,18 @@ export default function AdminMarketPage() {
                                 {(analyticsData?.stats?.lifetimeGrowth || 0).toFixed(2)}%
                             </p>
                         </div>
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 relative overflow-hidden">
+                        <div className="bg-gray-800/50 p-5 rounded-2xl border border-gray-700/50 relative overflow-hidden">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 relative z-10">Data Snapshots</p>
-                            <p className="text-xl font-black text-gray-900 relative z-10">
-                                {analyticsData?.stats?.dataPoints || 0} <span className="text-[10px] font-bold text-gray-400 lowercase ml-1">total days tracking</span>
+                            <p className="text-xl font-black text-white relative z-10">
+                                {analyticsData?.stats?.dataPoints || 0} <span className="text-[10px] font-bold text-gray-500 lowercase ml-1">total days tracking</span>
                             </p>
                         </div>
                     </div>
 
                     {/* Chart Container */}
-                    <div className="lg:col-span-3 h-[300px] relative bg-gray-50/50 rounded-2xl p-5 border border-gray-100/50">
+                    <div className="lg:col-span-3 h-[300px] relative bg-gray-900/50 rounded-2xl p-5 border border-gray-800/50">
                         {analyticsLoading && (
-                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+                            <div className="absolute inset-0 z-10 bg-[#1e293b]/80 flex items-center justify-center rounded-2xl">
                                 <Activity className="text-indigo-500 animate-spin" size={24} />
                             </div>
                         )}
@@ -341,7 +341,7 @@ export default function AdminMarketPage() {
                                             <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" strokeOpacity={0.5} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.5} />
                                     <XAxis
                                         dataKey="time"
                                         axisLine={false}
@@ -359,8 +359,9 @@ export default function AdminMarketPage() {
                                     <Tooltip
                                         contentStyle={{
                                             borderRadius: '12px',
-                                            border: '1px solid #f3f4f6',
-                                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                            border: '1px solid #374151',
+                                            background: '#1e293b',
+                                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)',
                                             padding: '12px 16px'
                                         }}
                                         itemStyle={{ fontWeight: 800, fontSize: '14px', color: '#4f46e5' }}
@@ -383,15 +384,15 @@ export default function AdminMarketPage() {
             </div>
 
             {/* Event History Dictionary */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-                <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                    <h2 className="font-bold text-gray-900 text-sm">Action History Dictionary</h2>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Showing Last 50 Events</span>
+            <div className="bg-[#1e293b] rounded-2xl overflow-hidden border border-gray-800">
+                <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+                    <h2 className="font-bold text-white text-sm">Action History Dictionary</h2>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Showing Last 50 Events</span>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-gray-100">
+                            <tr className="border-b border-gray-800">
                                 <th className="px-5 py-3 text-[10px] font-black text-gray-400 uppercase tracking-wider">Timestamp</th>
                                 <th className="px-5 py-3 text-[10px] font-black text-gray-400 uppercase tracking-wider">Event Type</th>
                                 <th className="px-5 py-3 text-[10px] font-black text-gray-400 uppercase tracking-wider">Target</th>
@@ -400,7 +401,7 @@ export default function AdminMarketPage() {
                                 <th className="px-5 py-3 text-[10px] font-black text-gray-400 uppercase tracking-wider text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-800/50">
                             {marketEventHistory.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-5 py-10 text-center text-sm font-medium text-gray-400 italic">No scheduled actions found.</td>
@@ -409,8 +410,8 @@ export default function AdminMarketPage() {
                                 marketEventHistory.map((event) => (
                                     <tr key={event.id} className="hover:bg-gray-50/50 transition">
                                         <td className="px-5 py-3">
-                                            <div className="text-xs font-bold text-gray-900">{new Date(event.createdAt).toLocaleDateString()}</div>
-                                            <div className="text-[10px] font-medium text-gray-400">{new Date(event.createdAt).toLocaleTimeString()}</div>
+                                            <div className="text-xs font-bold text-white">{new Date(event.createdAt).toLocaleDateString()}</div>
+                                            <div className="text-[10px] font-medium text-gray-500">{new Date(event.createdAt).toLocaleTimeString()}</div>
                                         </td>
                                         <td className="px-5 py-3">
                                             <span className={cn(
@@ -420,17 +421,17 @@ export default function AdminMarketPage() {
                                                 {event.type}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3 font-bold text-gray-700 text-xs">
+                                        <td className="px-5 py-3 font-bold text-gray-300 text-xs">
                                             {event.assetId === 'ALL' ? 'GLOBAL MARKET' : event.assetId}
                                         </td>
-                                        <td className="px-5 py-3 text-xs font-black text-gray-900">
+                                        <td className="px-5 py-3 text-xs font-black text-white">
                                             {(Number(event.magnitude) * 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%
                                         </td>
                                         <td className="px-5 py-3 text-center">
                                             <span className={cn(
                                                 "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                                                event.status === 'PENDING' ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
-                                                    event.status === 'EXECUTED' ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600 border border-amber-100"
+                                                event.status === 'PENDING' ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/20" :
+                                                    event.status === 'EXECUTED' ? "bg-gray-800 text-gray-400" : "bg-amber-900/30 text-amber-500 border border-amber-900/50"
                                             )}>
                                                 {event.status}
                                             </span>

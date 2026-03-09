@@ -99,7 +99,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
             <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
 
                 {/* Header Navbar */}
-                <header className="flex items-center justify-between sticky top-4 z-50 bg-slate-900/60 backdrop-blur-xl border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20 mb-6">
+                <header className="flex items-center justify-between sticky top-4 z-50 bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20 mb-6">
                     <div className="flex items-center gap-4">
                         <Link href="/invest" className="p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-95 group">
                             <ArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
@@ -136,31 +136,29 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                     )}
 
                     {/* Stats Summary Panel */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 md:p-6 rounded-3xl relative overflow-hidden group">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors"></div>
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                        <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
-                                <Activity size={14} className="text-indigo-400" /> Your Holdings
+                                <Activity size={14} className="text-indigo-400" /> Your Units
                             </p>
-                            <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono tracking-tight">
+                            <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 {userUnits.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                                 <span className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">{asset.unit.split(' ')[1]}s</span>
                             </p>
                         </div>
 
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 md:p-6 rounded-3xl relative overflow-hidden group">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
+                        <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
                                 <DollarSign size={14} className="text-emerald-400" /> Current Value
                             </p>
-                            <p className="text-2xl md:text-3xl font-black text-emerald-400 relative z-10 font-mono tracking-tight">
+                            <p className="text-xl md:text-2xl font-black text-emerald-400 relative z-10 font-mono tracking-tight truncate">
                                 ₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
 
                     {/* Performance Chart */}
-                    <div className="bg-slate-900/50 backdrop-blur-md border border-white/5 p-5 md:p-6 rounded-3xl relative h-72 md:h-80 flex flex-col group">
+                    <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-3xl relative h-72 md:h-80 flex flex-col group">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none rounded-3xl"></div>
 
                         <div className="flex justify-between flex-wrap items-center gap-2 mb-4 relative z-10">
@@ -217,7 +215,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                     </div>
 
                     {/* Information Module */}
-                    <div className="bg-orange-950/20 p-5 rounded-3xl border border-orange-500/20 flex gap-4 backdrop-blur-sm">
+                    <div className="bg-orange-950/20 p-4 md:p-5 rounded-3xl border border-orange-500/20 flex gap-4">
                         <div className="bg-orange-500/10 p-2.5 rounded-xl h-fit border border-orange-500/20">
                             <Lightbulb size={22} className="text-orange-400" />
                         </div>
@@ -236,7 +234,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
             </div>
 
             {/* Trading Input Bar */}
-            <div className="fixed sm:sticky bottom-0 left-0 right-0 z-40 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent pt-12">
+            <div className="fixed sm:sticky bottom-[72px] sm:bottom-0 left-0 right-0 z-40 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent pt-12">
                 <div className="max-w-4xl mx-auto grid grid-cols-2 gap-3 md:gap-4">
                     <button
                         onClick={() => setIsInvesting(true)}
@@ -257,7 +255,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
 
             {/* Main Trading Modal Overlay */}
             {(isInvesting || isCashingOut) && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/90 animate-in fade-in duration-300">
 
                     <div className="absolute inset-0" onClick={() => { setIsInvesting(false); setIsCashingOut(false); setError(''); setShowConfirm(false) }} />
 
@@ -266,7 +264,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                         {!showConfirm ? (
                             <>
                                 <div className="flex justify-between items-center mb-8">
-                                    <h2 className="text-xl md:text-2xl font-black text-white">{isInvesting ? 'Acquire' : 'Liquidate'} {asset.name}</h2>
+                                    <h2 className="text-xl md:text-2xl font-black text-white">{isInvesting ? 'Invest in' : 'Cash Out'} {asset.name}</h2>
                                     <button
                                         onClick={() => { setIsInvesting(false); setIsCashingOut(false); setError(''); }}
                                         className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition"
@@ -338,7 +336,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                                             : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20"
                                                     )}
                                                 >
-                                                    {isInvesting ? 'Execute Acquisition' : 'Liquidate Position'}
+                                                    {isInvesting ? 'Confirm Investment' : 'Confirm Cash Out'}
                                                 </button>
 
                                                 {isCashingOut && (
@@ -347,7 +345,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                                         disabled={userUnits <= 0}
                                                         className="w-full py-4 mt-2 bg-transparent text-red-500 border border-red-500/30 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-500/10 transition"
                                                     >
-                                                        Liquidate All Holdings
+                                                        Cash Out All Units
                                                     </button>
                                                 )}
                                             </>
@@ -364,7 +362,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                 </div>
                                 <h3 className="text-xl md:text-2xl font-black text-white mb-2 tracking-tight">Are you absolutely sure?</h3>
                                 <p className="text-gray-400 text-xs md:text-sm font-medium mb-8 leading-relaxed max-w-[280px]">
-                                    You are about to completely exit your position in <span className="text-white font-bold">{asset.name}</span>.
+                                    You are about to cash out all your units of <span className="text-white font-bold">{asset.name}</span>.
                                 </p>
 
                                 <div className="w-full space-y-3">
@@ -372,7 +370,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                         onClick={() => handleTrade('SELL', true)}
                                         className="w-full py-4 bg-red-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-red-500 transition shadow-lg shadow-red-500/20 active:scale-95"
                                     >
-                                        Confirm Liquidation
+                                        Confirm Cash Out
                                     </button>
                                     <button
                                         onClick={() => setShowConfirm(false)}
@@ -387,6 +385,42 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                     </div>
                 </div>
             )}
+
+            <BottomNav />
         </main>
+    );
+}
+
+function BottomNav() {
+    return (
+        <nav className="fixed bottom-0 w-full bg-[#111827] border-t border-white/5 pb-safe z-40 shadow-[0_-5px_10px_rgba(0,0,0,0.5)]">
+            <div className="flex justify-around items-end pb-4 pt-2 relative">
+                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'bids'); }} className="flex flex-col items-center gap-1 w-1/5 text-slate-400 group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
+                </Link>
+                <div className="flex flex-col items-center gap-1 w-1/5 text-blue-500 group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">storefront</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Market</span>
+                </div>
+                {/* Center Pay button */}
+                <div className="relative w-1/5 flex justify-center -top-6">
+                    <Link href="/pay">
+                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-[#111827] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
+                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
+                        </button>
+                    </Link>
+                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
+                </div>
+                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+                </Link>
+                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">person</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
+                </Link>
+            </div>
+        </nav>
     );
 }

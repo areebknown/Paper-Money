@@ -52,15 +52,15 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
             </div>
 
-            <div className="relative z-10 max-w-5xl mx-auto p-4 md:p-6 lg:p-8 space-y-8">
+            <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6">
                 {/* Header Navbar */}
-                <header className="flex items-center justify-between sticky top-4 z-50 bg-slate-900/60 backdrop-blur-xl border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
+                <header className="flex items-center justify-between sticky top-4 z-50 bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
                     <div className="flex items-center gap-4 text-white">
-                        <Link href="/home" className="p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-95 group">
+                        <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-95 group cursor-pointer">
                             <ArrowLeft size={20} className="text-gray-400 group-hover:text-white transition-colors" />
                         </Link>
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent flex justify-center items-center gap-2">
+                            <h1 className="text-lg md:text-xl font-['Russo_One'] tracking-tight text-white flex justify-center items-center gap-2 uppercase">
                                 <Activity className="text-red-500 w-5 h-5" />
                                 Global Market
                             </h1>
@@ -70,25 +70,23 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 </header>
 
                 {/* Dashboard Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 md:p-6 rounded-3xl relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                         <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                             <Wallet size={16} className="text-red-500" />
                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono tracking-tight">
+                        <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                             ₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}
                         </p>
                     </div>
 
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-white/5 p-5 md:p-6 rounded-3xl relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-colors"></div>
+                    <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                         <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                             <Briefcase size={16} className="text-orange-500" />
                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono tracking-tight">
+                        <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                             ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                         </p>
                     </div>
@@ -102,7 +100,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Portfolio</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="flex overflow-x-auto snap-x gap-3 pb-4 hidden-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                             {user.portfolios.filter((p: any) => p.units > 0).map((p: any) => {
                                 const currentValue = p.units * Number(p.asset.currentPrice);
                                 const profit = currentValue - Number(p.totalCost);
@@ -112,7 +110,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                     <Link
                                         href={`/invest/${p.assetId}`}
                                         key={p.id}
-                                        className="bg-slate-900/40 backdrop-blur-md p-5 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden"
+                                        className="min-w-[75vw] sm:min-w-[280px] bg-[#1e293b] p-4 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden snap-start"
                                     >
                                         {/* Glow effect on hover */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -160,21 +158,21 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                         <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Market Assets</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
                         {assets.map((asset: any) => {
                             const isPositive = asset.change24h >= 0;
                             return (
                                 <Link
                                     key={asset.id}
                                     href={`/invest/${asset.id}`}
-                                    className="bg-slate-900/40 backdrop-blur-md p-5 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-4 group relative overflow-hidden"
+                                    className="bg-[#1e293b] p-4 rounded-2xl md:rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden"
                                 >
                                     {/* Hover Gradient */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                                     <div className="flex justify-between items-start relative z-10">
-                                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/30 transition-colors shadow-inner">
-                                            <Activity size={20} />
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/30 transition-colors shadow-inner">
+                                            <Activity size={16} />
                                         </div>
                                         <div className={cn(
                                             "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border backdrop-blur-xl shadow-lg",
@@ -202,13 +200,49 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     </div>
                 </section>
 
-                <div className="pt-8 pb-4 text-center">
+                <div className="pt-6 pb-20 text-center">
                     <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                         <Activity size={12} className="text-red-500/50" />
                         Market updates daily at 12:00 AM IST. Investing involves risk.
                     </p>
                 </div>
             </div>
+
+            <BottomNav />
         </main>
+    );
+}
+
+function BottomNav() {
+    return (
+        <nav className="fixed bottom-0 w-full bg-[#111827] border-t border-white/5 pb-safe z-40 shadow-[0_-5px_10px_rgba(0,0,0,0.5)]">
+            <div className="flex justify-around items-end pb-4 pt-2 relative">
+                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'bids'); }} className="flex flex-col items-center gap-1 w-1/5 text-slate-400 group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
+                </Link>
+                <div className="flex flex-col items-center gap-1 w-1/5 text-blue-500 group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">storefront</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Market</span>
+                </div>
+                {/* Center Pay button */}
+                <div className="relative w-1/5 flex justify-center -top-6">
+                    <Link href="/pay">
+                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-[#111827] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
+                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
+                        </button>
+                    </Link>
+                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
+                </div>
+                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+                </Link>
+                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">person</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
+                </Link>
+            </div>
+        </nav>
     );
 }

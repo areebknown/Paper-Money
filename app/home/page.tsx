@@ -7,9 +7,21 @@ import { LOGO_URL, getTierBg, MARKET_BG_URLS } from '@/lib/cloudinary';
 import { getPusherClient } from '@/lib/pusher-client';
 
 export default function HomePage() {
-    const [activeTab, setActiveTab] = useState<'bids' | 'market'>('bids');
+    const [activeTab, setActiveTab] = useState<'bids' | 'market'>(() => {
+        if (typeof sessionStorage !== 'undefined') {
+            return (sessionStorage.getItem('homeTab') as any) || 'bids';
+        }
+        return 'bids';
+    });
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
+    // Persist tab change
+    useEffect(() => {
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('homeTab', activeTab);
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         async function fetchUser() {
