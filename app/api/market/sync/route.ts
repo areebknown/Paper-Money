@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { updateMarketPrices } from '@/lib/market-engine';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { pusherServer } from '@/lib/pusher-server';
 
 // Route configuration to prevent caching
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,12 @@ export async function GET(req: Request) {
             console.log('[CRON] Starting market price update...');
             await updateMarketPrices();
             console.log('[CRON] Market prices updated successfully');
+
+            // Broadcast the update globally via WebSockets
+            await pusherServer.trigger('market-updates', 'prices-updated', {
+                timestamp: new Date().toISOString()
+            });
+
             return NextResponse.json({
                 success: true,
                 message: 'Market prices updated successfully',
@@ -78,6 +85,12 @@ export async function POST(req: Request) {
         // Force true ignores the 20-hour idempotency check
         await updateMarketPrices(true);
         console.log('[ADMIN] Market sync completed successfully');
+
+        // Broadcast the update globally via WebSockets
+        await pusherServer.trigger('market-updates', 'prices-updated', {
+            timestamp: new Date().toISOString()
+        });
+
         return NextResponse.json({
             success: true,
             message: 'Market prices updated successfully',

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, TrendingUp, TrendingDown, ShoppingCart, DollarSign, Activity, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { getPusherClient } from '@/lib/pusher-client';
 import {
     XAxis,
     YAxis,
@@ -30,6 +31,21 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
     const [tradeAmount, setTradeAmount] = useState('1');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const pusher = getPusherClient();
+        const channel = pusher.subscribe('market-updates');
+
+        channel.bind('prices-updated', () => {
+            console.log('[Pusher] Market prices updated via midnight trigger! Refreshing component...');
+            router.refresh();
+        });
+
+        return () => {
+            pusher.unsubscribe('market-updates');
+            channel.unbind_all();
+        };
+    }, [router]);
 
     const isPositive = asset.change24h >= 0;
 

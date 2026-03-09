@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import useSWR from 'swr';
+import { useState, useEffect } from 'react';
+import useSWR, { useSWRConfig } from 'swr';
 import Link from 'next/link';
 import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Briefcase, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { getPusherClient } from '@/lib/pusher-client';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -14,11 +15,28 @@ interface InvestClientProps {
 }
 
 export default function InvestClient({ initialAssets }: InvestClientProps) {
-    const { data: userData } = useSWR('/api/user', fetcher, { refreshInterval: 5000 });
+    const { mutate } = useSWRConfig();
+
+    const { data: userData } = useSWR('/api/user', fetcher);
     const { data: marketData } = useSWR('/api/market/sync', fetcher, {
-        refreshInterval: 30000,
         fallbackData: { assets: initialAssets }
     });
+
+    useEffect(() => {
+        const pusher = getPusherClient();
+        const channel = pusher.subscribe('market-updates');
+
+        channel.bind('prices-updated', () => {
+            console.log('[Pusher] Market prices updated! Re-fetching...');
+            mutate('/api/market/sync');
+            mutate('/api/user');
+        });
+
+        return () => {
+            pusher.unsubscribe('market-updates');
+            channel.unbind_all();
+        };
+    }, [mutate]);
 
     const assets = marketData?.assets || initialAssets;
     const user = userData?.user;
