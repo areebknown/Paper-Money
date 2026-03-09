@@ -11,7 +11,7 @@ export const revalidate = 0;
 // 1. Cron Job Execution: If CRON_SECRET is present, it MUTATES state (updates prices)
 // 2. Data Fetching: If no secret (or normal user), it READS state (returns assets)
 export async function GET(req: Request) {
-    // Check for Vercel Cron secret
+    // Check for Vercel Cron secret (Using QStash or Vercel cron)
     const authHeader = req.headers.get('Authorization');
     const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
@@ -40,9 +40,7 @@ export async function GET(req: Request) {
     }
 
     // SCENARIO 2: DATA FETCHING (Read Only)
-    // Used by MarketClient.tsx (via useSWR) to get latest prices.
-    // This strictly READS data and does NOT trigger updates.
-    // This fixes the "Loop Bug" where visiting the page caused endless updates.
+    // Used by the Invest dashboard (via useSWR) to get latest prices.
     try {
         const assets = await prisma.asset.findMany({
             orderBy: { name: 'asc' }
@@ -55,15 +53,11 @@ export async function GET(req: Request) {
     }
 }
 
-// POST method for backward compatibility with admin panel (Manual Trigger)
+// POST method for admin panel (Manual Trigger)
 export async function POST(req: Request) {
     console.log('[ADMIN] Manual market sync request received');
 
-    // Debug headers to see if cookies/auth are present
-    console.log('[ADMIN] Headers:', JSON.stringify(Object.fromEntries(req.headers.entries())));
-
     const userId = await getUserIdFromRequest();
-    console.log('[ADMIN] Resolved User ID:', userId);
 
     if (!userId) {
         console.log('[ADMIN] Unauthorized: No user ID found');
@@ -74,8 +68,6 @@ export async function POST(req: Request) {
         where: { id: userId },
     });
 
-    console.log('[ADMIN] Found user:', user?.username, 'Is Admin:', user?.isAdmin);
-
     if (!user?.isAdmin) {
         console.log('[ADMIN] Forbidden: User is not admin');
         return NextResponse.json({ error: 'Admin only' }, { status: 403 });
@@ -83,6 +75,7 @@ export async function POST(req: Request) {
 
     try {
         console.log('[ADMIN] Manual market sync triggered by:', user.username);
+        // Force true ignores the 20-hour idempotency check
         await updateMarketPrices(true);
         console.log('[ADMIN] Market sync completed successfully');
         return NextResponse.json({

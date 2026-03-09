@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
@@ -12,7 +11,7 @@ export async function GET(req: Request) {
     if (!user?.isAdmin) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
     try {
-        const events = await (prisma as any).marketEvent.findMany({
+        const events = await prisma.marketEvent.findMany({
             orderBy: { createdAt: 'desc' },
             take: 50
         });
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
         const value = magnitude / 100;
 
         // Create the event
-        const event = await (prisma as any).marketEvent.create({
+        const event = await prisma.marketEvent.create({
             data: {
                 assetId: assetId || 'ALL',
                 type,
@@ -77,7 +76,12 @@ export async function DELETE(req: Request) {
     if (!id) return NextResponse.json({ error: 'Missing event ID' }, { status: 400 });
 
     try {
-        await (prisma as any).marketEvent.update({
+        const eventToCancel = await prisma.marketEvent.findUnique({ where: { id } });
+        if (!eventToCancel) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+
+        if (eventToCancel.status !== 'PENDING') return NextResponse.json({ error: 'Only pending events can be cancelled' }, { status: 400 });
+
+        await prisma.marketEvent.update({
             where: { id },
             data: { status: 'CANCELLED' }
         });

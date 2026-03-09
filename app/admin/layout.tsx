@@ -3,10 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield, Wallet } from 'lucide-react';
+import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield, Wallet, Activity } from 'lucide-react';
 
 const ADMIN_NAV_ITEMS = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+    { href: '/admin/market', icon: Activity, label: 'Market' },
     { href: '/admin/auctions', icon: Gavel, label: 'Auctions' },
     { href: '/admin/artifacts', icon: Package, label: 'Artifacts' },
     { href: '/admin/contracts', icon: FileText, label: 'Contracts' },

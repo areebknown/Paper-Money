@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         // Enforce whole units (except for cashing out everything)
         if (!all && !Number.isInteger(units)) {
-            return NextResponse.json({ error: 'You can only trade in whole units (complete packets/barrels/biscuits).' }, { status: 400 });
+            return NextResponse.json({ error: 'You can only trade in whole units.' }, { status: 400 });
         }
 
         const asset = await prisma.asset.findUnique({ where: { id: assetId } });
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         if (user.isSuspended) {
-            return NextResponse.json({ error: 'Your account is suspended. Contact admin for support.' }, { status: 403 });
+            return NextResponse.json({ error: 'Your account is suspended. Contact an administrator.' }, { status: 403 });
         }
 
         // Get specific market account for this asset
@@ -41,9 +41,12 @@ export async function POST(req: Request) {
 
         if (!marketUser) return NextResponse.json({ error: 'Market system error' }, { status: 500 });
 
+        // Ensure units are treated as integers
+        const cleanUnits = units ? Math.floor(Number(units)) : 0;
+
         return await prisma.$transaction(async (tx) => {
             if (type === 'BUY') {
-                const rawPrice = units * Number(asset.currentPrice);
+                const rawPrice = cleanUnits * Number(asset.currentPrice);
                 const totalPrice = Math.round(rawPrice * 100) / 100;
 
                 if (Number(user.balance) < totalPrice) {
@@ -60,10 +63,10 @@ export async function POST(req: Request) {
                 await tx.portfolio.upsert({
                     where: { userId_assetId: { userId, assetId } },
                     update: {
-                        units: { increment: units },
+                        units: { increment: cleanUnits },
                         totalCost: { increment: totalPrice }
                     },
-                    create: { userId, assetId, units, totalCost: totalPrice }
+                    create: { userId, assetId, units: cleanUnits, totalCost: totalPrice }
                 });
 
                 // Create Transaction record
@@ -80,6 +83,7 @@ export async function POST(req: Request) {
                 });
 
                 return NextResponse.json({ success: true, message: 'Purchase successful' });
+
             } else if (type === 'SELL') {
                 const portfolio = await tx.portfolio.findUnique({
                     where: { userId_assetId: { userId, assetId } }
@@ -89,7 +93,8 @@ export async function POST(req: Request) {
                     throw new Error('No units to sell');
                 }
 
-                const unitsToSell = all ? Number(portfolio.units) : units;
+                const unitsToSell = all ? Number(portfolio.units) : cleanUnits;
+
                 if (unitsToSell > Number(portfolio.units)) {
                     throw new Error('Insufficient units to sell');
                 }

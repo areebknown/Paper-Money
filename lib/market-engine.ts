@@ -1,5 +1,6 @@
 import { prisma } from './db';
 
+// Using the exact baseline properties and tuning from the legacy app
 export const ASSETS = [
     { id: 'IRON', name: 'Iron', unit: '1kg Packet', startPrice: 100, upProb: 0.74, magMin: 0.005, magMax: 0.04, description: 'Iron may see upward movement with relatively lower risk. Price action is likely to stay increasing slowly.' },
     { id: 'COPPER', name: 'Copper', unit: '1kg Packet', startPrice: 1000, upProb: 0.70, magMin: 0.02, magMax: 0.03, description: 'Copper could experience gradual changes . Upside appears more possible, though profit may remain moderate.' },
@@ -13,6 +14,9 @@ export async function initAssets() {
     for (const assetConfig of ASSETS) {
         // 1. Ensure the Market System account for this asset exists
         const systemUsername = `MARKET_${assetConfig.id}`;
+
+        // Use an isolated transaction to avoid Prisma Client validation errors
+        // during concurrent upserts of system accounts.
         await prisma.user.upsert({
             where: { username: systemUsername },
             update: {},
@@ -20,7 +24,7 @@ export async function initAssets() {
                 username: systemUsername,
                 password: 'SYSTEM_ACCOUNT_LOCKED', // Non-loginable
                 isAdmin: true,
-                balance: 10000000 // Infinite-like pool for market side (within Decimal 10,2 limit)
+                balance: 10000000 // Infinite-like pool for market side
             }
         });
 
@@ -75,7 +79,6 @@ export async function updateMarketPrices(force: boolean = false) {
             }
         }
 
-        // Ensure assets exist
         console.log('[MARKET ENGINE] Initializing assets...');
         await initAssets();
 
@@ -84,15 +87,15 @@ export async function updateMarketPrices(force: boolean = false) {
 
         const now = new Date();
 
-        // Fetch all pending market events
-        const pendingEvents = await (prisma as any).marketEvent.findMany({
+        // Fetch all pending market events (BOOM or CRASH)
+        const pendingEvents = await prisma.marketEvent.findMany({
             where: { status: 'PENDING' }
-        }) as any[];
+        });
 
         console.log(`[MARKET ENGINE] Found ${pendingEvents.length} pending market events`);
         if (pendingEvents.length > 0) {
-            pendingEvents.forEach((event: any) => {
-                console.log(`[MARKET ENGINE] - Event: ${event.type} for ${event.assetId} (${event.magnitude * 100}%)`);
+            pendingEvents.forEach((event) => {
+                console.log(`[MARKET ENGINE] - Event: ${event.type} for ${event.assetId} (${Number(event.magnitude) * 100}%)`);
             });
         }
 
@@ -106,7 +109,7 @@ export async function updateMarketPrices(force: boolean = false) {
             let changePercent: number;
 
             // Find if there's a specific event for this asset or a global event
-            const event = pendingEvents.find((e: any) => e.assetId === asset.id) || pendingEvents.find((e: any) => e.assetId === 'ALL');
+            const event = pendingEvents.find(e => e.assetId === asset.id) || pendingEvents.find(e => e.assetId === 'ALL');
 
             if (event) {
                 // EXECUTE SCHEDULED EVENT (BOOM or CRASH)
@@ -117,15 +120,20 @@ export async function updateMarketPrices(force: boolean = false) {
 
                 console.log(`[MARKET ${event.type}] Executing scheduled event for ${asset.name}: ${isBoom ? '+' : '-'}${(magnitude * 100).toFixed(2)}%`);
             } else {
-                // NORMAL MARKET MATH
+                // NORMAL MARKET MATH LOGIC
+                // Generate a random roll to decide if it goes UP or DOWN based on the asset's custom probability
                 const isUp = Math.random() < config.upProb;
+                // Generate a random swing magnitude within the asset's custom limitations
                 const magnitude = config.magMin + (Math.random() * (config.magMax - config.magMin));
+                // Set the final directional change
                 const direction = isUp ? 1 : -1;
                 changePercent = direction * magnitude;
             }
 
             const oldPrice = Number(asset.currentPrice);
             const rawNewPrice = oldPrice * (1 + changePercent);
+
+            // Hard floor constraint to avoid price diving into decimals/zeros
             const newPrice = Math.max(1, Math.round(rawNewPrice * 100) / 100);
 
             console.log(`[MARKET ENGINE] ${asset.name}: ₹${oldPrice.toFixed(2)} → ₹${newPrice.toFixed(2)} (${(changePercent * 100).toFixed(2)}%)`);
@@ -148,8 +156,8 @@ export async function updateMarketPrices(force: boolean = false) {
         // Mark all utilized pending events as EXECUTED
         if (pendingEvents.length > 0) {
             console.log(`[MARKET ENGINE] Marking ${pendingEvents.length} events as EXECUTED`);
-            await (prisma as any).marketEvent.updateMany({
-                where: { id: { in: pendingEvents.map((e: any) => e.id) } },
+            await prisma.marketEvent.updateMany({
+                where: { id: { in: pendingEvents.map(e => e.id) } },
                 data: {
                     status: 'EXECUTED',
                     executedAt: now
