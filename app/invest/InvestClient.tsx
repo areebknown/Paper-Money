@@ -16,6 +16,7 @@ interface InvestClientProps {
 
 export default function InvestClient({ initialAssets }: InvestClientProps) {
     const { mutate } = useSWRConfig();
+    const [focusedStat, setFocusedStat] = useState<'balance' | 'invested' | null>(null);
 
     const { data: userData } = useSWR('/api/user', fetcher);
     const { data: marketData } = useSWR('/api/market/sync', fetcher, {
@@ -71,7 +72,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
                 {/* Dashboard Stats */}
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
+                    <div
+                        onClick={() => setFocusedStat('balance')}
+                        className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                    >
                         <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                             <Wallet size={16} className="text-red-500" />
                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
@@ -81,7 +85,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                         </p>
                     </div>
 
-                    <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
+                    <div
+                        onClick={() => setFocusedStat('invested')}
+                        className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                    >
                         <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                             <Briefcase size={16} className="text-orange-500" />
                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
@@ -190,9 +197,9 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                         <p className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mt-0.5">{asset.unit}</p>
                                     </div>
 
-                                    <div className="mt-2 pt-3 border-t border-white/5 flex justify-between items-end relative z-10">
+                                    <div className="mt-2 pt-3 border-t border-white/5 flex flex-col items-start gap-1 relative z-10 pb-1">
                                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Current Price</span>
-                                        <p className="text-xl font-black text-white font-mono">₹{Number(asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                        <p className="text-lg font-black text-white font-mono break-all leading-tight">₹{Number(asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     </div>
                                 </Link>
                             )
@@ -201,12 +208,44 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 </section>
 
                 <div className="pt-6 pb-20 text-center">
-                    <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                        <Activity size={12} className="text-red-500/50" />
-                        Market updates daily at 12:00 AM IST. Investing involves risk.
-                    </p>
+                    <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-1">
+                        <div className="flex items-center gap-2">
+                            <Activity size={12} className="text-red-500/50" />
+                            <span>Market updates daily at 12:00 AM IST.</span>
+                        </div>
+                        <span>Investing involves risk.</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Full Value Modal */}
+            {focusedStat && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                    onClick={() => setFocusedStat(null)}
+                >
+                    <div
+                        className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
+                            {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
+                                {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
+                            </span>
+                        </div>
+                        <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
+                            ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                        </p>
+
+                        {/* Decorative background glow */}
+                        <div className={cn(
+                            "absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none",
+                            focusedStat === 'balance' ? "bg-red-500" : "bg-orange-500"
+                        )} />
+                    </div>
+                </div>
+            )}
 
             <BottomNav />
         </main>
