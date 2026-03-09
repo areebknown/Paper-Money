@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Trophy, AlertCircle, Layers, Upload, X, ImageIcon, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
@@ -10,18 +10,49 @@ export default function NewArtifactPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const [nextPid, setNextPid] = useState<number | null>(null);
+    const [marketPrices, setMarketPrices] = useState<{ gold: number, silver: number }>({ gold: 0, silver: 0 });
+
+    useEffect(() => {
+        fetch('/api/admin/artifacts/init')
+            .then(res => res.json())
+            .then(data => {
+                if (data.nextPid) setNextPid(data.nextPid);
+                if (data.marketPrices) setMarketPrices(data.marketPrices);
+            })
+            .catch(err => console.error('Failed to load init data:', err));
+    }, []);
+
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         imageUrl: '',
         basePoints: '',
-        pawnPoints: '',
         width: '',
         height: '',
         depth: '',
         materialSilver: '',
         materialGold: '',
     });
+
+    function calculateTier(bp: number) {
+        if (bp <= 1000) return 'E';
+        if (bp <= 5000) return 'D';
+        if (bp <= 12000) return 'C';
+        if (bp <= 35000) return 'B';
+        if (bp <= 100000) return 'A';
+        if (bp <= 300000) return 'AA';
+        if (bp <= 1000000) return 'AAA';
+        if (bp <= 3000000) return 'S';
+        if (bp <= 10000000) return 'SS';
+        if (bp <= 30000000) return 'SSS';
+        return 'SSS+';
+    }
+
+    const numericBp = Number(formData.basePoints) || 0;
+    const currentTier = calculateTier(numericBp);
+    const materialValue = (Number(formData.materialGold) || 0) * marketPrices.gold + (Number(formData.materialSilver) || 0) * marketPrices.silver;
+    const totalValue = numericBp + materialValue;
 
     // Image upload state
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
@@ -91,7 +122,6 @@ export default function NewArtifactPage() {
                 description: formData.description,
                 imageUrl: formData.imageUrl,
                 basePoints: Number(formData.basePoints),
-                pawnPoints: formData.pawnPoints ? Number(formData.pawnPoints) : 0,
                 width: formData.width ? Number(formData.width) : undefined,
                 height: formData.height ? Number(formData.height) : undefined,
                 depth: formData.depth ? Number(formData.depth) : undefined,
@@ -131,6 +161,22 @@ export default function NewArtifactPage() {
                 <h1 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                     Mint New Artifact
                 </h1>
+
+                {/* Info Badges */}
+                <div className="flex flex-wrap gap-4 mb-8">
+                    <div className="bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2">
+                        <span className="text-gray-500 text-sm">PID</span>
+                        <span className="text-white font-['Russo_One']">{nextPid ? `#${nextPid}` : '...'}</span>
+                    </div>
+                    <div className="bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2">
+                        <span className="text-gray-500 text-sm">Tier</span>
+                        <span className="text-purple-400 font-['Russo_One'] font-bold text-lg leading-none">{currentTier}</span>
+                    </div>
+                    <div className="bg-gray-900 border border-yellow-900/50 px-4 py-2 rounded-xl flex items-center gap-2">
+                        <span className="text-gray-500 text-sm">Total Price (TP)</span>
+                        <span className="text-yellow-400 font-['Russo_One'] font-bold tracking-wide">₹{totalValue.toLocaleString()}</span>
+                    </div>
+                </div>
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-lg flex items-center gap-3 text-red-200">
@@ -238,15 +284,11 @@ export default function NewArtifactPage() {
                                 <p className="text-xs text-gray-500">Fundamental value of the item.</p>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-400">Pawn Points (Optional)</label>
-                                <input
-                                    type="number"
-                                    value={formData.pawnPoints}
-                                    onChange={(e) => setFormData({ ...formData, pawnPoints: e.target.value })}
-                                    placeholder="500"
-                                    className={inputCls}
-                                />
-                                <p className="text-xs text-gray-500">Quick-sell value at Pawn Shop.</p>
+                                <label className="text-sm font-medium text-gray-400">Live Material Economics</label>
+                                <div className="h-[46px] mt-1 bg-gray-950/50 border border-gray-800 rounded-lg px-4 flex items-center gap-4">
+                                    <p className="text-xs text-gray-500">Gold: <span className="text-yellow-500 font-bold">₹{marketPrices.gold}/g</span></p>
+                                    <p className="text-xs text-gray-500">Silver: <span className="text-gray-300 font-bold">₹{marketPrices.silver}/g</span></p>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -60,24 +60,17 @@ export async function GET(
         }
 
         const demandPoints = Math.floor(artifact.viewCount * 0.5);
-        const pawnPoints = artifact.isPspPermanent
-            ? artifact.pawnPoints
-            : artifact.pawnShopId
-                ? artifact.pawnPoints
-                : 0;
 
         const totalValue =
             Number(artifact.basePoints) +
             materialPoints +
-            demandPoints +
-            Number(pawnPoints);
+            demandPoints;
 
         return NextResponse.json({
             artifact: {
                 ...artifact,
                 materialPoints,
                 demandPoints,
-                pawnPoints: Number(pawnPoints),
                 totalValue,
             },
         });

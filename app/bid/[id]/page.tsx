@@ -352,21 +352,32 @@ function ShutterStage({
             </div>
 
             {/* ── LAYER 2: Artifact Images ── */}
-            <div className="absolute inset-0 flex items-center justify-center p-6 z-10">
+            <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 z-10">
                 {auctionData.artifacts && auctionData.artifacts.length > 0 ? (
-                    <div className="flex flex-wrap gap-3 justify-center items-center">
-                        {auctionData.artifacts.map((a: any, i: number) => (
-                            <div key={i}>
-                                {a.artifact.imageUrl ? (
-                                    <img src={compressImageUrl(a.artifact.imageUrl)} alt="" className="h-20 w-20 object-contain drop-shadow-2xl"
-                                        style={{ filter: 'drop-shadow(0 0 12px rgba(255,200,80,0.4))' }} />
-                                ) : (
-                                    <div className="w-20 h-20 bg-yellow-900/40 border border-yellow-600/30 rounded-lg flex items-center justify-center">
-                                        <span className="material-icons-round text-yellow-500 text-3xl">inventory_2</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                    <div
+                        className="flex flex-wrap gap-2 sm:gap-4 justify-center items-center h-full w-full content-center"
+                        style={{ maxWidth: '85%' }}
+                    >
+                        {auctionData.artifacts.slice(0, 10).map((a: any, i: number) => {
+                            const count = auctionData.artifacts.length;
+                            // Dynamically scale images down if there are many artifacts
+                            const sizeClass = count > 5 ? 'w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20' :
+                                count > 2 ? 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24' :
+                                    'w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40';
+
+                            return (
+                                <div key={i} className="relative z-10 transition-transform hover:scale-110">
+                                    {a.artifact?.imageUrl ? (
+                                        <img src={compressImageUrl(a.artifact.imageUrl)} alt="" className={`${sizeClass} object-contain`}
+                                            style={{ filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5)) drop-shadow(0 0 12px rgba(255,200,80,0.4))' }} />
+                                    ) : (
+                                        <div className={`${sizeClass} bg-yellow-900/40 border border-yellow-600/30 rounded-lg flex items-center justify-center shadow-xl shadow-black/50`}>
+                                            <span className="material-icons-round text-yellow-500 text-3xl">inventory_2</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="text-yellow-600/40 text-center">

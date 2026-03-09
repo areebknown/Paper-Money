@@ -43,37 +43,6 @@ export default function AdminDashboard() {
                 />
             </div>
 
-            {/* Stats Overview */}
-            <h2 className="text-xl font-bold text-gray-200 mb-6 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                Live Overview
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard
-                    icon={<Users className="w-5 h-5 text-blue-400" />}
-                    label="Total Users"
-                    value="1,247"
-                    trend="+12%"
-                />
-                <StatCard
-                    icon={<Gavel className="w-5 h-5 text-green-400" />}
-                    label="Active Auctions"
-                    value="5"
-                    trend="+2"
-                />
-                <StatCard
-                    icon={<Package className="w-5 h-5 text-purple-400" />}
-                    label="Artifacts"
-                    value="38"
-                    trend="+5"
-                />
-                <StatCard
-                    icon={<Shield className="w-5 h-5 text-yellow-400" />}
-                    label="Revenue"
-                    value="₹1.2M"
-                    trend="+8%"
-                />
-            </div>
         </div>
     );
 }
@@ -92,18 +61,5 @@ function QuickActionCard({ href, icon, title, description, gradient, borderColor
                 <p className="text-sm text-gray-400">{description}</p>
             </div>
         </Link>
-    );
-}
-
-function StatCard({ icon, label, value, trend }: any) {
-    return (
-        <div className="p-5 bg-[#0a0a0a] border border-gray-800 rounded-xl hover:border-gray-700 transition-colors">
-            <div className="flex items-start justify-between mb-4">
-                <div className="p-2 bg-gray-900 rounded-lg">{icon}</div>
-                <span className="text-xs font-medium text-green-400 bg-green-900/20 px-2 py-1 rounded-full">{trend}</span>
-            </div>
-            <div className="text-2xl font-bold text-gray-100 mb-1">{value}</div>
-            <div className="text-xs text-gray-500">{label}</div>
-        </div>
     );
 }

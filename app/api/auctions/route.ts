@@ -69,7 +69,6 @@ export async function POST(req: Request) {
         // Strict Validation
         const {
             name,
-            description,
             scheduledAt,
             rankTier,
             startingPrice,
@@ -97,7 +96,6 @@ export async function POST(req: Request) {
         const auction = await prisma.auction.create({
             data: {
                 name,
-                description: description || '',
                 scheduledAt: new Date(scheduledAt),
                 rankTier,
                 startingPrice: price,

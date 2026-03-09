@@ -103,8 +103,6 @@ export async function POST(req: Request) {
                 where: { id: artifactId },
                 data: {
                     pawnShopId: pawnShop.id,
-                    pawnPoints: Number(pawnShop.pspValue),
-                    isPspPermanent: false,
                 },
             });
 
@@ -124,8 +122,6 @@ export async function POST(req: Request) {
                 where: { id: artifactId },
                 data: {
                     pawnShopId: null,
-                    pawnPoints: 0,
-                    isPspPermanent: false,
                 },
             });
 

@@ -122,6 +122,7 @@ model Portfolio {
 
 model Artifact {
   id          String   @id @default(cuid())
+  productId   Int      @unique @default(autoincrement()) // Product ID (PID), starting from 10001
   name        String
   description String?
   imageUrl    String?
@@ -129,6 +130,7 @@ model Artifact {
   // Valuation
   basePoints     Decimal @db.Decimal(10, 2) // BP
   materialComposition Json? // {"gold": 2.5, "silver": 10} in grams
+  tier           String  @default("E") // Artifact Tier (E to SSS+)
   
   // Dimensions for visual scaling
   width  Decimal? @db.Decimal(8, 2) // relative units
@@ -147,8 +149,6 @@ model Artifact {
   // Pawn Shop
   pawnShopId String?
   pawnShop   PawnShop? @relation(fields: [pawnShopId], references: [id])
-  pawnPoints Decimal @default(0) @db.Decimal(10, 2) // PSP (temporary unless sold)
-  isPspPermanent Boolean @default(false)
   
   // Relations
   auctions   AuctionArtifact[]
@@ -160,7 +160,6 @@ model Artifact {
 model Auction {
   id          String   @id @default(cuid())
   name        String
-  description String?
   
   // Timing
   scheduledAt DateTime
