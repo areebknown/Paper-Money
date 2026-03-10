@@ -24,7 +24,7 @@ interface AssetClientProps {
     isSuspended: boolean;
 }
 
-export default function AssetClient({ asset, userUnits, userBalance, isSuspended }: AssetClientProps) {
+export default function AssetClient({ asset, userUnits, userBalance, rankPoints, isSuspended }: AssetClientProps & { rankPoints: number }) {
     const router = useRouter();
     const [isInvesting, setIsInvesting] = useState(false);
     const [isCashingOut, setIsCashingOut] = useState(false);
@@ -89,39 +89,69 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
     };
 
     return (
-        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-[#1E3A8A] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] relative pb-24 lg:pb-0 overflow-x-hidden">
-            {/* Background Effects Removed for Consistency with Home Page */}
+        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] relative flex flex-col pb-24 lg:pb-0 overflow-x-hidden selection:bg-[#FBBF24] selection:text-white">
 
             <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col flex-1 pt-0">
-                {/* Header Block REMOVED to prevent footer overlap on smaller devices. Replaced with Floating Balance */}
-                <div className="flex justify-between items-center px-4 pt-4 mb-2 relative z-50">
-                    <div className="flex flex-col gap-1 w-auto">
-                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap shadow-lg">
-                            <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
-                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
-                                {userBalance.toLocaleString()}
-                            </span>
+                {/* Header */}
+                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4">
+                    <div className="flex justify-between items-center px-4 mb-2 relative">
+                        {/* Left: Balance + Rank Points */}
+                        <div className="flex flex-col gap-1 w-auto">
+                            <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
+                                <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
+                                    {(userBalance || 0).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
+                                <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
+                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints || 0}</span>
+                            </div>
+                        </div>
+
+                        {/* Center: Logo */}
+                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
+                            <img
+                                src={LOGO_URL}
+                                alt="Bid Wars Logo"
+                                className="drop-shadow-lg object-contain h-[50px] w-auto"
+                            />
+                        </div>
+
+                        {/* Right: Notifications + Profile */}
+                        <div className="flex items-center gap-3 w-24 justify-end">
+                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
+                                <span className="material-icons-round text-white">notifications</span>
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                            </button>
+                            <Link href="/profile">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
+                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
+                                        <span className="material-icons-round text-white text-xl">person</span>
+                                    </div>
+                                </div>
+                            </Link>
                         </div>
                     </div>
-                </div>
+                </header>
 
                 <div className="px-4 pb-6 space-y-4 flex-1 w-full max-w-4xl mx-auto">
                     {/* Floating Asset Title Bar */}
-                    <div className="flex items-center justify-between bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
+                    <div className="flex items-center justify-between bg-[#1e293b] border border-white/10 p-4 rounded-2xl shadow-xl shadow-black/40">
                         <div className="flex items-center gap-3">
-                            <Link href="/invest" className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition border border-white/10 shadow-inner group active:scale-95">
-                                <ArrowLeft size={18} className="text-white group-hover:-translate-x-0.5 transition-transform" />
+                            <Link href="/invest" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all outline-none border border-white/5">
+                                <ArrowLeft size={18} />
                             </Link>
                             <div>
                                 <h1 className="text-lg md:text-xl font-bold tracking-tight text-white">{asset.name}</h1>
-                                <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest">{asset.unit}</p>
+                                <p className="text-[10px] md:text-xs text-[#FBBF24] font-bold uppercase tracking-widest">{asset.unit}</p>
                             </div>
                         </div>
                         <div className={cn(
                             "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border md:text-sm",
                             isPositive
-                                ? "bg-green-500/10 text-[#22C55E] border-[#22C55E]/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
-                                : "bg-red-600/10 text-[#EF4444] border-[#EF4444]/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                                : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                         )}>
                             {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                             {Math.abs(asset.change24h).toFixed(2)}%
@@ -155,9 +185,9 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
 
                         <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
-                                <DollarSign size={14} className="text-[#22C55E]" /> Current Value
+                                <DollarSign size={14} className="text-emerald-400" /> Current Value
                             </p>
-                            <p className="text-xl md:text-2xl font-black text-[#22C55E] relative z-10 font-mono tracking-tight truncate">
+                            <p className="text-xl md:text-2xl font-black text-emerald-400 relative z-10 font-mono tracking-tight truncate">
                                 ₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -181,8 +211,8 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                 <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity={0} />
+                                            <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.5} />
@@ -209,7 +239,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                     <Area
                                         type="monotone"
                                         dataKey="price"
-                                        stroke={isPositive ? "#22c55e" : "#ef4444"}
+                                        stroke={isPositive ? "#10b981" : "#ef4444"}
                                         strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorPrice)"
@@ -240,12 +270,12 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
             </div>
 
             {/* Trading Input Bar */}
-            <div className="fixed sm:sticky bottom-[72px] sm:bottom-0 left-0 right-0 z-40 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent pt-12">
+            <div className="fixed sm:sticky bottom-0 left-0 right-0 z-40 p-4 md:p-6 bg-gradient-to-t from-[#111827] via-[#111827]/90 to-transparent pt-12">
                 <div className="max-w-4xl mx-auto grid grid-cols-2 gap-3 md:gap-4">
                     <button
                         onClick={() => setIsInvesting(true)}
                         disabled={isSuspended}
-                        className="flex items-center justify-center gap-2 text-[#1E3A8A] font-black py-4 md:py-5 rounded-2xl transition shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:grayscale disabled:hover:from-[#FBBF24] text-sm md:text-base bg-gradient-to-b from-[#FBBF24] to-yellow-600 hover:from-yellow-400 hover:to-yellow-500"
+                        className="flex items-center justify-center gap-2 bg-[#FBBF24] hover:bg-yellow-400 text-blue-900 border border-[#FBBF24] font-black py-4 md:py-5 rounded-2xl transition shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:grayscale disabled:hover:bg-[#FBBF24] text-sm md:text-base active:scale-95"
                     >
                         <ShoppingCart size={18} /> Invest
                     </button>
@@ -337,10 +367,10 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                                     onClick={() => handleTrade(isInvesting ? 'BUY' : 'SELL')}
                                                     className={cn(
                                                         "w-full py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg",
-                                                        isInvesting
-                                                            ? "bg-gradient-to-b from-[#FBBF24] to-yellow-600 text-[#1E3A8A] hover:from-yellow-400 hover:to-yellow-500 shadow-yellow-500/20"
-                                                            : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20"
-                                                    )}
+                                                    isInvesting
+                                                        ? "bg-[#FBBF24] text-blue-900 hover:bg-yellow-400 shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                                                        : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20"
+                                                )}
                                                 >
                                                     {isInvesting ? 'Confirm Investment' : 'Confirm Cash Out'}
                                                 </button>
@@ -392,40 +422,6 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                 </div>
             )}
 
-            <BottomNav />
         </main>
-    );
-}
-
-function BottomNav() {
-    return (
-        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
-                </Link>
-                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
-                </Link>
-                <div className="relative w-1/5 flex justify-center -top-6">
-                    <Link href="/pay">
-                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
-                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
-                        </button>
-                    </Link>
-                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
-                </div>
-                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
-                </Link>
-                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
-                </button>
-            </div>
-        </nav>
     );
 }

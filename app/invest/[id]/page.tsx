@@ -37,7 +37,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
 
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { balance: true, isSuspended: true }
+        select: { balance: true, isSuspended: true, rankPoints: true }
     });
 
     // Convert Decimal fields to number for Client Component serialization
@@ -55,6 +55,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             asset={normalizedAsset}
             userUnits={Number(portfolio?.units) || 0}
             userBalance={Number(user?.balance) || 0}
+            rankPoints={user?.rankPoints || 0}
             isSuspended={user?.isSuspended || false}
         />
     );

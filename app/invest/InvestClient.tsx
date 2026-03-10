@@ -44,8 +44,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
     const user = userData?.user;
 
     return (
-        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-[#1E3A8A] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] relative pb-24 lg:pb-0 overflow-x-hidden">
-            {/* Background Effects Removed for Consistency with Home Page */}
+        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] relative pb-24 lg:pb-0 overflow-x-hidden selection:bg-[#FBBF24] selection:text-white">
 
             <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6 pt-0 px-0 md:px-6">
                 {/* Header */}
@@ -96,7 +95,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div
                             onClick={() => setFocusedStat('balance')}
-                            className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
                             <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                                 <Wallet size={16} className="text-[#FBBF24]" />
@@ -109,11 +108,11 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
                         <div
                             onClick={() => setFocusedStat('invested')}
-                            className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
                             <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                                 <Briefcase size={16} className="text-red-500" />
-                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-500/80">Invested Value</span>
+                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
                             </div>
                             <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
@@ -125,7 +124,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
                         <section className="space-y-4">
                             <div className="flex items-center gap-2 px-1">
-                                <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"></div>
+                                <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full"></div>
                                 <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Portfolio</h2>
                             </div>
 
@@ -139,7 +138,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                         <Link
                                             href={`/invest/${p.assetId}`}
                                             key={p.id}
-                                            className="min-w-[75vw] sm:min-w-[280px] bg-[#1e293b] p-4 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden snap-start"
+                                            className="min-w-[75vw] sm:min-w-[280px] bg-[#1e293b] p-4 rounded-3xl border border-white/10 hover:border-red-500/50 shadow-lg transition-all flex flex-col gap-3 group relative overflow-hidden snap-start"
                                         >
                                             {/* Glow effect on hover */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -149,8 +148,8 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                                 <div className={cn(
                                                     "text-[9px] font-black px-2 py-1 rounded-md border backdrop-blur-xl",
                                                     isProfit
-                                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                                                        : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                                                        : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                                                 )}>
                                                     {isProfit ? 'PROFIT' : 'LOSS'}
                                                 </div>
@@ -168,7 +167,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                                 <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">P/L</span>
                                                 <span className={cn(
                                                     "text-xs font-black font-mono",
-                                                    isProfit ? "text-emerald-400" : "text-red-400"
+                                                    isProfit ? "text-emerald-400" : "text-red-500"
                                                 )}>
                                                     {isProfit ? '+' : '-'}₹{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
@@ -181,9 +180,9 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     )}
 
                     {/* Asset Market Section */}
-                    <section className="space-y-4 mt-8">
+                    <section className="space-y-4">
                         <div className="flex items-center gap-2 px-1">
-                            <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"></div>
+                            <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full"></div>
                             <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Market Assets</h2>
                         </div>
 
@@ -194,7 +193,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                     <Link
                                         key={asset.id}
                                         href={`/invest/${asset.id}`}
-                                        className="bg-[#1e293b] p-4 rounded-2xl md:rounded-3xl border border-white/5 hover:border-red-500/30 transition-all flex flex-col gap-3 group relative overflow-hidden"
+                                        className="bg-[#1e293b] p-4 rounded-2xl md:rounded-3xl border border-white/10 hover:border-red-500/50 shadow-lg transition-all flex flex-col gap-3 group relative overflow-hidden"
                                     >
                                         {/* Hover Gradient */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -206,8 +205,8 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                             <div className={cn(
                                                 "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border backdrop-blur-xl shadow-lg",
                                                 isPositive
-                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                                                    : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+                                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                                                    : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                                             )}>
                                                 {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                                                 {Math.abs(asset.change24h).toFixed(2)}%
@@ -279,7 +278,7 @@ function BottomNav() {
     return (
         <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
             <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" onClick={() => { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('homeTab', 'market'); }} className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
+                <Link href="/home" className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
                     <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </Link>
