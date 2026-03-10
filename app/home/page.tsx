@@ -69,41 +69,60 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-white bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
             {/* Header */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-40 pt-4 pb-2 border-b border-[#FBBF24]">
-                <div className="flex justify-between items-center px-4 mb-2 relative">
+            <header className="relative z-40 border-b border-white/10 bg-gradient-to-b from-[#14254f] via-[#101d3f] to-[#0b1328] shadow-[0_18px_38px_rgba(0,0,0,0.45)] overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-black/25 pointer-events-none" />
+                <div className="flex justify-between items-center px-4 pt-4 pb-3 relative min-h-[92px]">
                     {/* Left: Balance + Rank Points */}
-                    <div className="flex flex-col gap-1 w-auto">
-                        <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
-                            <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
-                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
-                                {balance.toLocaleString()}
-                            </span>
+                    <div className="flex flex-col gap-2 w-auto min-w-[104px]">
+                        <div className="min-h-[38px] rounded-2xl border border-white/10 bg-white/8 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_20px_rgba(0,0,0,0.18)] backdrop-blur-[2px] whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#FBBF24] to-[#f59e0b] shadow-[0_6px_14px_rgba(251,191,36,0.35)]">
+                                    <span className="material-icons-round text-[#1E293B] leading-none" style={{ fontSize: '16px' }}>currency_rupee</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[9px] font-semibold tracking-[0.22em] text-white/55 uppercase">Balance</div>
+                                    <div className="text-white text-[15px] leading-none font-semibold font-mono tabular-nums">
+                                        {balance.toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
-                            <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
-                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
+                        <div className="min-h-[34px] rounded-2xl border border-white/10 bg-black/20 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#60A5FA] to-[#1D4ED8] shadow-[0_6px_14px_rgba(37,99,235,0.28)]">
+                                    <span className="material-icons-round text-white leading-none" style={{ fontSize: '14px' }}>military_tech</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[8px] font-semibold tracking-[0.22em] text-white/50 uppercase">Rank</div>
+                                    <div className="text-white text-[13px] leading-none font-semibold font-mono tabular-nums">{rankPoints}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Center: Logo */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                        <img
-                            src={LOGO_URL}
-                            alt="Bid Wars Logo"
-                            className="drop-shadow-lg object-contain h-[50px] w-auto"
-                        />
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div className="rounded-[28px] border border-white/12 bg-white/6 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_rgba(0,0,0,0.28)] backdrop-blur-[2px]">
+                            <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                            <img
+                                src={LOGO_URL}
+                                alt="Bid Wars Logo"
+                                className="drop-shadow-[0_10px_22px_rgba(0,0,0,0.4)] object-contain h-[52px] w-auto relative z-10"
+                            />
+                        </div>
                     </div>
 
                     {/* Right: Notifications + Profile */}
                     <div className="flex items-center gap-3 w-24 justify-end">
-                        <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
-                            <span className="material-icons-round text-white">notifications</span>
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                        <button className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_18px_rgba(0,0,0,0.18)] transition hover:bg-white/14 active:scale-95">
+                            <span className="material-icons-round text-white text-[21px]">notifications</span>
+                            <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full border-2 border-[#101d3f] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.7)]"></span>
                         </button>
                         <Link href="/profile">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
-                                <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
-                                    <span className="material-icons-round text-white text-xl">person</span>
+                            <div className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border border-[#fcd34d]/60 bg-gradient-to-br from-[#FBBF24] via-[#f59e0b] to-[#c2410c] p-[1px] shadow-[0_10px_20px_rgba(251,191,36,0.25)]">
+                                <div className="flex h-full w-full items-center justify-center rounded-[15px] border border-white/15 bg-[#334155]">
+                                    <span className="material-icons-round text-white text-[21px]">person</span>
                                 </div>
                             </div>
                         </Link>
