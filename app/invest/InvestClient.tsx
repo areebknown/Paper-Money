@@ -44,15 +44,8 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
     const user = userData?.user;
 
     return (
-        <main className="min-h-screen bg-slate-950 text-white relative pb-24 lg:pb-0 overflow-x-hidden selection:bg-red-500/30 selection:text-red-200">
-            {/* Background Effects */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-red-900/10 rounded-full blur-[120px] mix-blend-screen transform translate-x-1/3 -translate-y-1/3 animate-pulse-slow"></div>
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-orange-900/10 rounded-full blur-[100px] mix-blend-screen transform -translate-x-1/3 translate-y-1/3"></div>
-
-                {/* Subtle Grid Overlay */}
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-            </div>
+        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-[#1E3A8A] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] relative pb-24 lg:pb-0 overflow-x-hidden">
+            {/* Background Effects Removed for Consistency with Home Page */}
 
             <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6 pt-0 px-0 md:px-6">
                 {/* Header */}
@@ -106,7 +99,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
                         >
                             <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
-                                <Wallet size={16} className="text-red-500" />
+                                <Wallet size={16} className="text-[#FBBF24]" />
                                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
                             </div>
                             <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
@@ -119,8 +112,8 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
                         >
                             <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
-                                <Briefcase size={16} className="text-orange-500" />
-                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
+                                <Briefcase size={16} className="text-red-500" />
+                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-500/80">Invested Value</span>
                             </div>
                             <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
@@ -132,7 +125,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     {user?.portfolios?.filter((p: any) => p.units > 0).length > 0 && (
                         <section className="space-y-4">
                             <div className="flex items-center gap-2 px-1">
-                                <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
+                                <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"></div>
                                 <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Portfolio</h2>
                             </div>
 
@@ -188,9 +181,9 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                     )}
 
                     {/* Asset Market Section */}
-                    <section className="space-y-4">
+                    <section className="space-y-4 mt-8">
                         <div className="flex items-center gap-2 px-1">
-                            <div className="w-1.5 h-6 bg-red-500 rounded-full"></div>
+                            <div className="w-1.5 h-6 bg-[#FBBF24] rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"></div>
                             <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Market Assets</h2>
                         </div>
 

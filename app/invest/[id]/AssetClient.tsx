@@ -89,66 +89,39 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
     };
 
     return (
-        <main className="min-h-screen bg-slate-950 text-white relative flex flex-col pb-24 lg:pb-0 overflow-x-hidden selection:bg-red-500/30 selection:text-red-200">
-            {/* Background Effects */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[100px] mix-blend-screen transform translate-x-1/3 -translate-y-1/3"></div>
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-orange-900/10 rounded-full blur-[100px] mix-blend-screen transform -translate-x-1/3 translate-y-1/3"></div>
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-            </div>
+        <main className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col selection:bg-[#FBBF24] selection:text-[#1E3A8A] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] relative pb-24 lg:pb-0 overflow-x-hidden">
+            {/* Background Effects Removed for Consistency with Home Page */}
 
             <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col flex-1 pt-0">
-                {/* Header */}
-                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 rounded-b-3xl md:rounded-3xl mb-4">
-                    <div className="flex justify-between items-center px-4 mb-2 relative">
-                        {/* Left: Back Button + Arrow */}
-                        <div className="flex flex-col gap-1 w-auto z-50">
-                            <Link href="/invest" className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full border border-white/10 whitespace-nowrap group hover:bg-black/50 transition">
-                                <ArrowLeft size={16} className="text-[#FBBF24] group-hover:-translate-x-1 transition-transform" />
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide uppercase">
-                                    Market
-                                </span>
-                            </Link>
-                        </div>
-
-                        {/* Center: Logo */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                            <img
-                                src={LOGO_URL}
-                                alt="Bid Wars Logo"
-                                className="drop-shadow-lg object-contain h-[50px] w-auto"
-                            />
-                        </div>
-
-                        {/* Right: Notifications + Profile */}
-                        <div className="flex items-center gap-3 w-24 justify-end z-50">
-                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
-                                <span className="material-icons-round text-white">notifications</span>
-                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
-                            </button>
-                            <Link href="/profile">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
-                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
-                                        <span className="material-icons-round text-white text-xl">person</span>
-                                    </div>
-                                </div>
-                            </Link>
+                {/* Header Block REMOVED to prevent footer overlap on smaller devices. Replaced with Floating Balance */}
+                <div className="flex justify-between items-center px-4 pt-4 mb-2 relative z-50">
+                    <div className="flex flex-col gap-1 w-auto">
+                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap shadow-lg">
+                            <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
+                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
+                                {userBalance.toLocaleString()}
+                            </span>
                         </div>
                     </div>
-                </header>
+                </div>
 
                 <div className="px-4 pb-6 space-y-4 flex-1 w-full max-w-4xl mx-auto">
                     {/* Floating Asset Title Bar */}
                     <div className="flex items-center justify-between bg-[#1e293b] border border-white/5 p-4 rounded-2xl shadow-xl shadow-black/20">
-                        <div>
-                            <h1 className="text-lg md:text-xl font-bold tracking-tight text-white">{asset.name}</h1>
-                            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest">{asset.unit}</p>
+                        <div className="flex items-center gap-3">
+                            <Link href="/invest" className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition border border-white/10 shadow-inner group active:scale-95">
+                                <ArrowLeft size={18} className="text-white group-hover:-translate-x-0.5 transition-transform" />
+                            </Link>
+                            <div>
+                                <h1 className="text-lg md:text-xl font-bold tracking-tight text-white">{asset.name}</h1>
+                                <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest">{asset.unit}</p>
+                            </div>
                         </div>
                         <div className={cn(
                             "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border md:text-sm",
                             isPositive
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                                : "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+                                ? "bg-green-500/10 text-[#22C55E] border-[#22C55E]/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                                : "bg-red-600/10 text-[#EF4444] border-[#EF4444]/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
                         )}>
                             {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                             {Math.abs(asset.change24h).toFixed(2)}%
@@ -182,9 +155,9 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
 
                         <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
-                                <DollarSign size={14} className="text-emerald-400" /> Current Value
+                                <DollarSign size={14} className="text-[#22C55E]" /> Current Value
                             </p>
-                            <p className="text-xl md:text-2xl font-black text-emerald-400 relative z-10 font-mono tracking-tight truncate">
+                            <p className="text-xl md:text-2xl font-black text-[#22C55E] relative z-10 font-mono tracking-tight truncate">
                                 ₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -196,7 +169,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
 
                         <div className="flex justify-between flex-wrap items-center gap-2 mb-4 relative z-10">
                             <h2 className="text-sm md:text-base font-bold text-white flex items-center gap-2 tracking-tight">
-                                <TrendingUp size={18} className="text-red-500" /> 7-Day Performance Metric
+                                <TrendingUp size={18} className="text-[#FBBF24]" /> 7-Day Performance
                             </h2>
                             <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
                                 Market Price: <span className="text-white font-mono">₹{asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -208,8 +181,8 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                 <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0} />
+                                            <stop offset="5%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.5} />
@@ -236,7 +209,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                     <Area
                                         type="monotone"
                                         dataKey="price"
-                                        stroke={isPositive ? "#10b981" : "#ef4444"}
+                                        stroke={isPositive ? "#22c55e" : "#ef4444"}
                                         strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorPrice)"
@@ -272,7 +245,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                     <button
                         onClick={() => setIsInvesting(true)}
                         disabled={isSuspended}
-                        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-black py-4 md:py-5 rounded-2xl transition shadow-[0_0_20px_rgba(220,38,38,0.3)] disabled:opacity-50 disabled:grayscale disabled:hover:bg-red-600 text-sm md:text-base"
+                        className="flex items-center justify-center gap-2 text-[#1E3A8A] font-black py-4 md:py-5 rounded-2xl transition shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:grayscale disabled:hover:from-[#FBBF24] text-sm md:text-base bg-gradient-to-b from-[#FBBF24] to-yellow-600 hover:from-yellow-400 hover:to-yellow-500"
                     >
                         <ShoppingCart size={18} /> Invest
                     </button>
@@ -365,7 +338,7 @@ export default function AssetClient({ asset, userUnits, userBalance, isSuspended
                                                     className={cn(
                                                         "w-full py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg",
                                                         isInvesting
-                                                            ? "bg-red-600 text-white hover:bg-red-500 shadow-red-500/20"
+                                                            ? "bg-gradient-to-b from-[#FBBF24] to-yellow-600 text-[#1E3A8A] hover:from-yellow-400 hover:to-yellow-500 shadow-yellow-500/20"
                                                             : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20"
                                                     )}
                                                 >
