@@ -1,5 +1,14 @@
-# Major Admin Panel Overhaul Planning
+# Major Admin Panel Overhaul Planning [COMPLETED]
 
-This document serves as a staging ground for the upcoming, massive structural changes and features planned for the Admin Dashboard. 
+The major overhaul planned for the Admin Dashboard has been successfully executed.
 
-*(This document is currently blank and pending user brain-dump regarding their requirements and feature additions. Update this text with the exact feature scope, UI desires, and backend database schema adjustments required to execute the Admin Panel rewrite before beginning work).*
+## Completed Features
+- **Database Schema Refactor:** Migrated to `productId` (PID) logic and calculated `tier` system.
+- **Enhanced Artifact Minting:** Auto-PID generation, real-time Tier calculation, and Total Price (TP) estimation.
+- **Advanced Auction Creation:** 
+    - Replaced artifact dropdowns with a search-able lazy-loaded card grid.
+    - Added support for selecting 1-10 artifacts per auction.
+    - Integrated filter logic to hide owned or active artifacts.
+- **Artifact Duplication:** One-click cloning of artifact metadata.
+- **UI Standardized:** Applied Dark Theme consistently and removed legacy "Live Overview" placeholders.
+
