@@ -56,7 +56,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
             <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6 pt-0 px-0 md:px-6">
                 {/* Header */}
-                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 rounded-b-3xl md:rounded-3xl mb-4">
+                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4">
                     <div className="flex justify-between items-center px-4 mb-2 relative">
                         {/* Left: Balance + Rank Points */}
                         <div className="flex flex-col gap-1 w-auto">

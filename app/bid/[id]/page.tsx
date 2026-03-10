@@ -1140,35 +1140,46 @@ export default function LiveBidPage() {
             )}
 
             {/* ── HEADER ── */}
-            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-lg z-40 pb-4 pt-5 rounded-b-3xl flex justify-between items-center px-4 relative">
-                <div className="flex flex-col gap-1 w-1/3">
-                    <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 w-fit whitespace-nowrap">
-                        <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
-                        <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide max-w-[70px] truncate">{balance.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10 w-fit">
-                        <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
-                        <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide truncate">{rankPoints}</span>
-                    </div>
-                </div>
-
-                <div className="absolute left-1/2 -translate-x-1/2">
-                    <img src={LOGO_URL} alt="Bid Wars" className="object-contain drop-shadow-lg h-[50px] w-auto" />
-                </div>
-
-                <div className="flex items-center justify-end gap-2 w-1/3">
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-500'} shadow-lg`} />
-                    <button className="relative w-9 h-9 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition">
-                        <span className="material-icons-round text-white text-lg">notifications</span>
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#1E3A8A]" />
-                    </button>
-                    <Link href="/profile">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg">
-                            <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
-                                <span className="material-icons-round text-white text-base">person</span>
-                            </div>
+            <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-40 pt-4 pb-2 border-b border-[#FBBF24]">
+                <div className="flex justify-between items-center px-4 mb-2 relative">
+                    {/* Left: Balance + Rank Points */}
+                    <div className="flex flex-col gap-1 w-auto">
+                        <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
+                            <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
+                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
+                                {balance.toLocaleString()}
+                            </span>
                         </div>
-                    </Link>
+                        <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
+                            <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
+                            <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints}</span>
+                        </div>
+                    </div>
+
+                    {/* Center: Back Button (instead of Logo) */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
+                        <Link href="/home">
+                            <button className="flex flex-col items-center justify-center pt-2 pb-1 hover:text-white transition group relative active:scale-95">
+                                <span className="material-icons-round text-3xl mb-0 text-white translate-y-2 relative z-10 group-hover:-translate-y-1 transition-transform">flight_takeoff</span>
+                                <span className="text-[10px] font-black tracking-widest uppercase font-mono bg-white text-blue-900 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute top-10">Escape</span>
+                            </button>
+                        </Link>
+                    </div>
+
+                    {/* Right: Notifications + Profile */}
+                    <div className="flex items-center gap-3 w-24 justify-end">
+                        <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
+                            <span className="material-icons-round text-white">notifications</span>
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                        </button>
+                        <Link href="/profile">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
+                                <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
+                                    <span className="material-icons-round text-white text-xl">person</span>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
                 </div>
             </header>
 
