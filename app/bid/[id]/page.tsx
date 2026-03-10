@@ -474,6 +474,8 @@ export default function LiveBidPage() {
     // Too-early guard
     const [tooEarly, setTooEarly] = useState(false);
     const [scheduledAt, setScheduledAt] = useState<string>('');
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [isExiting, setIsExiting] = useState(false);
 
     // Animation timers
     const [lockCountdown, setLockCountdown] = useState(10);
@@ -527,6 +529,13 @@ export default function LiveBidPage() {
                 if (!auctionRes.ok) throw new Error('Auction not found');
                 const auctionJson = await auctionRes.json();
                 const auction = auctionJson.auction;
+
+                // Restrict access if the user has permanently exited
+                if (auction.exitedUsers?.some((u: any) => u.id === currentUserId)) {
+                    router.push('/home');
+                    return;
+                }
+
                 setAuctionData(auction);
 
                 const sp = Number(auction.startingPrice);
@@ -1005,6 +1014,16 @@ export default function LiveBidPage() {
 
 
     // ── Handlers ───────────────────────────────────────────────────────────────
+    const handlePermanentExit = async () => {
+        setIsExiting(true);
+        try {
+            await fetch(`/api/auctions/${auctionId}/exit`, { method: 'POST' });
+            router.push('/home');
+        } catch (error) {
+            console.error('Failed to exit auction', error);
+            setIsExiting(false);
+        }
+    };
     const placeBid = async (amount: number) => {
         if (bidding || phase !== 'BIDDING') return;
         if (amount > balance) { alert('Insufficient balance!'); return; }
@@ -1158,21 +1177,22 @@ export default function LiveBidPage() {
                         </div>
                     </div>
 
-                    {/* Center: Back Button (instead of Logo) */}
+                    {/* Center: Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                        <Link href="/home">
-                            <button className="flex flex-col items-center justify-center pt-2 pb-1 hover:text-white transition group relative active:scale-95">
-                                <span className="material-icons-round text-3xl mb-0 text-white translate-y-2 relative z-10 group-hover:-translate-y-1 transition-transform">flight_takeoff</span>
-                                <span className="text-[10px] font-black tracking-widest uppercase font-mono bg-white text-blue-900 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute top-10">Escape</span>
-                            </button>
-                        </Link>
+                        <img
+                            src={LOGO_URL}
+                            alt="Bid Wars Logo"
+                            className="drop-shadow-lg object-contain h-[50px] w-auto"
+                        />
                     </div>
 
-                    {/* Right: Notifications + Profile */}
+                    {/* Right: Exit + Profile */}
                     <div className="flex items-center gap-3 w-24 justify-end">
-                        <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
-                            <span className="material-icons-round text-white">notifications</span>
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                        <button 
+                            onClick={() => setShowExitConfirm(true)}
+                            className="relative w-10 h-10 flex items-center justify-center bg-red-500/10 rounded-full hover:bg-red-500/20 border border-red-500/30 transition active:scale-95 group"
+                        >
+                            <span className="material-icons-round text-red-500 group-hover:rotate-90 transition-transform">exit_to_app</span>
                         </button>
                         <Link href="/profile">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
@@ -1184,6 +1204,36 @@ export default function LiveBidPage() {
                     </div>
                 </div>
             </header>
+
+            {/* ── EXIT CONFIRMATION MODAL ── */}
+            {showExitConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#1e293b] border border-red-500/30 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl shadow-red-900/40 relative overflow-hidden animate-in zoom-in-95 align-center text-center">
+                        <div className="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                            <span className="material-icons-round text-red-500 text-3xl">warning</span>
+                        </div>
+                        <h2 className="text-xl font-black text-white mb-2 tracking-tight">Leave Auction?</h2>
+                        <p className="text-sm font-medium text-gray-400 mb-6">
+                            If you exit now, <strong className="text-red-400">you will not be able to join this auction again.</strong> Are you sure you want to leave?
+                        </p>
+                        <div className="flex gap-3 mt-4">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition active:scale-95 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handlePermanentExit}
+                                disabled={isExiting}
+                                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded-xl transition shadow-[0_0_15px_rgba(239,68,68,0.4)] active:scale-95 text-sm uppercase tracking-wide disabled:opacity-50"
+                            >
+                                {isExiting ? 'Leaving...' : 'Yes, Exit'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── SHUTTER STAGE ── */}
             <div className="shrink-0 w-full">

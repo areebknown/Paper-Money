@@ -32,6 +32,9 @@ export async function GET(
                         },
                     },
                 },
+                exitedUsers: {
+                    select: { id: true }
+                }
             },
         });
 

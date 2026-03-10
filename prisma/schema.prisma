@@ -33,6 +33,7 @@ model User {
   pawnShop             PawnShop?
   contracts            Contract[]
   wonAuctions          Auction[]     @relation("AuctionWinner")
+  exitedAuctions       Auction[]     @relation("AuctionExited")
   notificationSubs     AuctionNotificationSubscription[]
 }
 
@@ -190,6 +191,7 @@ model Auction {
   // Relations
   artifacts    AuctionArtifact[]
   bids         AuctionBid[]
+  exitedUsers  User[]        @relation("AuctionExited")
   notificationSubs AuctionNotificationSubscription[]
   
   @@index([status])
