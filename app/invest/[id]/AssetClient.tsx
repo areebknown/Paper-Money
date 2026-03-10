@@ -93,7 +93,9 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
 
             <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col flex-1 pt-0">
                 {/* Header */}
-                <header className="bg-[#1E3A8A] bg-opacity-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4">
+                <header className="relative z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4 bg-gradient-to-b from-[#14254f] via-[#101d3f] to-[#0b1328] shadow-[0_18px_38px_rgba(0,0,0,0.45)] overflow-hidden">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-black/25 pointer-events-none" />
                     <div className="flex justify-between items-center px-4 mb-2 relative">
                         {/* Left: Balance + Rank Points */}
                         <div className="flex flex-col gap-1 w-auto">
