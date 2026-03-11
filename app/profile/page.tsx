@@ -5,7 +5,21 @@ import { User, TrendingUp, Award, ShoppingBag, Settings, LogOut, ChevronRight, E
 import BottomNav from '@/components/BottomNav';
 import RankBadge from '@/components/RankBadge';
 
+import { useRouter } from 'next/navigation';
+
 export default function ProfilePage() {
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            const res = await fetch('/api/auth/logout', { method: 'POST' });
+            if (res.ok) {
+                router.push('/login');
+            }
+        } catch (error) {
+            console.error('Logout failed', error);
+        }
+    };
     // Mock user data
     const userData = {
         username: 'bidmaster123',
@@ -107,7 +121,10 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Logout */}
-                <button className="w-full py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/20 transition">
+                <button 
+                    onClick={handleLogout}
+                    className="w-full py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/20 transition"
+                >
                     <LogOut className="w-5 h-5" />
                     Logout
                 </button>
