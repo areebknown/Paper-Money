@@ -271,40 +271,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 )}
             </div>
 
-            <BottomNav />
-        </main>
-    );
-}
 
-function BottomNav() {
-    return (
-        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
-                </Link>
-                <Link href="/inventory" className="flex flex-col items-center gap-1 w-1/5 text-blue-400 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
-                </Link>
-                <div className="relative w-1/5 flex justify-center -top-6">
-                    <Link href="/pay">
-                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
-                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
-                        </button>
-                    </Link>
-                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
-                </div>
-                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
-                </Link>
-                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
-                </button>
-            </div>
-        </nav>
+        </main>
     );
 }

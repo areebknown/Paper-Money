@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Vault as VaultIcon, FileText, Package, Clock, ChevronRight } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+
 
 type TabOption = 'contracts' | 'stored';
 
@@ -96,7 +96,7 @@ export default function VaultPage() {
                 )}
             </main>
 
-            <BottomNav />
+
         </div>
     );
 }

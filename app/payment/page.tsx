@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { QrCode, Copy, Check, Download } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+
 
 export default function PaymentPage() {
     const [copied, setCopied] = useState(false);
@@ -117,7 +117,7 @@ export default function PaymentPage() {
                 </div>
             </main>
 
-            <BottomNav />
+
         </div>
     );
 }

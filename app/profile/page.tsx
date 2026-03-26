@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { User, TrendingUp, Award, ShoppingBag, Settings, LogOut, ChevronRight, Edit } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+
 import RankBadge from '@/components/RankBadge';
 
 import { useRouter } from 'next/navigation';
@@ -130,7 +130,7 @@ export default function ProfilePage() {
                 </button>
             </main>
 
-            <BottomNav />
+
         </div>
     );
 }

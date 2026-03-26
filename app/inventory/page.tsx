@@ -5,7 +5,7 @@ import useSWR, { useSWRConfig } from 'swr';
 import Link from 'next/link';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
-import BottomNav from '@/components/BottomNav';
+
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -573,11 +573,7 @@ export default function InventoryPage() {
                 setSortTier={setSortTier}
             />
 
-            <BottomNav />
 
-            {/* Google Fonts */}
-            <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-            <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
         </div>
     );
 }

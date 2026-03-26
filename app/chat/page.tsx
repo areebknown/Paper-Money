@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MessageSquare, TrendingUp, TrendingDown, Award, ShoppingBag, Clock } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+
 
 type TransactionType = 'BID' | 'WIN' | 'RANK' | 'PAYMENT' | 'PAWN';
 
@@ -91,7 +91,7 @@ export default function ChatPage() {
                 </button>
             </main>
 
-            <BottomNav />
+
         </div>
     );
 }
