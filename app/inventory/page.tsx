@@ -413,7 +413,7 @@ export default function InventoryPage() {
 
             {/* ── INVENTORY TITLE ── */}
             <div className="px-4 pt-4 pb-2">
-                <h1 className="text-xl font-black text-[#FBBF24] uppercase tracking-widest font-['Russo_One']">
+                <h1 className="text-xl font-black text-white uppercase tracking-widest font-['Russo_One']">
                     {user?.username ? `${user.username}'s Inventory` : 'My Inventory'}
                 </h1>
             </div>
@@ -481,7 +481,7 @@ export default function InventoryPage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black text-white uppercase tracking-wide leading-none mb-0.5">{p.name}</p>
-                                            <p className="font-black text-sm leading-none text-[#FBBF24] font-['Russo_One']">
+                                            <p className="font-black text-sm leading-none text-white font-['Russo_One']">
                                                 {p.units >= 1000 ? `${(p.units / 1000).toFixed(1)}k` : p.units.toFixed(p.units < 10 ? 2 : 0)}
                                             </p>
                                             <p className="text-[8px] text-gray-500 mt-0.5">{p.unit}</p>
