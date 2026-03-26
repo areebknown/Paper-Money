@@ -45,7 +45,7 @@ function SectionHeading({ icon, label, children }: { icon: string; label: string
                 <span className="material-icons-round text-base text-blue-400">{icon}</span>
                 {label}
             </h2>
-            {children}
+            {children && <div className="flex items-center gap-3">{children}</div>}
         </div>
     );
 }
@@ -57,154 +57,169 @@ function BalanceCard({ user }: { user: any }) {
     const greenMoney = Number(user?.greenMoney ?? 0);
     const totalInvested = Number(user?.totalInvested ?? 0);
     const netWorth = Number(user?.netWorth ?? 0);
-    const loanAmount = 0; // Not tracked yet in schema — placeholder
+    const loanAmount = 0; // Not tracked in schema yet
+
+    const fmt = (v: number) => '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const details = [
+        { label: 'Loan Amount', value: loanAmount, icon: 'money_off', color: 'text-red-400' },
+        { label: 'Green Money', value: greenMoney, icon: 'eco', color: 'text-emerald-400' },
+        { label: 'Invested', value: totalInvested, icon: 'trending_up', color: 'text-blue-400' },
+        { label: 'Net Worth', value: netWorth, icon: 'stars', color: 'text-yellow-400' },
+    ].filter(d => d.value > 0);
 
     return (
         <div
             onClick={() => setExpanded(e => !e)}
-            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-2xl p-4 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden"
+            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-2xl p-3 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden self-start"
         >
-            <div className="flex items-center gap-2 text-gray-400 mb-2">
-                <span className="material-icons-round text-emerald-400 text-base">account_balance_wallet</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">Total Balance</span>
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+                <span className="material-icons-round text-emerald-400" style={{ fontSize: '14px' }}>account_balance_wallet</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Total Balance</span>
             </div>
-            <p className="text-lg font-black text-white font-mono tracking-tight truncate">
-                ₹{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <p className="text-[15px] font-black text-white font-mono tracking-tight">
+                ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
 
             {/* Expandable section */}
             <div
-                style={{ maxHeight: expanded ? '220px' : '0', opacity: expanded ? 1 : 0 }}
+                style={{ maxHeight: expanded ? '240px' : '0', opacity: expanded ? 1 : 0 }}
                 className="overflow-hidden transition-all duration-300 ease-in-out"
             >
-                <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
-                    {[
-                        { label: 'Loan Amount', value: loanAmount, icon: 'money_off', color: 'text-red-400' },
-                        { label: 'Green Money', value: greenMoney, icon: 'eco', color: 'text-emerald-400', note: 'Bid-only funds' },
-                        { label: 'Invested', value: totalInvested, icon: 'trending_up', color: 'text-blue-400' },
-                        { label: 'Net Worth', value: netWorth, icon: 'stars', color: 'text-yellow-400' },
-                    ].map(item => (
-                        <div key={item.label} className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                                <span className={`material-icons-round text-sm ${item.color}`}>{item.icon}</span>
-                                <span className="text-[11px] text-gray-400 font-medium">
-                                    {item.label}
-                                    {item.note && <span className="text-[9px] text-gray-600 ml-1">({item.note})</span>}
-                                </span>
+                {details.length > 0 ? (
+                    <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-2">
+                        {details.map(item => (
+                            <div key={item.label}>
+                                <div className="flex items-center gap-1">
+                                    <span className={`material-icons-round ${item.color}`} style={{ fontSize: '11px' }}>{item.icon}</span>
+                                    <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{item.label}</span>
+                                </div>
+                                <p className="text-[12px] font-black text-white font-mono ml-4 leading-tight">{fmt(item.value)}</p>
                             </div>
-                            <span className="text-[11px] font-bold text-white font-mono">
-                                ₹{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-[10px] text-gray-600 mt-2 pt-2 border-t border-white/10">No detailed breakdown available</p>
+                )}
             </div>
 
             {!expanded && (
-                <p className="text-[9px] text-gray-600 text-right mt-1 font-medium">Tap for details</p>
+                <p className="text-[9px] text-gray-600 text-right mt-1">Tap for details</p>
             )}
         </div>
     );
 }
 
 // ─── Rank Card ────────────────────────────────────────────────────────────────
+// Sub-rank label: 'ROOKIE' with subRank index 0 → 'Rookie I'
+function subRankLabel(tierName: string, iconName: string): string {
+    const suffixMap: Record<string, string> = {};
+    // e.g. 'rookie1' → 'I', 'rookie2' → 'II', 'rookie3' → 'III'
+    const match = iconName.match(/(\d+)$/);
+    if (!match) return tierName; // crown+, monarch
+    const n = parseInt(match[1]);
+    const numerals = ['I', 'II', 'III'];
+    return `${tierName.charAt(0) + tierName.slice(1).toLowerCase()} ${numerals[n - 1] ?? n}`;
+}
+
 function RankCard({ user, rank }: { user: any; rank: any }) {
     const [expanded, setExpanded] = useState(false);
 
     if (!rank) return null;
     const { tier, iconName, progress, nextThreshold } = rank;
+    const displayLabel = subRankLabel(tier.name, iconName);
 
-    const RANK_PERKS: Record<string, { perks: string[] }> = {
-        'ROOKIE': { perks: ['Access to Bronze auctions', '1 Loan Token', 'Basic trading rights'] },
-        'DEALER': { perks: ['Access to Silver auctions', '2 Loan Tokens', 'Priority bid queue'] },
-        'FINANCIER': { perks: ['Access to Gold auctions', '3 Loan Tokens', 'Market analysis tools'] },
-        'TYCOON': { perks: ['Access to all auctions', '4 Loan Tokens', 'VIP bid room access'] },
-        'CROWN': { perks: ['All auction access', '5 Loan Tokens', 'Exclusive Crown auctions', 'Reduced fees'] },
-        'CROWN+': { perks: ['Elite status', '6 Loan Tokens', 'Personal broker', 'Exclusive items'] },
-        'MONARCH': { perks: ['Legendary status', '8 Loan Tokens', 'Private auctions', 'All perks'] },
+    const RANK_PERKS: Record<string, string[]> = {
+        'ROOKIE': ['Access to Bronze auctions', '1 Loan Token'],
+        'DEALER': ['Access to Silver auctions', '2 Loan Tokens'],
+        'FINANCIER': ['Access to Gold auctions', '3 Loan Tokens'],
+        'TYCOON': ['All auction access', '4 Loan Tokens'],
+        'CROWN': ['Exclusive Crown auctions', '5 Loan Tokens'],
+        'CROWN+': ['Elite status', '6 Loan Tokens'],
+        'MONARCH': ['Private auctions', '8 Loan Tokens'],
     };
-    const perks = RANK_PERKS[tier.name]?.perks ?? [];
+    const perks = RANK_PERKS[tier.name] ?? [];
 
     return (
         <div
             onClick={() => setExpanded(e => !e)}
-            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-2xl p-4 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden"
+            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-2xl p-3 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden"
         >
-            <div className="flex items-center gap-2 text-gray-400 mb-2">
-                <span className="material-icons-round text-blue-400 text-base">military_tech</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">Rank</span>
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+                <span className="material-icons-round text-blue-400" style={{ fontSize: '14px' }}>military_tech</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Rank</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
                 {/* Rank icon */}
                 <Link href="/rank" onClick={e => e.stopPropagation()}>
                     <img
                         src={getRankIconPath(iconName)}
                         alt={tier.name}
-                        className="w-14 h-14 object-contain drop-shadow-lg flex-shrink-0 active:scale-90 transition-transform"
+                        className="w-12 h-12 object-contain drop-shadow-lg flex-shrink-0 active:scale-90 transition-transform"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                 </Link>
-                <div>
-                    <p className="text-base font-black text-white font-['Russo_One'] uppercase tracking-wider">{tier.name}</p>
+                <div className="min-w-0">
+                    <p className="text-sm font-black text-white font-['Russo_One'] uppercase tracking-wider truncate">{displayLabel}</p>
                     <p className="text-[10px] text-blue-400 font-bold font-mono">{user?.rankPoints ?? 0} RP</p>
-                    {/* Progress bar */}
-                    <div className="mt-1 w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-[#FBBF24] to-yellow-500 rounded-full transition-all duration-500"
-                            style={{ width: `${progress}%` }}
-                        />
+                    <div className="mt-1 w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-[#FBBF24] to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                     </div>
                     {nextThreshold && (
-                        <p className="text-[9px] text-gray-600 mt-0.5">{nextThreshold - (user?.rankPoints ?? 0)} RP to next rank</p>
+                        <p className="text-[9px] text-gray-600 mt-0.5">{nextThreshold - (user?.rankPoints ?? 0)} RP to next</p>
                     )}
                 </div>
             </div>
 
-            {/* Expandable perks */}
             <div
-                style={{ maxHeight: expanded ? '200px' : '0', opacity: expanded ? 1 : 0 }}
+                style={{ maxHeight: expanded ? '180px' : '0', opacity: expanded ? 1 : 0 }}
                 className="overflow-hidden transition-all duration-300 ease-in-out"
             >
-                <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+                <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-1.5">
                     <div className="flex items-center gap-1.5">
-                        <span className="material-icons-round text-yellow-400 text-sm">confirmation_number</span>
-                        <span className="text-[11px] text-gray-300">Loan Tokens: <strong className="text-white">{user?.loanTokens ?? 1}</strong></span>
+                        <span className="material-icons-round text-yellow-400" style={{ fontSize: '13px' }}>confirmation_number</span>
+                        <span className="text-[10px] text-gray-300">Loan Tokens: <strong className="text-white">{user?.loanTokens ?? 1}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="material-icons-round text-blue-400 text-sm">card_giftcard</span>
-                        <span className="text-[11px] text-gray-300">Coupons: <strong className="text-white">0</strong></span>
+                        <span className="material-icons-round text-blue-400" style={{ fontSize: '13px' }}>card_giftcard</span>
+                        <span className="text-[10px] text-gray-300">Coupons: <strong className="text-white">0</strong></span>
                     </div>
-                    {perks.slice(0, 2).map(perk => (
+                    {perks.map(perk => (
                         <div key={perk} className="flex items-center gap-1.5">
-                            <span className="material-icons-round text-emerald-400 text-sm">check_circle</span>
-                            <span className="text-[11px] text-gray-400">{perk}</span>
+                            <span className="material-icons-round text-emerald-400" style={{ fontSize: '13px' }}>check_circle</span>
+                            <span className="text-[10px] text-gray-400">{perk}</span>
                         </div>
                     ))}
-                    <Link href="/rank" className="block text-[10px] text-[#FBBF24] font-bold mt-2 hover:underline" onClick={e => e.stopPropagation()}>
-                        See all rank perks →
+                    <Link href="/rank" className="block text-[10px] text-[#FBBF24] font-bold mt-1 hover:underline" onClick={e => e.stopPropagation()}>
+                        See all perks →
                     </Link>
                 </div>
             </div>
-            {!expanded && (
-                <p className="text-[9px] text-gray-600 text-right mt-1 font-medium">Tap for perks</p>
-            )}
+            {!expanded && <p className="text-[9px] text-gray-600 text-right mt-1">Tap for perks</p>}
         </div>
     );
 }
 
 // ─── Resource Icon map ─────────────────────────────────────────────────────────
 const RESOURCE_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-    default: { icon: 'inventory_2', color: 'text-gray-400', bg: 'bg-gray-800' },
-    gold: { icon: 'monetization_on', color: 'text-yellow-400', bg: 'bg-yellow-900/30' },
-    silver: { icon: 'circle', color: 'text-gray-300', bg: 'bg-gray-700/50' },
-    crude: { icon: 'water_drop', color: 'text-slate-400', bg: 'bg-slate-800' },
-    oil: { icon: 'water_drop', color: 'text-slate-400', bg: 'bg-slate-800' },
-    diamond: { icon: 'diamond', color: 'text-blue-400', bg: 'bg-blue-900/30' },
-    platinum: { icon: 'stars', color: 'text-purple-400', bg: 'bg-purple-900/30' },
+    default:   { icon: 'inventory_2',   color: 'text-gray-400',   bg: 'bg-gray-800/60' },
+    gold:      { icon: 'toll',          color: 'text-yellow-400', bg: 'bg-yellow-900/40' },
+    silver:    { icon: 'radio_button_unchecked', color: 'text-slate-300', bg: 'bg-slate-700/50' },
+    crude:     { icon: 'opacity',       color: 'text-gray-400',   bg: 'bg-gray-800/60' },
+    oil:       { icon: 'opacity',       color: 'text-gray-400',   bg: 'bg-gray-800/60' },
+    copper:    { icon: 'electrical_services', color: 'text-orange-400', bg: 'bg-orange-900/30' },
+    lithium:   { icon: 'bolt',          color: 'text-cyan-400',   bg: 'bg-cyan-900/30' },
+    iron:      { icon: 'hardware',      color: 'text-gray-300',   bg: 'bg-gray-700/50' },
+    steel:     { icon: 'construction',  color: 'text-slate-300',  bg: 'bg-slate-700/50' },
+    diamond:   { icon: 'diamond',       color: 'text-blue-400',   bg: 'bg-blue-900/30' },
+    platinum:  { icon: 'star',          color: 'text-purple-400', bg: 'bg-purple-900/30' },
+    wheat:     { icon: 'grass',         color: 'text-yellow-600', bg: 'bg-yellow-900/20' },
+    wood:      { icon: 'park',          color: 'text-green-400',  bg: 'bg-green-900/30' },
+    stone:     { icon: 'layers',        color: 'text-gray-400',   bg: 'bg-gray-800/60' },
 };
 function getResourceStyle(name: string) {
-    const key = name.toLowerCase();
+    const key = name.toLowerCase().replace(/\s+/g, '');
     return RESOURCE_ICONS[key] ?? RESOURCE_ICONS.default;
 }
 
@@ -398,10 +413,9 @@ export default function InventoryPage() {
                 </div>
             </header>
 
-            {/* ── INVENTORY TITLE BAR ── */}
-            <div className="px-4 py-3 bg-[#1e293b]/50 border-b border-white/5">
-                <h1 className="text-base font-black text-[#FBBF24] uppercase tracking-widest font-['Russo_One'] flex items-center gap-2">
-                    <div className="w-1 h-5 bg-[#FBBF24] rounded-full" />
+            {/* ── INVENTORY TITLE ── */}
+            <div className="px-4 pt-4 pb-2">
+                <h1 className="text-xl font-black text-[#FBBF24] uppercase tracking-widest font-['Russo_One']">
                     {user?.username ? `${user.username}'s Inventory` : 'My Inventory'}
                 </h1>
             </div>
@@ -409,8 +423,8 @@ export default function InventoryPage() {
             {/* ── BODY ── */}
             <main className="flex-1 px-4 py-5 space-y-6">
 
-                {/* ── BALANCE + RANK (2-col) ── */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* ── BALANCE + RANK (2-col, natural heights) ── */}
+                <div className="grid grid-cols-2 gap-3 items-start">
                     <BalanceCard user={user} />
                     <RankCard user={user} rank={rank} />
                 </div>
@@ -462,19 +476,19 @@ export default function InventoryPage() {
                             {portfolios.map(p => {
                                 const style = getResourceStyle(p.name);
                                 return (
-                                    <div key={p.assetId}
-                                        className="bg-[#1e293b] border border-white/10 rounded-xl p-2.5 flex flex-col items-center justify-center gap-1.5 aspect-square text-center">
-                                        <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center`}>
-                                            <span className={`material-icons-round text-lg ${style.color}`}>{style.icon}</span>
+                                    <Link key={p.assetId} href={`/invest/${p.assetId}`}
+                                        className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-xl p-2.5 flex flex-col items-center justify-center gap-1.5 aspect-square text-center active:scale-95 transition-transform">
+                                        <div className={`w-10 h-10 rounded-lg ${style.bg} flex items-center justify-center`}>
+                                            <span className={`material-icons-round text-xl ${style.color}`}>{style.icon}</span>
                                         </div>
                                         <div>
-                                            <p className="text-[9px] text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{p.name}</p>
-                                            <p className="font-black text-sm leading-none text-white font-['Russo_One']">
+                                            <p className="text-[10px] font-black text-white uppercase tracking-wide leading-none mb-0.5">{p.name}</p>
+                                            <p className="font-black text-sm leading-none text-[#FBBF24] font-['Russo_One']">
                                                 {p.units >= 1000 ? `${(p.units / 1000).toFixed(1)}k` : p.units.toFixed(p.units < 10 ? 2 : 0)}
                                             </p>
-                                            <p className="text-[8px] text-gray-600 mt-0.5">{p.unit}</p>
+                                            <p className="text-[8px] text-gray-500 mt-0.5">{p.unit}</p>
                                         </div>
-                                    </div>
+                                    </Link>
                                 );
                             })}
                         </div>
@@ -494,18 +508,13 @@ export default function InventoryPage() {
                                 <span className="text-[10px] text-gray-500 font-['Inter'] font-normal ml-1">({filteredArtifacts.length})</span>
                             )}
                         </h2>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setShowSearch(s => !s)}
-                                className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg hover:bg-white/10 transition active:scale-95 border border-white/10"
-                            >
-                                <span className="material-icons-round text-gray-400 text-base">search</span>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setShowSearch(s => !s)} className="active:scale-90 transition-transform">
+                                <span className="material-icons-round text-blue-400 text-xl">search</span>
                             </button>
-                            <button
-                                onClick={() => setFilterOpen(true)}
-                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition active:scale-95 border ${sortTier !== 'ALL' ? 'bg-[#FBBF24]/20 border-[#FBBF24]/60' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                            >
-                                <span className={`material-icons-round text-base ${sortTier !== 'ALL' ? 'text-[#FBBF24]' : 'text-gray-400'}`}>tune</span>
+                            <button onClick={() => setFilterOpen(true)} className="active:scale-90 transition-transform relative">
+                                <span className={`material-icons-round text-xl ${sortTier !== 'ALL' ? 'text-[#FBBF24]' : 'text-blue-400'}`}>tune</span>
+                                {sortTier !== 'ALL' && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#FBBF24] rounded-full" />}
                             </button>
                         </div>
                     </div>
