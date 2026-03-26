@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
+import { processWeeklyPerks } from '@/lib/rank-rewards';
 
 export async function POST(req: Request) {
     try {
@@ -26,6 +27,9 @@ export async function POST(req: Request) {
         if (!isValidPassword) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
+
+        // Trigger weekly perk allocation if eligible (runs in background to not block login)
+        processWeeklyPerks(user.id).catch(err => console.error("Weekly perk allocation failed:", err));
 
         // Create JWT
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');

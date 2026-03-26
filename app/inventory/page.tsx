@@ -111,7 +111,7 @@ function BalanceCard({ user }: { user: any }) {
 }
 
 // ─── Rank Card ────────────────────────────────────────────────────────────────
-function RankCard({ user, rank }: { user: any; rank: any }) {
+function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; couponsCount?: number }) {
     const [expanded, setExpanded] = useState(false);
 
     if (!rank) return null;
@@ -180,7 +180,7 @@ function RankCard({ user, rank }: { user: any; rank: any }) {
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="material-icons-round text-blue-400" style={{ fontSize: '13px' }}>card_giftcard</span>
-                        <span className="text-[10px] text-gray-300">Coupons: <strong className="text-white">0</strong></span>
+                        <span className="text-[10px] text-gray-300">Coupons: <strong className="text-white">{couponsCount}</strong></span>
                     </div>
                     {perks.map(perk => (
                         <div key={perk} className="flex items-center gap-1.5">
@@ -350,6 +350,7 @@ export default function InventoryPage() {
     const ownedEstates: any[] = data?.ownedEstates ?? [];
     const ownedVehicles: any[] = data?.ownedVehicles ?? [];
     const allArtifacts: any[] = data?.ownedArtifacts ?? [];
+    const coupons: any[] = data?.coupons ?? [];
 
     // Filter and search artifacts
     const filteredArtifacts = allArtifacts.filter(a => {
@@ -423,7 +424,7 @@ export default function InventoryPage() {
                 {/* ── BALANCE + RANK (2-col, natural heights) ── */}
                 <div className="grid grid-cols-2 gap-3 items-start">
                     <BalanceCard user={user} />
-                    <RankCard user={user} rank={rank} />
+                    <RankCard user={user} rank={rank} couponsCount={coupons.length} />
                 </div>
 
                 {/* ── ESTATES + VEHICLES (2-col) ── */}

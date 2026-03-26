@@ -54,6 +54,9 @@ export async function GET(req: Request) {
                 rankTier: true,
                 loanTokens: true,
                 greenMoney: true,
+                coupons: {
+                    where: { isUsed: false, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }
+                },
                 portfolios: {
                     include: { asset: true },
                 },
@@ -118,6 +121,7 @@ export async function GET(req: Request) {
             // Placeholder until estates/vehicles schema is added
             ownedEstates: [],
             ownedVehicles: [],
+            coupons: user.coupons,
         });
     } catch (error) {
         console.error('GET /api/inventory error:', error);
