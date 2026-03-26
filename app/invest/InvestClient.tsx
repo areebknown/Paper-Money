@@ -284,7 +284,7 @@ function BottomNav() {
                     <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </Link>
-                <Link href="/artifacts" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
+                <Link href="/inventory" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
                     <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
                 </Link>
