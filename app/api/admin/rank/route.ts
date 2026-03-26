@@ -17,13 +17,21 @@ export async function PUT(req: Request) {
 
     // Determine new rank tier
     const TIERS = [
-        { name: 'ROOKIE', min: 0 },
-        { name: 'DEALER', min: 200 },
-        { name: 'FINANCIER', min: 500 },
-        { name: 'TYCOON', min: 1000 },
-        { name: 'CROWN', min: 2500 },
-        { name: 'CROWN+', min: 5000 },
-        { name: 'MONARCH', min: 10000 },
+        { name: 'Rookie I',      min: 0    },
+        { name: 'Rookie II',     min: 100  },
+        { name: 'Rookie III',    min: 200  },
+        { name: 'Dealer I',      min: 300  },
+        { name: 'Dealer II',     min: 450  },
+        { name: 'Dealer III',    min: 600  },
+        { name: 'Financier I',   min: 750  },
+        { name: 'Financier II',  min: 900  },
+        { name: 'Financier III', min: 1050 },
+        { name: 'Tycoon I',      min: 1400 },
+        { name: 'Tycoon II',     min: 1600 },
+        { name: 'Tycoon III',    min: 1800 },
+        { name: 'Crown',         min: 2400 },
+        { name: 'Crown+',        min: 3000 },
+        { name: 'Monarch',       min: 4200 },
     ];
     const newTier = TIERS.findLast(t => rankPoints >= t.min)?.name ?? 'ROOKIE';
 

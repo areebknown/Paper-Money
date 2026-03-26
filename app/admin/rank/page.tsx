@@ -23,13 +23,21 @@ type SortKey = 'username' | 'rankPoints';
 type SortDir = 'asc' | 'desc';
 
 const RANK_TIERS = [
-    { name: 'ROOKIE', minPoints: 0, maxPoints: 199 },
-    { name: 'DEALER', minPoints: 200, maxPoints: 499 },
-    { name: 'FINANCIER', minPoints: 500, maxPoints: 999 },
-    { name: 'TYCOON', minPoints: 1000, maxPoints: 2499 },
-    { name: 'CROWN', minPoints: 2500, maxPoints: 4999 },
-    { name: 'CROWN+', minPoints: 5000, maxPoints: 9999 },
-    { name: 'MONARCH', minPoints: 10000, maxPoints: Infinity },
+    { name: 'Rookie I',      minPoints: 0    },
+    { name: 'Rookie II',     minPoints: 100  },
+    { name: 'Rookie III',    minPoints: 200  },
+    { name: 'Dealer I',      minPoints: 300  },
+    { name: 'Dealer II',     minPoints: 450  },
+    { name: 'Dealer III',    minPoints: 600  },
+    { name: 'Financier I',   minPoints: 750  },
+    { name: 'Financier II',  minPoints: 900  },
+    { name: 'Financier III', minPoints: 1050 },
+    { name: 'Tycoon I',      minPoints: 1400 },
+    { name: 'Tycoon II',     minPoints: 1600 },
+    { name: 'Tycoon III',    minPoints: 1800 },
+    { name: 'Crown',         minPoints: 2400 },
+    { name: 'Crown+',        minPoints: 3000 },
+    { name: 'Monarch',       minPoints: 4200 },
 ];
 
 function getRankForPoints(points: number): string {
@@ -110,13 +118,21 @@ export default function ManageRankPage() {
         sortDir === 'asc' ? <ChevronUp className="w-3 h-3 inline ml-1" /> : <ChevronDown className="w-3 h-3 inline ml-1" />;
 
     const TIER_COLORS: Record<string, string> = {
-        ROOKIE: 'text-orange-400 bg-orange-900/30 border-orange-800',
-        DEALER: 'text-blue-400 bg-blue-900/30 border-blue-800',
-        FINANCIER: 'text-purple-400 bg-purple-900/30 border-purple-800',
-        TYCOON: 'text-green-400 bg-green-900/30 border-green-800',
-        CROWN: 'text-yellow-400 bg-yellow-900/30 border-yellow-800',
-        'CROWN+': 'text-amber-300 bg-amber-900/30 border-amber-700',
-        MONARCH: 'text-white bg-white/10 border-white/30',
+        'Rookie I':      'text-orange-300 bg-orange-900/30 border-orange-800',
+        'Rookie II':     'text-orange-300 bg-orange-900/30 border-orange-800',
+        'Rookie III':    'text-orange-300 bg-orange-900/30 border-orange-800',
+        'Dealer I':      'text-blue-400 bg-blue-900/30 border-blue-800',
+        'Dealer II':     'text-blue-400 bg-blue-900/30 border-blue-800',
+        'Dealer III':    'text-blue-400 bg-blue-900/30 border-blue-800',
+        'Financier I':   'text-purple-400 bg-purple-900/30 border-purple-800',
+        'Financier II':  'text-purple-400 bg-purple-900/30 border-purple-800',
+        'Financier III': 'text-purple-400 bg-purple-900/30 border-purple-800',
+        'Tycoon I':      'text-green-400 bg-green-900/30 border-green-800',
+        'Tycoon II':     'text-green-400 bg-green-900/30 border-green-800',
+        'Tycoon III':    'text-green-400 bg-green-900/30 border-green-800',
+        'Crown':         'text-yellow-400 bg-yellow-900/30 border-yellow-800',
+        'Crown+':        'text-amber-300 bg-amber-900/30 border-amber-700',
+        'Monarch':       'text-white bg-white/10 border-white/30',
     };
 
     const filtered = users
@@ -188,7 +204,7 @@ export default function ManageRankPage() {
                 <div className="flex flex-wrap gap-2">
                     {RANK_TIERS.map(t => (
                         <div key={t.name} className={`px-3 py-1 rounded-full text-xs font-bold border ${TIER_COLORS[t.name] ?? 'text-gray-400 bg-gray-800 border-gray-700'}`}>
-                            {t.name}: {t.minPoints}–{t.maxPoints === Infinity ? '∞' : t.maxPoints} RP
+                            {t.name}: {t.minPoints}+ RP
                         </div>
                     ))}
                 </div>

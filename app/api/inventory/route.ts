@@ -2,33 +2,39 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
 
-// Rank thresholds and perks
+// Rank thresholds — strictly from rank-system.md
+// Each entry is a single named rank with one icon
 const RANK_TIERS = [
-    { name: 'ROOKIE', icon: 'rookie', minPoints: 0, maxPoints: 199, loanTokens: 1, subRanks: ['rookie1', 'rookie2', 'rookie3'] },
-    { name: 'DEALER', icon: 'dealer', minPoints: 200, maxPoints: 499, loanTokens: 2, subRanks: ['dealer1', 'dealer2', 'dealer3'] },
-    { name: 'FINANCIER', icon: 'financier', minPoints: 500, maxPoints: 999, loanTokens: 3, subRanks: ['financier1', 'financier2', 'financier3'] },
-    { name: 'TYCOON', icon: 'tycoon', minPoints: 1000, maxPoints: 2499, loanTokens: 4, subRanks: ['tycoon1', 'tycoon2', 'tycoon3'] },
-    { name: 'CROWN', icon: 'crown', minPoints: 2500, maxPoints: 4999, loanTokens: 5, subRanks: ['crown1', 'crown2', 'crown3'] },
-    { name: 'CROWN+', icon: 'crown+', minPoints: 5000, maxPoints: 9999, loanTokens: 6, subRanks: ['crown+'] },
-    { name: 'MONARCH', icon: 'monarch', minPoints: 10000, maxPoints: Infinity, loanTokens: 8, subRanks: ['monarch'] },
+    { name: 'Rookie I',      icon: 'rookie1',     minPoints: 0,    maxPoints: 99,   loanTokens: 1 },
+    { name: 'Rookie II',     icon: 'rookie2',     minPoints: 100,  maxPoints: 199,  loanTokens: 1 },
+    { name: 'Rookie III',    icon: 'rookie3',     minPoints: 200,  maxPoints: 299,  loanTokens: 1 },
+    { name: 'Dealer I',      icon: 'dealer1',     minPoints: 300,  maxPoints: 449,  loanTokens: 2 },
+    { name: 'Dealer II',     icon: 'dealer2',     minPoints: 450,  maxPoints: 599,  loanTokens: 2 },
+    { name: 'Dealer III',    icon: 'dealer3',     minPoints: 600,  maxPoints: 749,  loanTokens: 2 },
+    { name: 'Financier I',   icon: 'financier1',  minPoints: 750,  maxPoints: 899,  loanTokens: 3 },
+    { name: 'Financier II',  icon: 'financier2',  minPoints: 900,  maxPoints: 1049, loanTokens: 3 },
+    { name: 'Financier III', icon: 'financier3',  minPoints: 1050, maxPoints: 1399, loanTokens: 3 },
+    { name: 'Tycoon I',      icon: 'tycoon1',     minPoints: 1400, maxPoints: 1599, loanTokens: 4 },
+    { name: 'Tycoon II',     icon: 'tycoon2',     minPoints: 1600, maxPoints: 1799, loanTokens: 4 },
+    { name: 'Tycoon III',    icon: 'tycoon3',     minPoints: 1800, maxPoints: 2399, loanTokens: 4 },
+    { name: 'Crown',         icon: 'crown',       minPoints: 2400, maxPoints: 2999, loanTokens: 5 },
+    { name: 'Crown+',        icon: 'crown+',      minPoints: 3000, maxPoints: 4199, loanTokens: 6 },
+    { name: 'Monarch',       icon: 'monarch',     minPoints: 4200, maxPoints: Infinity, loanTokens: 8 },
 ];
 
 export function getRankInfo(rankPoints: number) {
-    const tier = RANK_TIERS.findLast(t => rankPoints >= t.minPoints) ?? RANK_TIERS[0];
-    const range = tier.maxPoints === Infinity ? tier.minPoints : tier.maxPoints - tier.minPoints;
-    const progress = tier.maxPoints === Infinity ? 100 : Math.min(100, Math.floor(((rankPoints - tier.minPoints) / range) * 100));
-    
-    // Determine sub-rank (1, 2, or 3)
-    let subRankIndex = 0;
-    if (tier.subRanks.length === 3) {
-        if (progress >= 66) subRankIndex = 2;
-        else if (progress >= 33) subRankIndex = 1;
-        else subRankIndex = 0;
-    }
-    const iconName = tier.subRanks[subRankIndex];
-
-    return { tier, progress, iconName, nextThreshold: tier.maxPoints === Infinity ? null : tier.maxPoints + 1 };
+    const rank = [...RANK_TIERS].reverse().find(t => rankPoints >= t.minPoints) ?? RANK_TIERS[0];
+    const isMax = rank.maxPoints === Infinity;
+    const range = isMax ? 1 : rank.maxPoints + 1 - rank.minPoints;
+    const progress = isMax ? 100 : Math.min(100, Math.floor(((rankPoints - rank.minPoints) / range) * 100));
+    return {
+        tier: rank,
+        progress,
+        iconName: rank.icon,
+        nextThreshold: isMax ? null : rank.maxPoints + 1,
+    };
 }
+
 
 // GET /api/inventory
 export async function GET(req: Request) {

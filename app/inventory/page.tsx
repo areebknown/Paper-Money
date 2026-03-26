@@ -111,32 +111,29 @@ function BalanceCard({ user }: { user: any }) {
 }
 
 // ─── Rank Card ────────────────────────────────────────────────────────────────
-// Sub-rank label: 'ROOKIE' with subRank index 0 → 'Rookie I'
-function subRankLabel(tierName: string, iconName: string): string {
-    const suffixMap: Record<string, string> = {};
-    // e.g. 'rookie1' → 'I', 'rookie2' → 'II', 'rookie3' → 'III'
-    const match = iconName.match(/(\d+)$/);
-    if (!match) return tierName; // crown+, monarch
-    const n = parseInt(match[1]);
-    const numerals = ['I', 'II', 'III'];
-    return `${tierName.charAt(0) + tierName.slice(1).toLowerCase()} ${numerals[n - 1] ?? n}`;
-}
-
 function RankCard({ user, rank }: { user: any; rank: any }) {
     const [expanded, setExpanded] = useState(false);
 
     if (!rank) return null;
     const { tier, iconName, progress, nextThreshold } = rank;
-    const displayLabel = subRankLabel(tier.name, iconName);
+    // tier.name is already the full label e.g. "Rookie I", "Tycoon III", "Crown"
 
     const RANK_PERKS: Record<string, string[]> = {
-        'ROOKIE': ['Access to Bronze auctions', '1 Loan Token'],
-        'DEALER': ['Access to Silver auctions', '2 Loan Tokens'],
-        'FINANCIER': ['Access to Gold auctions', '3 Loan Tokens'],
-        'TYCOON': ['All auction access', '4 Loan Tokens'],
-        'CROWN': ['Exclusive Crown auctions', '5 Loan Tokens'],
-        'CROWN+': ['Elite status', '6 Loan Tokens'],
-        'MONARCH': ['Private auctions', '8 Loan Tokens'],
+        'Rookie I':      ['1 Loan Token (Weekly)'],
+        'Rookie II':     ['1 Loan Token', 'Lesser Interest on Loans'],
+        'Rookie III':    ['1 Loan Token', 'Lesser Interest on Loans'],
+        'Dealer I':      ['2 Loan Tokens (Weekly)'],
+        'Dealer II':     ['2 Loan Tokens', 'Weekly Cashback Coupon'],
+        'Dealer III':    ['2 Loan Tokens', 'Weekly Discount Coupon'],
+        'Financier I':   ['3 Loan Tokens', 'Special Shutters'],
+        'Financier II':  ['3 Loan Tokens', 'Weekly Bid Pull'],
+        'Financier III': ['3 Loan Tokens', 'Better Discount Coupon'],
+        'Tycoon I':      ['4 Loan Tokens', 'No Contract Fee'],
+        'Tycoon II':     ['4 Loan Tokens', '200% Loan at 18% CI rate'],
+        'Tycoon III':    ['4 Loan Tokens', 'Better Cashback Coupon'],
+        'Crown':         ['5 Loan Tokens', '200% Loan at 15% CI rate'],
+        'Crown+':        ['6 Loan Tokens', '220% Loan at 15% CI rate'],
+        'Monarch':       ['8 Loan Tokens', 'Premium Coupon'],
     };
     const perks = RANK_PERKS[tier.name] ?? [];
 
@@ -161,7 +158,7 @@ function RankCard({ user, rank }: { user: any; rank: any }) {
                     />
                 </Link>
                 <div className="min-w-0">
-                    <p className="text-sm font-black text-white font-['Russo_One'] uppercase tracking-wider truncate">{displayLabel}</p>
+                    <p className="text-sm font-black text-white font-['Russo_One'] tracking-wider truncate">{tier.name}</p>
                     <p className="text-[10px] text-blue-400 font-bold font-mono">{user?.rankPoints ?? 0} RP</p>
                     <div className="mt-1 w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#FBBF24] to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
