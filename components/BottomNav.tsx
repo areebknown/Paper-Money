@@ -37,9 +37,9 @@ export default function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center gap-1 w-1/5 transition-colors group ${isActive ? 'text-[#FBBF24]' : 'text-slate-500 hover:text-slate-300'}`}
+                            className={`flex flex-col items-center gap-1 w-1/5 transition-colors group ${isActive ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
                         >
-                            <span className={`material-icons-round text-2xl transition-transform group-hover:scale-110`}>
+                            <span className="material-icons-round text-2xl transition-transform group-hover:scale-110">
                                 {item.icon}
                             </span>
                             <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>

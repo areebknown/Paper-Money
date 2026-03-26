@@ -158,8 +158,7 @@ export default function HomePage() {
                 </div>
             </main>
 
-            {/* Bottom Nav */}
-            <BottomNav />
+
 
             {/* Google Fonts */}
             <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -318,7 +317,7 @@ function BidsContent({ userId }: { userId?: string }) {
         };
         document.addEventListener('visibilitychange', onVisibility);
 
-        // ── Pusher WebSocket subscription on global-auctions ─────────────────
+        // â”€â”€ Pusher WebSocket subscription on global-auctions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const { getPusherClient } = require('@/lib/pusher-client');
         const pusher = getPusherClient();
         const channel = pusher.subscribe('global-auctions');
@@ -386,9 +385,9 @@ function BidsContent({ userId }: { userId?: string }) {
                 });
                 await beamsClient.start();
                 await beamsClient.addDeviceInterest(`user-${userId}`);
-                console.log('[Beams] ✅ Registered for push with interest user-' + userId);
+                console.log('[Beams] âœ… Registered for push with interest user-' + userId);
             } catch (err: any) {
-                console.error('[Beams] ❌ Registration failed:', err);
+                console.error('[Beams] âŒ Registration failed:', err);
             }
         }
 
@@ -448,7 +447,7 @@ function BidsContent({ userId }: { userId?: string }) {
                             const isLiveOrWaiting = isUiLive || isUiWaiting;
 
                             if (isUiLive) {
-                                badgeText = '🔴 Live';
+                                badgeText = 'ðŸ”´ Live';
                                 badgeColor = 'bg-red-500';
                             } else if (isUiWaiting) {
                                 badgeText = 'Waiting Room';
@@ -491,7 +490,7 @@ function BidsContent({ userId }: { userId?: string }) {
                                                     <p className="text-gray-500 dark:text-gray-400 text-xs font-normal font-['Russo_One'] uppercase">RANK - {bid.rankTier}</p>
                                                     <div className="flex items-center justify-between mt-2">
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: ₹{Number(bid.startingPrice).toLocaleString()}</span>
+                                                            <span className="text-green-600 dark:text-green-400 font-bold text-[13px]">Start: â‚¹{Number(bid.startingPrice).toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -535,13 +534,13 @@ function BidsContent({ userId }: { userId?: string }) {
                                         <h3 className="text-base font-['Russo_One'] text-white truncate">{bid.name}</h3>
                                         <div className="text-xs font-normal text-gray-500 font-['Russo_One'] mt-0.5 truncate uppercase">RANK - {bid.rankTier}</div>
                                         <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                            Won at <span className="font-bold text-[#FBBF24]">₹{Number(bid.currentPrice).toLocaleString()}</span>
+                                            Won at <span className="font-bold text-[#FBBF24]">â‚¹{Number(bid.currentPrice).toLocaleString()}</span>
                                             {bid.endedAt ? (
                                                 <> on <span className="font-bold text-[#FBBF24]">
                                                     {new Date(bid.endedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                 </span></>
                                             ) : null}
-                                            {isUnclaimed && <span className="text-yellow-500 font-bold"> · Payment pending</span>}
+                                            {isUnclaimed && <span className="text-yellow-500 font-bold"> Â· Payment pending</span>}
                                         </p>
                                     </div>
                                     {isUnclaimed ? (
@@ -594,15 +593,15 @@ function BidsContent({ userId }: { userId?: string }) {
                         <p className="text-center text-gray-400 text-xs mb-5">Complete payment to receive your items in inventory.</p>
                         <div className="bg-gray-800 rounded-2xl p-4 mb-5 space-y-2">
                             <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Auction</span><span className="text-white text-sm font-bold truncate max-w-[55%]">{payNowDialog.name}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Winning Bid</span><span className="text-green-400 text-sm font-bold">₹{Number(payNowDialog.currentPrice).toLocaleString()}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Winning Bid</span><span className="text-green-400 text-sm font-bold">â‚¹{Number(payNowDialog.currentPrice).toLocaleString()}</span></div>
                             {payNowDialog.claimExpiresAt && (
                                 <div className="flex justify-between"><span className="text-gray-400 text-xs uppercase">Expires</span><span className="text-yellow-400 text-xs font-bold">{new Date(payNowDialog.claimExpiresAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}</span></div>
                             )}
                         </div>
                         {payNowState === 'paid' ? (
                             <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-3 mb-4 text-center">
-                                <p className="text-green-400 font-bold text-sm">✅ Paid &amp; added to inventory!</p>
-                                <p className="text-green-600 text-xs mt-1">₹{Number(payNowDialog.currentPrice).toLocaleString()} deducted from your balance.</p>
+                                <p className="text-green-400 font-bold text-sm">âœ… Paid &amp; added to inventory!</p>
+                                <p className="text-green-600 text-xs mt-1">â‚¹{Number(payNowDialog.currentPrice).toLocaleString()} deducted from your balance.</p>
                             </div>
                         ) : (
                             <>
@@ -633,12 +632,12 @@ function BidsContent({ userId }: { userId?: string }) {
                                                 }
                                             } catch {
                                                 setPayNowState('error');
-                                                setPayNowError('Network error — please try again');
+                                                setPayNowError('Network error â€” please try again');
                                             }
                                         }}
                                         className="flex-[2] py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-gray-900 font-black text-sm shadow-lg active:scale-95 transition-all"
                                     >
-                                        {payNowState === 'paying' ? 'Processing...' : `💳 Pay ₹${Number(payNowDialog.currentPrice).toLocaleString()}`}
+                                        {payNowState === 'paying' ? 'Processing...' : `ðŸ’³ Pay â‚¹${Number(payNowDialog.currentPrice).toLocaleString()}`}
                                     </button>
                                 </div>
                             </>
@@ -710,38 +709,5 @@ function MarketContent() {
                 </Link>
             ))}
         </div>
-    );
-}
-
-function BottomNav() {
-    return (
-        <nav className="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-around items-end pb-4 pt-2 relative">
-                <Link href="/home" className="flex flex-col items-center gap-1 w-1/5 text-blue-600 group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">home</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
-                </Link>
-                <Link href="/inventory" className={`flex flex-col items-center gap-1 w-1/5 transition-colors group ${typeof window !== 'undefined' && window.location.pathname === '/inventory' ? 'text-blue-400' : 'text-slate-400 hover:text-slate-300'}`}>
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">backpack</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
-                </Link>
-                <div className="relative w-1/5 flex justify-center -top-6">
-                    <Link href="/pay">
-                        <button className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FBBF24] to-yellow-600 shadow-lg border-4 border-slate-100 dark:border-slate-900 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-200 z-30 group">
-                            <span className="material-icons-round text-3xl text-white drop-shadow-md group-hover:rotate-12 transition-transform">qr_code_scanner</span>
-                        </button>
-                    </Link>
-                    <span className="absolute -bottom-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Pay</span>
-                </div>
-                <Link href="/profile" className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Vault</span>
-                </Link>
-                <button className="flex flex-col items-center gap-1 w-1/5 text-slate-400 hover:text-slate-600 transition-colors group">
-                    <span className="material-icons-round text-2xl group-hover:scale-110 transition-transform">chat_bubble</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
-                </button>
-            </div>
-        </nav>
     );
 }
