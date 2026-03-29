@@ -5,6 +5,7 @@ import useSWR, { useSWRConfig } from 'swr';
 import Link from 'next/link';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -81,27 +82,34 @@ function BalanceCard({ user }: { user: any }) {
                 ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
 
-            {/* Expandable section */}
-            <div
-                style={{ maxHeight: expanded ? '240px' : '0', opacity: expanded ? 1 : 0 }}
-                className="overflow-hidden transition-all duration-300 ease-in-out"
-            >
-                {details.length > 0 ? (
-                    <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-2">
-                        {details.map(item => (
-                            <div key={item.label}>
-                                <div className="flex items-center gap-1">
-                                    <span className={`material-icons-round ${item.color}`} style={{ fontSize: '11px' }}>{item.icon}</span>
-                                    <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{item.label}</span>
-                                </div>
-                                <p className="text-[12px] font-black text-white font-mono ml-4 leading-tight">{fmt(item.value)}</p>
+            {/* Expandable section using Framer Motion for 60FPS */}
+            <AnimatePresence>
+                {expanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                    >
+                        {details.length > 0 ? (
+                            <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-2 pb-1">
+                                {details.map(item => (
+                                    <div key={item.label}>
+                                        <div className="flex items-center gap-1">
+                                            <span className={`material-icons-round ${item.color}`} style={{ fontSize: '11px' }}>{item.icon}</span>
+                                            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{item.label}</span>
+                                        </div>
+                                        <p className="text-[12px] font-black text-white font-mono ml-4 leading-tight">{fmt(item.value)}</p>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-[10px] text-gray-600 mt-2 pt-2 border-t border-white/10">No detailed breakdown available</p>
+                        ) : (
+                            <p className="text-[10px] text-gray-600 mt-2 pt-2 border-t border-white/10">No detailed breakdown available</p>
+                        )}
+                    </motion.div>
                 )}
-            </div>
+            </AnimatePresence>
 
             {!expanded && (
                 <p className="text-[9px] text-gray-600 text-right mt-1">Tap for details</p>
@@ -169,30 +177,37 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
                 </div>
             </div>
 
-            <div
-                style={{ maxHeight: expanded ? '180px' : '0', opacity: expanded ? 1 : 0 }}
-                className="overflow-hidden transition-all duration-300 ease-in-out"
-            >
-                <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                        <span className="material-icons-round text-yellow-400" style={{ fontSize: '13px' }}>confirmation_number</span>
-                        <span className="text-[10px] text-gray-300">Loan Tokens: <strong className="text-white">{user?.loanTokens ?? 1}</strong></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="material-icons-round text-blue-400" style={{ fontSize: '13px' }}>card_giftcard</span>
-                        <span className="text-[10px] text-gray-300">Coupons: <strong className="text-white">{couponsCount}</strong></span>
-                    </div>
-                    {perks.map(perk => (
-                        <div key={perk} className="flex items-center gap-1.5">
-                            <span className="material-icons-round text-emerald-400" style={{ fontSize: '13px' }}>check_circle</span>
-                            <span className="text-[10px] text-gray-400">{perk}</span>
+            <AnimatePresence>
+                {expanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                    >
+                        <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-1.5 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-icons-round text-yellow-400" style={{ fontSize: '13px' }}>confirmation_number</span>
+                                <span className="text-[10px] text-gray-300">Loan Tokens: <strong className="text-white">{user?.loanTokens ?? 1}</strong></span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-icons-round text-blue-400" style={{ fontSize: '13px' }}>card_giftcard</span>
+                                <span className="text-[10px] text-gray-300">Coupons: <strong className="text-white">{couponsCount}</strong></span>
+                            </div>
+                            {perks.map(perk => (
+                                <div key={perk} className="flex items-center gap-1.5">
+                                    <span className="material-icons-round text-emerald-400" style={{ fontSize: '13px' }}>check_circle</span>
+                                    <span className="text-[10px] text-gray-400">{perk}</span>
+                                </div>
+                            ))}
+                            <Link href="/rank" className="block text-[10px] text-[#FBBF24] font-bold mt-1 hover:underline" onClick={e => e.stopPropagation()}>
+                                See all perks →
+                            </Link>
                         </div>
-                    ))}
-                    <Link href="/rank" className="block text-[10px] text-[#FBBF24] font-bold mt-1 hover:underline" onClick={e => e.stopPropagation()}>
-                        See all perks →
-                    </Link>
-                </div>
-            </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {!expanded && <p className="text-[9px] text-gray-600 text-right mt-1">Tap for perks</p>}
         </div>
     );
@@ -359,13 +374,7 @@ export default function InventoryPage() {
     });
     const visibleArtifacts = filteredArtifacts.slice(0, visibleCount);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-[#111827] flex items-center justify-center">
-                <p className="text-white font-['Russo_One'] animate-pulse">Loading Inventory...</p>
-            </div>
-        );
-    }
+    if (isLoading || !user) return null;
 
     return (
         <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col pb-24 selection:bg-[#FBBF24] selection:text-white bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
