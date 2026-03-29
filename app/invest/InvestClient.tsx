@@ -151,10 +151,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                             <div className="flex justify-between items-start relative z-10">
                                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{p.asset.name}</p>
                                                 <div className={cn(
-                                                    "text-[9px] font-black px-2 py-1 rounded-md border backdrop-blur-xl",
+                                                    "text-[9px] font-black px-2 py-1 rounded-md border",
                                                     isProfit
-                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                                                        : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                        : "bg-red-500/10 text-red-500 border-red-500/20"
                                                 )}>
                                                     {isProfit ? 'PROFIT' : 'LOSS'}
                                                 </div>
@@ -208,10 +208,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                                 <Activity size={16} />
                                             </div>
                                             <div className={cn(
-                                                "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border backdrop-blur-xl shadow-lg",
+                                                "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-md border shadow-sm",
                                                 isPositive
-                                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                                                    : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                    : "bg-red-500/10 text-red-500 border-red-500/20"
                                             )}>
                                                 {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                                                 {Math.abs(asset.change24h).toFixed(2)}%

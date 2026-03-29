@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     XAxis,
     YAxis,
@@ -28,6 +29,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
     const router = useRouter();
     const [isInvesting, setIsInvesting] = useState(false);
     const [isCashingOut, setIsCashingOut] = useState(false);
+    const [showValueModal, setShowValueModal] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [tradeAmount, setTradeAmount] = useState('1');
     const [loading, setLoading] = useState(false);
@@ -150,10 +152,10 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                             </div>
                         </div>
                         <div className={cn(
-                            "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border md:text-sm",
+                            "flex items-center gap-1.5 font-black px-3 py-1.5 rounded-lg text-xs border md:text-sm shadow-sm",
                             isPositive
-                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                                : "bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                : "bg-red-500/10 text-red-500 border-red-500/20"
                         )}>
                             {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                             {Math.abs(asset.change24h).toFixed(2)}%
@@ -174,7 +176,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                     )}
 
                     {/* Stats Summary Panel */}
-                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 relative z-40">
                         <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
                                 <Activity size={14} className="text-indigo-400" /> Your Units
@@ -185,14 +187,18 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                             </p>
                         </div>
 
-                        <div className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
+                        <motion.div 
+                            layoutId="current-val-card"
+                            onClick={() => setShowValueModal(true)}
+                            className="bg-[#1e293b] border border-white/5 p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-transform"
+                        >
+                            <motion.p layoutId="current-val-title" className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 relative z-10 flex items-center gap-1.5">
                                 <DollarSign size={14} className="text-emerald-400" /> Current Value
-                            </p>
-                            <p className="text-xl md:text-2xl font-black text-emerald-400 relative z-10 font-mono tracking-tight truncate">
+                            </motion.p>
+                            <motion.p layoutId="current-val-value" className="text-xl md:text-2xl font-black text-emerald-400 relative z-10 font-mono tracking-tight truncate">
                                 ₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </p>
-                        </div>
+                            </motion.p>
+                        </motion.div>
                     </div>
 
                     {/* Performance Chart */}
@@ -424,6 +430,45 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                 </div>
             )}
 
+            {/* Current Value Modal */}
+            <AnimatePresence>
+            {showValueModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    onClick={() => setShowValueModal(false)}
+                >
+                    <motion.div
+                        layoutId="current-val-card"
+                        className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden cursor-default"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <motion.div layoutId="current-val-title" className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
+                            <DollarSign size={20} className="text-emerald-400" />
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
+                                Current Value
+                            </span>
+                        </motion.div>
+                        <motion.p layoutId="current-val-value" className="text-2xl md:text-3xl font-black text-emerald-400 relative z-10 font-mono break-all leading-tight">
+                            ₹{(userUnits * asset.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </motion.p>
+                        
+                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center relative z-10">
+                            <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Holdings</span>
+                            <span className="text-sm font-bold text-white tracking-widest">{userUnits.toLocaleString(undefined, { maximumFractionDigits: 2 })} {asset.unit}</span>
+                        </div>
+
+                        {/* Decorative background glow */}
+                        <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none bg-emerald-500" />
+                    </motion.div>
+                </motion.div>
+            )}
+            </AnimatePresence>
+
         </main>
     );
 }
+

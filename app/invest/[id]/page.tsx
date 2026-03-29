@@ -14,31 +14,31 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
 
     if (!assetId) redirect('/invest');
 
-    const asset = await prisma.asset.findUnique({
-        where: { id: assetId },
-        include: {
-            history: {
-                orderBy: { timestamp: 'desc' },
-                take: 7
+    const [asset, portfolio, user] = await Promise.all([
+        prisma.asset.findUnique({
+            where: { id: assetId },
+            include: {
+                history: {
+                    orderBy: { timestamp: 'desc' },
+                    take: 7
+                }
             }
-        }
-    });
+        }),
+        prisma.portfolio.findUnique({
+            where: {
+                userId_assetId: {
+                    userId,
+                    assetId
+                }
+            }
+        }),
+        prisma.user.findUnique({
+            where: { id: userId },
+            select: { balance: true, isSuspended: true, rankPoints: true }
+        })
+    ]);
 
     if (!asset) redirect('/invest');
-
-    const portfolio = await prisma.portfolio.findUnique({
-        where: {
-            userId_assetId: {
-                userId,
-                assetId
-            }
-        }
-    });
-
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { balance: true, isSuspended: true, rankPoints: true }
-    });
 
     // Convert Decimal fields to number for Client Component serialization
     const normalizedAsset = {

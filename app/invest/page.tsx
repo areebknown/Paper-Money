@@ -12,11 +12,16 @@ export default async function InvestPage() {
         redirect('/login');
     }
 
-    // Verify user exists and get suspension status
-    const userDb = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { isSuspended: true }
-    });
+    // Run database queries concurrently
+    const [userDb, assets] = await Promise.all([
+        prisma.user.findUnique({
+            where: { id: userId },
+            select: { isSuspended: true }
+        }),
+        prisma.asset.findMany({
+            orderBy: { name: 'asc' }
+        })
+    ]);
 
     if (!userDb) {
         redirect('/login');
@@ -25,11 +30,6 @@ export default async function InvestPage() {
     if (userDb.isSuspended) {
         redirect('/suspended');
     }
-
-    // Fetch initial market data for SSR
-    const assets = await prisma.asset.findMany({
-        orderBy: { name: 'asc' }
-    });
 
     return <InvestClient initialAssets={assets} />;
 }
