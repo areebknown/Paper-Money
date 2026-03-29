@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -95,7 +96,8 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 <div className="px-4 space-y-6">
                     {/* Dashboard Stats */}
                     <div className="grid grid-cols-2 gap-3 md:gap-4">
-                        <div
+                        <motion.div
+                            layoutId="balance-card"
                             onClick={() => setFocusedStat('balance')}
                             className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
@@ -106,9 +108,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}
                             </p>
-                        </div>
+                        </motion.div>
 
-                        <div
+                        <motion.div
+                            layoutId="invested-card"
                             onClick={() => setFocusedStat('invested')}
                             className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
@@ -119,7 +122,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                             </p>
-                        </div>
+                        </motion.div>
                     </div>
 
                     {/* Portfolio Summary Section */}
@@ -242,13 +245,19 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                 </div>
 
                 {/* Full Value Modal */}
+                <AnimatePresence>
                 {focusedStat && (
-                    <div
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                         onClick={() => setFocusedStat(null)}
                     >
-                        <div
-                            className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200"
+                        <motion.div
+                            layoutId={focusedStat === 'balance' ? 'balance-card' : 'invested-card'}
+                            className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden cursor-default"
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
@@ -266,9 +275,10 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                 "absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none",
                                 focusedStat === 'balance' ? "bg-red-500" : "bg-orange-500"
                             )} />
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
 
 
