@@ -95,19 +95,19 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
                 <div className="px-4 space-y-6">
                     {/* Dashboard Stats */}
-                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 relative z-40">
                         <motion.div
                             layoutId="balance-card"
                             onClick={() => setFocusedStat('balance')}
                             className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
-                            <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
+                            <motion.div layoutId="balance-title" className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                                 <Wallet size={16} className="text-[#FBBF24]" />
                                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Available Cash</span>
-                            </div>
-                            <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
+                            </motion.div>
+                            <motion.p layoutId="balance-value" className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '...'}
-                            </p>
+                            </motion.p>
                         </motion.div>
 
                         <motion.div
@@ -115,13 +115,13 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             onClick={() => setFocusedStat('invested')}
                             className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/50 shadow-lg p-4 md:p-5 rounded-2xl md:rounded-3xl relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
                         >
-                            <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
+                            <motion.div layoutId="invested-title" className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                                 <Briefcase size={16} className="text-red-500" />
                                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Invested Value</span>
-                            </div>
-                            <p className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
+                            </motion.div>
+                            <motion.p layoutId="invested-value" className="text-xl md:text-2xl font-black text-white relative z-10 font-mono tracking-tight truncate">
                                 ₹{Number(user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                            </p>
+                            </motion.p>
                         </motion.div>
                     </div>
 
@@ -260,15 +260,15 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                             className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden cursor-default"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
+                            <motion.div layoutId={focusedStat === 'balance' ? 'balance-title' : 'invested-title'} className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
                                 {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
                                 <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
                                     {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
                                 </span>
-                            </div>
-                            <p className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
+                            </motion.div>
+                            <motion.p layoutId={focusedStat === 'balance' ? 'balance-value' : 'invested-value'} className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
                                 ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                            </p>
+                            </motion.p>
 
                             {/* Decorative background glow */}
                             <div className={cn(
