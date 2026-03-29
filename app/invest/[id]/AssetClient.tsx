@@ -236,8 +236,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                                         contentStyle={{
                                             borderRadius: '16px',
                                             border: '1px solid rgba(255,255,255,0.1)',
-                                            background: 'rgba(15,23,42,0.9)',
-                                            backdropFilter: 'blur(8px)',
+                                            background: 'rgba(15,23,42,0.95)',
                                             boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.5)'
                                         }}
                                         labelStyle={{ fontWeight: 800, color: '#9ca3af' }}
@@ -290,7 +289,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                     <button
                         onClick={() => setIsCashingOut(true)}
                         disabled={userUnits <= 0 || isSuspended}
-                        className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-4 md:py-5 rounded-2xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base backdrop-blur-md"
+                        className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-4 md:py-5 rounded-2xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base shadow-lg"
                     >
                         <DollarSign size={18} /> Cash Out
                     </button>
@@ -438,7 +437,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
                     onClick={() => setShowValueModal(false)}
                 >
                     <motion.div
@@ -461,8 +460,13 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
                             <span className="text-sm font-bold text-white tracking-widest">{userUnits.toLocaleString(undefined, { maximumFractionDigits: 2 })} {asset.unit}</span>
                         </div>
 
-                        {/* Decorative background glow */}
-                        <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none bg-emerald-500" />
+                        {/* Decorative background glow using radial gradient for performance */}
+                        <div 
+                            className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
+                            style={{ 
+                                background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)' 
+                            }} 
+                        />
                     </motion.div>
                 </motion.div>
             )}

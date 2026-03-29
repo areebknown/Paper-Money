@@ -252,7 +252,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
                         onClick={() => setFocusedStat(null)}
                     >
                         <motion.div
@@ -270,11 +270,13 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
                                 ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                             </motion.p>
 
-                            {/* Decorative background glow */}
-                            <div className={cn(
-                                "absolute -right-8 -bottom-8 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none",
-                                focusedStat === 'balance' ? "bg-red-500" : "bg-orange-500"
-                            )} />
+                            {/* Decorative background glow using radial gradient for performance */}
+                            <div 
+                                className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
+                                style={{ 
+                                    background: `radial-gradient(circle, ${focusedStat === 'balance' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)'} 0%, transparent 70%)` 
+                                }} 
+                            />
                         </motion.div>
                     </motion.div>
                 )}
