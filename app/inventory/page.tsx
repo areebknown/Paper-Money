@@ -201,13 +201,13 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
 // ─── Resource Icon map ─────────────────────────────────────────────────────────
 const RESOURCE_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
     default:   { icon: 'inventory_2',   color: 'text-gray-400',   bg: 'bg-gray-800/60' },
-    gold:      { icon: 'toll',          color: 'text-yellow-400', bg: 'bg-yellow-900/40' },
-    silver:    { icon: 'radio_button_unchecked', color: 'text-slate-300', bg: 'bg-slate-700/50' },
-    crude:     { icon: 'opacity',       color: 'text-gray-400',   bg: 'bg-gray-800/60' },
-    oil:       { icon: 'opacity',       color: 'text-gray-400',   bg: 'bg-gray-800/60' },
+    gold:      { icon: 'view_day',      color: 'text-yellow-400', bg: 'bg-yellow-900/40' },
+    silver:    { icon: 'view_day',      color: 'text-gray-300',   bg: 'bg-gray-600/40' },
+    crude:     { icon: 'oil_barrel',    color: 'text-red-800',    bg: 'bg-red-300/20' },
+    oil:       { icon: 'oil_barrel',    color: 'text-red-800',    bg: 'bg-red-300/20' },
     copper:    { icon: 'electrical_services', color: 'text-orange-400', bg: 'bg-orange-900/30' },
     lithium:   { icon: 'bolt',          color: 'text-cyan-400',   bg: 'bg-cyan-900/30' },
-    iron:      { icon: 'hardware',      color: 'text-gray-300',   bg: 'bg-gray-700/50' },
+    iron:      { icon: 'hardware',      color: 'text-zinc-600',   bg: 'bg-zinc-900' },
     steel:     { icon: 'construction',  color: 'text-slate-300',  bg: 'bg-slate-700/50' },
     diamond:   { icon: 'diamond',       color: 'text-blue-400',   bg: 'bg-blue-900/30' },
     platinum:  { icon: 'star',          color: 'text-purple-400', bg: 'bg-purple-900/30' },
@@ -369,7 +369,7 @@ export default function InventoryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col pb-24 selection:bg-[#FBBF24] selection:text-white">
+        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased flex flex-col pb-24 selection:bg-[#FBBF24] selection:text-white bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
 
             {/* ── STANDARD HEADER ── */}
             <header className="relative z-40 pt-4 pb-2 border-b border-[#FBBF24] bg-gradient-to-b from-[#14254f] via-[#101d3f] to-[#0b1328] shadow-[0_18px_38px_rgba(0,0,0,0.45)] overflow-hidden">
@@ -412,8 +412,8 @@ export default function InventoryPage() {
             </header>
 
             {/* ── INVENTORY TITLE ── */}
-            <div className="px-4 pt-4 pb-2">
-                <h1 className="text-xl font-black text-white uppercase tracking-widest font-['Russo_One']">
+            <div className="px-5 pt-5 pb-1">
+                <h1 className="text-base font-bold text-gray-300 uppercase tracking-widest font-['Russo_One'] truncate drop-shadow-md">
                     {user?.username ? `${user.username}'s Inventory` : 'My Inventory'}
                 </h1>
             </div>
@@ -426,6 +426,8 @@ export default function InventoryPage() {
                     <BalanceCard user={user} />
                     <RankCard user={user} rank={rank} couponsCount={coupons.length} />
                 </div>
+
+                <hr className="border-t border-white/10" />
 
                 {/* ── ESTATES + VEHICLES (2-col) ── */}
                 <div className="grid grid-cols-2 gap-4">
@@ -466,6 +468,8 @@ export default function InventoryPage() {
                     </section>
                 </div>
 
+                <hr className="border-t border-white/10" />
+
                 {/* ── OWNED RESOURCES ── */}
                 <section>
                     <SectionHeading icon="inventory_2" label="Owned Resources" />
@@ -494,6 +498,8 @@ export default function InventoryPage() {
                         <p className="text-gray-600 text-[11px] font-medium mt-1">No Owned Resources</p>
                     )}
                 </section>
+
+                <hr className="border-t border-white/10" />
 
                 {/* ── OWNED ARTIFACTS ── */}
                 <section>
