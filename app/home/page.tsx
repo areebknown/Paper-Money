@@ -447,7 +447,7 @@ function BidsContent({ userId }: { userId?: string }) {
                             const isLiveOrWaiting = isUiLive || isUiWaiting;
 
                             if (isUiLive) {
-                                badgeText = 'ðŸ”´ Live';
+                                badgeText = '🔴 Live';
                                 badgeColor = 'bg-red-500';
                             } else if (isUiWaiting) {
                                 badgeText = 'Waiting Room';
@@ -540,7 +540,7 @@ function BidsContent({ userId }: { userId?: string }) {
                                                     {new Date(bid.endedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                 </span></>
                                             ) : null}
-                                            {isUnclaimed && <span className="text-yellow-500 font-bold"> Â· Payment pending</span>}
+                                            {isUnclaimed && <span className="text-yellow-500 font-bold"> · Payment pending</span>}
                                         </p>
                                     </div>
                                     {isUnclaimed ? (
@@ -637,7 +637,7 @@ function BidsContent({ userId }: { userId?: string }) {
                                         }}
                                         className="flex-[2] py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-gray-900 font-black text-sm shadow-lg active:scale-95 transition-all"
                                     >
-                                        {payNowState === 'paying' ? 'Processing...' : `ðŸ’³ Pay ₹${Number(payNowDialog.currentPrice).toLocaleString()}`}
+                                        {payNowState === 'paying' ? 'Processing...' : `💳 Pay ₹${Number(payNowDialog.currentPrice).toLocaleString()}`}
                                     </button>
                                 </div>
                             </>
