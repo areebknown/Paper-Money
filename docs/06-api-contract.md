@@ -35,3 +35,18 @@ The universal receiver for all delayed tasks (from Upstash).
 - `POST /api/admin/auctions/create`: Schedules a new auction and creates QStash schedules.
 - `POST /api/admin/auctions/[id]/start`: Force-starts an auction early.
 - `POST /api/admin/market/cron`: Schedules the everyday midnight market refresh.
+
+---
+
+## Data & State Syncing
+
+### `GET /api/market/sync`
+Used to fetch fresh market data for the /invest page.
+- **Behavior**: Returns all assets and their current prices. Used by Pusher listeners to re-validate local state.
+- **Returns**: `{ assets: [...] }`
+
+### `GET /api/inventory`
+The unified source of truth for the /inventory page.
+- **Behavior**: Consolidates user balance, rank, portfolios (with current assets), artifact list, and coupons into a single query. Highly optimized for concurrent app starts.
+- **Returns**: `{ user: {...}, rank: {...}, portfolios: [...], ownedArtifacts: [...] }`
+

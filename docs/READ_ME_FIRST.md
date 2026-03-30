@@ -20,4 +20,15 @@ Before doing **ANY** work, you MUST read the files in this directory to synchron
 - `06-api-contract.md`: The master list of core API routes, their behaviors, and precise payload expectations.
 - `07-design-system.md`: Project-specific aesthetic guidelines, Tailwind variables, and notes on the 2.5D visual illusions.
 
+---
+
+### 🚀 Performance & Animation Checklist (Mandatory)
+Before pushing any UI or Data changes, you MUST verify:
+- [ ] **Concurrency**: Are all independent `await` calls wrapped in `Promise.all`? (See `01-architecture.md`)
+- [ ] **Streaming**: Does the new page/module have a matching `loading.tsx` skeleton?
+- [ ] **No-Blur**: Have you removed `backdrop-blur` from any scrolling lists or modals? (See `07-design-system.md`)
+- [ ] **Glows**: Are decorative glows using **Radial Gradients** instead of `blur-3xl`?
+- [ ] **Expansions**: Are you using **Framer Motion `height: auto`** instead of CSS `max-height`?
+
 Proceed to read `01-architecture.md` now to understand the application you are working on.
+

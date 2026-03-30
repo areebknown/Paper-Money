@@ -50,3 +50,21 @@ Standardized the React Top-Down data flow. We passed a literal `onBalanceUpdate=
 ---
 
 *(Append new major architectural bugs below as they occur)*
+
+---
+
+### 5. The Sequential Fetching "Stack" (8-Second Page Loads)
+**The Bug:**
+The Invest and Asset Specific pages were taking upwards of 8 seconds to load on specialized Serverless SQL (Neon). The screen remained completely white/blank during this "Time to First Byte" (TTFB) window.
+
+**The Cause:**
+The server-side code was awaiting queries one-by-one: 
+1. `await user` (2s) 
+2. `await asset` (2s) 
+3. `await portfolio` (2s)
+Cumulative wait time: 6+ seconds. Because Next.js waits for all `await` calls in a Server Component before sending *any* HTML to the browser, the user saw a frozen white screen.
+
+**The Fix:**
+1. **Parallel Fetching**: We wrapped all independent data calls in `Promise.all([user, asset, portfolio])`. This reduced the wait from the *sum* of all queries to just the single slowest query.
+2. **Suspense Streaming**: We added `loading.tsx` skeletons. Now, Next.js instantly sends the page layout/skeleton to the browser while the database queries are still running in the background.
+

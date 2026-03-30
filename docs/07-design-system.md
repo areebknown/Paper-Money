@@ -29,3 +29,26 @@ This document outlines the design styles for the current Bid Wars app project, p
 
 ## 5. Footers / Navigation
 - There is only **one** universal Bottom Navigation component. Elements inside individual flow pages (like an element's purchase page) should **not** render the BottomNav—they should rely on "Back" buttons in the actual page UI to prevent the primary CTAs from colliding with universal navigation.
+
+## 6. Interaction & Animation Standards
+
+To achieve a "native app" feel, follow these high-performance animation rules:
+
+### 6.1 Framer Motion `layoutId` Morphing
+Use `layoutId` to create fluid transitions between a dashboard card and its expanded modal (e.g., the "Current Value" or "Balance" cards). 
+- Ensure a `relative z-40` stacking context on the parent grid to prevent the card from slipping behind other elements during expansion.
+
+### 6.2 The No-Blur Policy
+Avoid `backdrop-blur` and heavy `blur-` filters on elements that are part of a scrollable list or a primary animation. 
+- **The Issue**: Blurs are calculated on every frame, causing stutter.
+- **The Fix**: Use slightly more opaque background colors (e.g., `bg-black/90` instead of `bg-black/80 backdrop-blur-sm`).
+
+### 6.3 Radial Gradient Glows (High-FPS Glows)
+Never use `blur-3xl` for decorative glows inside an animating component.
+- **Rule**: Replace them with a **Radial Gradient** `style`. It looks identical but renders 5x faster because the browser treats it as a static background color instead of a filter.
+- **Standard**: `radial-gradient(circle, rgba(..., 0.15) 0%, transparent 70%)`.
+
+### 6.4 Height Animations
+Never animate CSS `max-height` for expanding panels (like the "Balance Details" or "Rank Perks").
+- **Rule**: Use Framer Motion's `AnimatePresence` with `motion.div initial={{ height: 0 }} animate={{ height: 'auto' }}`. This is physics-based and significantly smoother than layout-reflowing CSS transitions.
+

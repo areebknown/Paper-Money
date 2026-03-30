@@ -1,4 +1,4 @@
-'use client';
+i w'use client';
 
 import { useState, useEffect } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
+import Header from '@/components/Header';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -48,50 +49,7 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
         <main className="min-h-screen bg-[#111827] text-[#F9FAFB] relative pb-24 lg:pb-0 overflow-x-hidden selection:bg-[#FBBF24] selection:text-white">
 
             <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6 pt-0 px-0 md:px-6">
-                {/* Header */}
-                <header className="relative z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4 bg-gradient-to-b from-[#14254f] via-[#101d3f] to-[#0b1328] shadow-[0_18px_38px_rgba(0,0,0,0.45)] overflow-hidden">
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
-                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-black/25 pointer-events-none" />
-                    <div className="flex justify-between items-center px-4 mb-2 relative">
-                        {/* Left: Balance + Rank Points */}
-                        <div className="flex flex-col gap-1 w-auto">
-                            <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
-                                <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
-                                    {(user?.balance ? Number(user.balance) : 0).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
-                                <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{user?.rankPoints || 0}</span>
-                            </div>
-                        </div>
-
-                        {/* Center: Logo */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                            <img
-                                src={LOGO_URL}
-                                alt="Bid Wars Logo"
-                                className="drop-shadow-lg object-contain h-[50px] w-auto"
-                            />
-                        </div>
-
-                        {/* Right: Notifications + Profile */}
-                        <div className="flex items-center gap-3 w-24 justify-end">
-                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
-                                <span className="material-icons-round text-white">notifications</span>
-                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
-                            </button>
-                            <Link href="/profile">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
-                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
-                                        <span className="material-icons-round text-white text-xl">person</span>
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                </header>
+                <Header />
 
                 <div className="px-4 space-y-6">
                     {/* Dashboard Stats */}
@@ -246,40 +204,40 @@ export default function InvestClient({ initialAssets }: InvestClientProps) {
 
                 {/* Full Value Modal */}
                 <AnimatePresence>
-                {focusedStat && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-                        onClick={() => setFocusedStat(null)}
-                    >
+                    {focusedStat && (
                         <motion.div
-                            layoutId={focusedStat === 'balance' ? 'balance-card' : 'invested-card'}
-                            className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden cursor-default"
-                            onClick={e => e.stopPropagation()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+                            onClick={() => setFocusedStat(null)}
                         >
-                            <motion.div layoutId={focusedStat === 'balance' ? 'balance-title' : 'invested-title'} className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
-                                {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
-                                <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
-                                    {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
-                                </span>
-                            </motion.div>
-                            <motion.p layoutId={focusedStat === 'balance' ? 'balance-value' : 'invested-value'} className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
-                                ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                            </motion.p>
+                            <motion.div
+                                layoutId={focusedStat === 'balance' ? 'balance-card' : 'invested-card'}
+                                className="bg-[#1e293b] border border-white/10 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl relative overflow-hidden cursor-default"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <motion.div layoutId={focusedStat === 'balance' ? 'balance-title' : 'invested-title'} className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
+                                    {focusedStat === 'balance' ? <Wallet size={20} className="text-red-500" /> : <Briefcase size={20} className="text-orange-500" />}
+                                    <span className="text-xs md:text-sm font-bold uppercase tracking-widest">
+                                        {focusedStat === 'balance' ? 'Available Cash' : 'Invested Value'}
+                                    </span>
+                                </motion.div>
+                                <motion.p layoutId={focusedStat === 'balance' ? 'balance-value' : 'invested-value'} className="text-2xl md:text-3xl font-black text-white relative z-10 font-mono break-all leading-tight">
+                                    ₹{Number(focusedStat === 'balance' ? user?.balance : user?.totalInvested).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                </motion.p>
 
-                            {/* Decorative background glow using radial gradient for performance */}
-                            <div 
-                                className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
-                                style={{ 
-                                    background: `radial-gradient(circle, ${focusedStat === 'balance' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)'} 0%, transparent 70%)` 
-                                }} 
-                            />
+                                {/* Decorative background glow using radial gradient for performance */}
+                                <div
+                                    className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
+                                    style={{
+                                        background: `radial-gradient(circle, ${focusedStat === 'balance' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)'} 0%, transparent 70%)`
+                                    }}
+                                />
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
+                    )}
                 </AnimatePresence>
             </div>
 

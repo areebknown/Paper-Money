@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
+import Header from '@/components/Header';
 import {
     XAxis,
     YAxis,
@@ -94,50 +95,7 @@ export default function AssetClient({ asset, userUnits, userBalance, rankPoints,
         <main className="min-h-screen bg-[#111827] text-[#F9FAFB] relative flex flex-col pb-24 lg:pb-0 overflow-x-hidden selection:bg-[#FBBF24] selection:text-white">
 
             <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col flex-1 pt-0">
-                {/* Header */}
-                <header className="relative z-50 pt-4 pb-2 border-b border-[#FBBF24] sticky top-0 mb-4 bg-gradient-to-b from-[#14254f] via-[#101d3f] to-[#0b1328] shadow-[0_18px_38px_rgba(0,0,0,0.45)] overflow-hidden">
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
-                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-black/25 pointer-events-none" />
-                    <div className="flex justify-between items-center px-4 mb-2 relative">
-                        {/* Left: Balance + Rank Points */}
-                        <div className="flex flex-col gap-1 w-auto">
-                            <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full border border-white/10 whitespace-nowrap">
-                                <span className="material-icons-round text-[#FBBF24] drop-shadow-md leading-none" style={{ fontSize: '14px' }}>currency_rupee</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">
-                                    {(userBalance || 0).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded-full border border-white/10">
-                                <span className="material-icons-round text-blue-400 drop-shadow-md leading-none" style={{ fontSize: '14px' }}>military_tech</span>
-                                <span className="text-white text-[10px] font-bold font-['Russo_One'] tracking-wide">{rankPoints || 0}</span>
-                            </div>
-                        </div>
-
-                        {/* Center: Logo */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2">
-                            <img
-                                src={LOGO_URL}
-                                alt="Bid Wars Logo"
-                                className="drop-shadow-lg object-contain h-[50px] w-auto"
-                            />
-                        </div>
-
-                        {/* Right: Notifications + Profile */}
-                        <div className="flex items-center gap-3 w-24 justify-end">
-                            <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
-                                <span className="material-icons-round text-white">notifications</span>
-                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
-                            </button>
-                            <Link href="/profile">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer">
-                                    <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 flex items-center justify-center">
-                                        <span className="material-icons-round text-white text-xl">person</span>
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                </header>
+                <Header />
 
                 <div className="px-4 pb-6 space-y-4 flex-1 w-full max-w-4xl mx-auto">
                     {/* Floating Asset Title Bar */}

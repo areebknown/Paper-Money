@@ -17,6 +17,13 @@ model User {
   balance   Decimal  @default(0) @db.Decimal(10, 2)
   createdAt DateTime @default(now())
   
+  // Custom Identity & Auth
+  publicId    String?  @unique // PMUID (8-digit random)
+  isMainAccount Boolean @default(false)
+  realName    String?
+  profileImage String?
+  phoneNumber  String?  @unique
+
   resetToken       String?
   resetTokenExpiry DateTime?
   

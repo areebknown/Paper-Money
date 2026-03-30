@@ -69,6 +69,29 @@ Vercel Serverless Functions die after 10-15 seconds. Making a `setTimeout` for 1
 2. **Claim Expiry:** When an auction ends, the server tells QStash to ping back in exactly 24 hours. If the auction is still `COMPLETED` and not `CLAIMED`, the webhook flips it to `VOID`.
 3. **Daily Market Cron:** QStash pings `/api/admin/market/cron` exactly at Server Midnight to update the global randomized market prices for Pawn Shop artifacts.
 
+4. **Midnight Pusher Reset (Price Refresher):**
+   - At Server Midnight (12:00 AM IST), the cron job broadcasts a `prices-updated` event via the `market-updates` Pusher channel.
+   - All active clients (Home, Invest, Portfolio) listen for this event and trigger an immediate `mutate()` or `router.refresh()`.
+   - This ensures a synchronized "Day Start" for all players without requiring manual page refreshes.
+
 **Idempotency / Override Protection:**
 What happens if QStash is scheduled to start an auction at 5:00 PM, but the Admin gets impatient and clicks "Start Now" at 4:30 PM?
 Our internal Webhook receiver checks the DB first: *"Is this auction already LIVE or COMPLETED?"* If yes, the receiver drops the QStash hook in the garbage. QStash cannot accidentally rollback an auction state.
+
+---
+
+## 5. Performance & Concurrency Standards
+
+To maintain a 60FPS feel in a serverless environment, the following architectural rules are mandatory:
+
+### 5.1 Fetch Concurrency (`Promise.all`)
+Never use sequential `await` statements for independent data (e.g., fetching User then fetching Portfolio). This causes "TTFB Stacking" where each query adds to the initial wait time. 
+*   **Rule**: Use `Promise.all([user, portfolio, assets])` at the Page level.
+
+### 5.2 Streaming UI (`loading.tsx`)
+Never let the browser hang on a blank screen while waiting for the database.
+*   **Rule**: Every primary module (Home, Invest, Inventory) MUST have a `loading.tsx` file that serves a branded skeleton loader. This leverages Next.js Suspense to provide instant visual feedback.
+
+### 5.3 Database Query Consolidation
+Instead of making 5 small API calls from a component, prefer a single "Sync" endpoint that returns a consolidated JSON object (e.g., `/api/inventory`). Prisma's `include` and `select` should do the heavy lifting of joining tables in a single round-trip.
+

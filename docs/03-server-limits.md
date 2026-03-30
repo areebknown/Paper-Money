@@ -73,3 +73,22 @@ QStash limits on the free tier provide **500 messages per day**.
 Because an auction strictly requires 2 hooks (Waiting Room + Start), you could mathematically schedule **249 unique auctions** in a single day plus the 1 daily Market Cron, before hitting the limit.
 
 **Will it break the Free Tier? ✅ Extremely Safe.**
+
+---
+
+## 4. Neon DB Storage: The 500MB Frontier
+
+A common concern is the long-term growth of **Transaction History**.
+
+### The Math (Per-Row Analytics)
+*   **Average Transaction**: ~200 bytes (CUID, amount, category, description, timestamps).
+*   **10,000 Transactions**: ~2 MB.
+*   **100,000 Transactions**: ~20 MB.
+*   **1,000,000 Transactions**: ~200 MB.
+
+### Verdict: ✅ **Safe for Years.**
+With the 500MB Neon limit, the app can store approximately **2.5 Million transactions** before requiring an archival strategy. 
+
+### Archival Policy (Future-Proofing)
+If the database reaches **400MB (80% capacity)**, we will implement an "Archival Service" to move transactions older than 1 year to **Supabase** for permanent cold storage, keeping only the recent history in the fast Neon "Bank".
+
