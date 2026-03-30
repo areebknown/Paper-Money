@@ -64,17 +64,17 @@ export default function LoginPage() {
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center mb-10"
+                    className="flex flex-col items-center mb-6"
                 >
                     <img 
                         src={LOGO_URL} 
                         alt="Bid Wars" 
-                        className="h-20 w-auto drop-shadow-[0_0_20px_rgba(251,191,36,0.15)]"
+                        className="h-10 w-auto drop-shadow-[0_0_20px_rgba(251,191,36,0.15)]"
                     />
-                    <div className="mt-4 flex items-center gap-2">
-                        <div className="h-px w-8 bg-gradient-to-r from-transparent to-slate-700" />
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] pl-1">Authorized Access Only</span>
-                        <div className="h-px w-8 bg-gradient-to-l from-transparent to-slate-700" />
+                    <div className="mt-3 flex items-center gap-2">
+                        <div className="h-px w-6 bg-gradient-to-r from-transparent to-slate-700" />
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">Secure Auth Port</span>
+                        <div className="h-px w-6 bg-gradient-to-l from-transparent to-slate-700" />
                     </div>
                 </motion.div>
 
@@ -82,15 +82,15 @@ export default function LoginPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden"
+                    className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                        <ShieldCheck size={120} className="text-white" />
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <ShieldCheck size={80} className="text-white" />
                     </div>
 
-                    <div className="mb-10 text-left">
-                        <h1 className="text-3xl font-black text-white tracking-tight leading-tight">SECURE <span className="text-cyan-400">LOGIN</span></h1>
-                        <p className="text-slate-400 text-sm mt-2">Enter your identity credentials</p>
+                    <div className="mb-6 text-left border-b border-white/5 pb-4">
+                        <h1 className="text-xl font-black text-white tracking-tight uppercase">Terminal <span className="text-cyan-400">Login</span></h1>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-1">Authorized identities only</p>
                     </div>
 
                     {error && (
@@ -104,40 +104,39 @@ export default function LoginPage() {
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleLogin} className="space-y-6">
+                    <form onSubmit={handleLogin} className="space-y-4">
                         {/* Username */}
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 leading-tight block">Username Handle</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">User Identifier</label>
                             <div className="relative group">
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                                    <User size={18} />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                                    <User size={16} />
                                 </div>
                                 <input
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full pl-12 pr-6 py-5 bg-slate-900 border-2 border-slate-800 rounded-2xl focus:border-cyan-500 outline-none transition-all text-white font-mono placeholder:text-slate-700"
-                                    placeholder="your_handle"
+                                    className="w-full pl-11 pr-5 py-3.5 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-sm placeholder:text-slate-800"
+                                    placeholder="handle_v1.0"
                                     required
                                 />
                             </div>
                         </div>
 
                         {/* Password */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Security Pin</label>
-                                <Link href="/api/auth/forgot-password" title="Recover account" className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider hover:text-cyan-400 transition-colors">Recover</Link>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center px-1">
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Access Pin</label>
                             </div>
                             <div className="relative group">
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                                    <Lock size={18} />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                                    <Lock size={16} />
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-12 pr-12 py-5 bg-slate-900 border-2 border-slate-800 rounded-2xl focus:border-cyan-500 outline-none transition-all text-white font-mono placeholder:text-slate-700"
+                                    className="w-full pl-11 pr-11 py-3.5 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-sm placeholder:text-slate-800"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -154,43 +153,46 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full group bg-cyan-500 text-slate-950 font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_40px_rgba(6,182,212,0.25)] relative overflow-hidden"
+                            className="w-full group bg-cyan-500 text-slate-950 font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-95 shadow-lg relative overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                            {loading ? <Loader2 size={24} className="animate-spin" /> : (
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                            {loading ? <Loader2 size={20} className="animate-spin" /> : (
                                 <>
-                                    ENTER SYSTEM
-                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    SYNC IDENTITY
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-8 flex items-center gap-4 text-slate-600">
-                        <div className="h-px bg-slate-800 flex-1" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">or login with</span>
-                        <div className="h-px bg-slate-800 flex-1" />
+                    <div className="mt-5 flex items-center gap-3 text-slate-700">
+                        <div className="h-px bg-slate-800/50 flex-1" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Connect Via</span>
+                        <div className="h-px bg-slate-800/50 flex-1" />
                     </div>
 
-                    <div className="mt-6">
-                        <button className="w-full bg-slate-900 border border-slate-800 py-4 rounded-2xl flex items-center justify-center gap-3 text-slate-300 font-bold hover:bg-slate-800 hover:text-white transition-all active:scale-[0.98]">
-                            <img src="https://www.google.com/favicon.ico" className="w-5 h-5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100" />
-                            Connect via Google
-                        </button>
+                    <div className="mt-4">
+                        <Link 
+                            href="/api/auth/google" 
+                            className="w-full bg-slate-950/50 border border-slate-800 py-3 rounded-xl flex items-center justify-center gap-2 text-slate-400 text-xs font-bold hover:bg-slate-900 hover:text-white transition-all active:scale-[0.98]"
+                        >
+                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale opacity-50" />
+                            Google Auth
+                        </Link>
                     </div>
                 </motion.div>
 
-                <p className="mt-10 text-center text-slate-500 text-sm">
-                    Don't have an identity yet?{' '}
-                    <Link href="/signup" className="text-cyan-400 font-black hover:underline tracking-tight">
+                <p className="mt-6 text-center text-slate-600 text-xs font-medium">
+                    New user?{' '}
+                    <Link href="/signup" className="text-cyan-500 font-black hover:underline tracking-tight">
                         Create Account
                     </Link>
                 </p>
             </div>
 
             {/* Footer Tag */}
-            <div className="mt-12 opacity-30 pointer-events-none">
-                <p className="font-mono text-[9px] text-slate-600 tracking-[0.4em] uppercase">Paper Money Secure Protocol v2.5.0</p>
+            <div className="mt-6 opacity-20 pointer-events-none">
+                <p className="font-mono text-[8px] text-slate-600 tracking-[0.4em] uppercase">Paper Money Secure Protocol</p>
             </div>
         </div>
     );

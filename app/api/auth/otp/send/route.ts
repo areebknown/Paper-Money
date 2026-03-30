@@ -16,7 +16,10 @@ export async function POST(req: Request) {
         const result = await sendWhatsAppOTP(phoneNumber, otp);
 
         if (!result.success) {
-            return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 });
+            return NextResponse.json({ 
+                error: `WhatsApp OTP Failed: ${result.error || 'Unknown Error'}`,
+                debug: result
+            }, { status: 500 });
         }
 
         // Return the OTP in DEV for testing (so user can skip Meta approval)
