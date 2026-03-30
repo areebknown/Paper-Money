@@ -446,11 +446,16 @@ export default function SignupPage() {
                     )}
                 </AnimatePresence>
 
-                <p className="mt-12 text-center text-slate-500 text-sm">
+                <p className="mt-8 text-center text-slate-600 text-[11px] font-medium leading-relaxed">
                     Already have an account?{' '}
-                    <Link href="/login" className="text-cyan-400 font-bold hover:underline">
+                    <Link href="/login" className="text-cyan-500 font-bold hover:underline">
                         Secure Login
                     </Link>
+                    <br/>
+                    <span className="opacity-50 tracking-tight">By creating identity, you agree to our </span>
+                    <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Protocol of Conduct</Link>
+                    <span className="opacity-50"> & </span>
+                    <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Privacy Protocol</Link>
                 </p>
             </div>
 

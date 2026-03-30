@@ -182,11 +182,16 @@ export default function LoginPage() {
                     </div>
                 </motion.div>
 
-                <p className="mt-6 text-center text-slate-600 text-xs font-medium">
+                <p className="mt-6 text-center text-slate-600 text-[11px] font-medium leading-relaxed">
                     New user?{' '}
                     <Link href="/signup" className="text-cyan-500 font-black hover:underline tracking-tight">
                         Create Account
                     </Link>
+                    <br/>
+                    <span className="opacity-50">By syncing identity, you agree to our </span>
+                    <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Protocol of Conduct</Link>
+                    <span className="opacity-50"> & </span>
+                    <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Privacy Protocol</Link>
                 </p>
             </div>
 
