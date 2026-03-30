@@ -1,4 +1,4 @@
-i w'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
