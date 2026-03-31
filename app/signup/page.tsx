@@ -285,7 +285,7 @@ export default function SignupPage() {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-black text-sm text-white uppercase mb-1">Main Account</h3>
-                                            <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh BONUS</div>
+                                            <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh Starter BONUS</div>
                                             <p className="text-[10px] text-slate-500 font-medium">Full Progress. Device Bound.</p>
                                         </div>
                                     </div>

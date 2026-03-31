@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
     const host = req.headers.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const rootDomain = host.includes('localhost') 
+        ? `http://${host}` 
+        : 'https://wars-bid.vercel.app';
     
-    const rootDomain = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
     const REDIRECT_URI = `${rootDomain}/api/auth/google/callback`;
     

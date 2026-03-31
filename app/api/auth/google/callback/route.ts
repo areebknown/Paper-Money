@@ -10,21 +10,28 @@ export async function GET(req: Request) {
     const error = searchParams.get('error');
 
     if (error) {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login?error=Google auth failed: ${error}`);
+        const host = req.headers.get('host') || 'localhost:3000';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        return NextResponse.redirect(`${rootDomain}/login?error=Google auth failed: ${error}`);
     }
 
     if (!code) {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login?error=No code provided`);
+        const host = req.headers.get('host') || 'localhost:3000';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        return NextResponse.redirect(`${rootDomain}/login?error=No code provided`);
     }
 
     try {
+        const host = req.headers.get('host') || 'localhost:3000';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             body: JSON.stringify({
                 code,
                 client_id: process.env.GOOGLE_CLIENT_ID,
                 client_secret: process.env.GOOGLE_CLIENT_SECRET,
-                redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`,
+                redirect_uri: `${rootDomain}/api/auth/google/callback`,
                 grant_type: 'authorization_code',
             }),
         });
@@ -75,7 +82,8 @@ export async function GET(req: Request) {
             .setExpirationTime('30d')
             .sign(secret);
 
-        const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/home`);
+        const finalRedirectUrl = host.includes('localhost') ? `http://${host}/home` : 'https://wars-bid.vercel.app/home';
+        const response = NextResponse.redirect(finalRedirectUrl);
         (await cookies()).set('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -87,6 +95,8 @@ export async function GET(req: Request) {
 
     } catch (err) {
         console.error('[Google Callback Error]', err);
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login?error=Google integration error: ${(err as Error).message}`);
+        const host = req.headers.get('host') || 'localhost:3000';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        return NextResponse.redirect(`${rootDomain}/login?error=Google integration error: ${(err as Error).message}`);
     }
 }
