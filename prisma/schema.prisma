@@ -46,6 +46,9 @@ model User {
   exitedAuctions       Auction[]     @relation("AuctionExited")
   notificationSubs     AuctionNotificationSubscription[]
   coupons              Coupon[]      @relation("UserCoupons")
+  
+  // WebAuthn Biometrics
+  authenticators       Authenticator[]
 }
 
 enum AuctionStatus {
@@ -302,4 +305,21 @@ model AuctionNotificationSubscription {
 
   @@unique([userId, auctionId])
   @@index([auctionId])
+}
+
+// ============================================
+// AUTHENTICATION MODELS (WebAuthn / Passkeys)
+// ============================================
+
+model Authenticator {
+  credentialID         String  @id
+  userId               String
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialPublicKey  Bytes
+  counter              BigInt
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String? // Comma-separated: "internal,usb,nfc,ble"
+
+  @@index([userId])
 }

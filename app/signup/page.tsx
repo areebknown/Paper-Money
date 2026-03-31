@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-    CheckCircle2, 
-    Smartphone, 
-    Mail, 
-    User, 
-    ShieldCheck, 
-    ArrowRight, 
+import {
+    CheckCircle2,
+    Smartphone,
+    Mail,
+    User,
+    ShieldCheck,
+    ArrowRight,
     ArrowLeft,
     Loader2,
     Eye,
@@ -20,6 +20,7 @@ import {
     Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { startRegistration } from '@simplewebauthn/browser';
 import { LOGO_URL } from '@/lib/cloudinary';
 
 type SignupStep = 'choice' | 'username' | 'verification' | 'details' | 'profile-pic';
@@ -27,28 +28,29 @@ type AccountType = 'main' | 'side' | null;
 
 export default function SignupPage() {
     const router = useRouter();
-    
+
     // Form States
     const [step, setStep] = useState<SignupStep>('choice');
     const [accountType, setAccountType] = useState<AccountType>(null);
     const [username, setUsername] = useState('');
     const [isUsernameValid, setIsUsernameValid] = useState<boolean | null>(null);
     const [checkingUsername, setCheckingUsername] = useState(false);
-    
+
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState('');
     const [isOtpSent, setIsOtpSent] = useState(false);
-    
+
     const [password, setPassword] = useState('');
     const [realName, setRealName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
-    
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [authenticatorData, setAuthenticatorData] = useState<any>(null);
 
     // PMUID for naming PFP
     const [pmuid, setPmuid] = useState('');
@@ -122,7 +124,8 @@ export default function SignupPage() {
                     email: accountType === 'side' ? email : null,
                     realName: accountType === 'main' ? realName : null,
                     profileImage,
-                    publicId: pmuid
+                    publicId: pmuid,
+                    authenticator: authenticatorData // Send biometric data if available
                 }),
             });
 
@@ -140,14 +143,52 @@ export default function SignupPage() {
         }
     };
 
+    const handleBiometricVerify = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            // 1. Get options from server
+            const optionsRes = await fetch('/api/auth/webauthn/options', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username }),
+            });
+            const options = await optionsRes.json();
+            if (!optionsRes.ok) throw new Error(options.error);
+
+            // 2. Trigger browser prompt
+            const attestation = await startRegistration(options);
+
+            // 3. Verify with server
+            const verifyRes = await fetch('/api/auth/webauthn/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attestation }),
+            });
+            const verificationData = await verifyRes.json();
+            
+            if (verifyRes.ok && verificationData.verified) {
+                setAuthenticatorData(verificationData.authenticator);
+                nextStep();
+            } else {
+                throw new Error(verificationData.error || 'Verification failed');
+            }
+        } catch (err: any) {
+            console.error(err);
+            setError(err.name === 'NotAllowedError' ? 'Verification cancelled' : err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const sendOtp = async () => {
-        const payload = accountType === 'main' 
+        const payload = accountType === 'main'
             ? { phoneNumber, type: 'whatsapp' }
             : { email, type: 'email' };
-            
+
         if (accountType === 'main' && !phoneNumber) return setError('Please enter a phone number');
         if (accountType === 'side' && !email) return setError('Please enter an email address');
-        
+
         setLoading(true);
         try {
             const res = await fetch('/api/auth/otp/send', {
@@ -197,14 +238,14 @@ export default function SignupPage() {
 
             <div className="w-full max-w-sm relative z-10">
                 {/* Logo Section */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col items-center mb-8"
                 >
-                    <img 
-                        src={LOGO_URL} 
-                        alt="Bid Wars" 
+                    <img
+                        src={LOGO_URL}
+                        alt="Bid Wars"
                         className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
                     />
                     <div className="mt-4 flex items-center gap-2">
@@ -217,7 +258,7 @@ export default function SignupPage() {
                 <AnimatePresence mode="wait">
                     {/* STEP 0: CHOICE */}
                     {step === 'choice' && (
-                        <motion.div 
+                        <motion.div
                             key="choice"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -231,13 +272,12 @@ export default function SignupPage() {
 
                             <div className="grid grid-cols-1 gap-3">
                                 {/* MAIN ACCOUNT */}
-                                <button 
+                                <button
                                     onClick={() => setAccountType('main')}
-                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${
-                                        accountType === 'main' 
-                                        ? 'bg-slate-900 border-cyan-500 shadow-[0_0_40px_rgba(6,182,212,0.15)]' 
-                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
-                                    }`}
+                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main'
+                                            ? 'bg-slate-900 border-cyan-500 shadow-[0_0_40px_rgba(6,182,212,0.15)]'
+                                            : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                        }`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'main' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
@@ -246,7 +286,7 @@ export default function SignupPage() {
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className="font-black text-sm text-white uppercase">Main Account</h3>
-                                                <div className="px-2 py-0.5 bg-cyan-500 text-slate-950 text-[9px] font-black rounded-lg">₹1L BONUS</div>
+                                                <div className="px-2 py-0.5 bg-cyan-500 text-slate-950 text-[9px] font-black rounded-lg">₹1 Lakh Starter BONUS</div>
                                             </div>
                                             <p className="text-[10px] text-slate-500 font-medium">Permanent. WhatsApp Verified.</p>
                                         </div>
@@ -254,13 +294,12 @@ export default function SignupPage() {
                                 </button>
 
                                 {/* SIDE ACCOUNT */}
-                                <button 
+                                <button
                                     onClick={() => setAccountType('side')}
-                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${
-                                        accountType === 'side' 
-                                        ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]' 
-                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
-                                    }`}
+                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'side'
+                                            ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]'
+                                            : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                        }`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-indigo-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
@@ -274,7 +313,7 @@ export default function SignupPage() {
                                 </button>
                             </div>
 
-                            <button 
+                            <button
                                 disabled={!accountType}
                                 onClick={nextStep}
                                 className="w-full mt-2 bg-white text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2 group uppercase tracking-widest text-xs"
@@ -287,7 +326,7 @@ export default function SignupPage() {
 
                     {/* STEP 1: USERNAME */}
                     {step === 'username' && (
-                        <motion.div 
+                        <motion.div
                             key="username"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -305,7 +344,7 @@ export default function SignupPage() {
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Your Name in the Game</label>
                                 <div className="relative">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
-                                    <input 
+                                    <input
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
@@ -324,7 +363,7 @@ export default function SignupPage() {
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 disabled={!isUsernameValid || checkingUsername}
                                 onClick={nextStep}
                                 className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs"
@@ -336,7 +375,7 @@ export default function SignupPage() {
 
                     {/* STEP 2: VERIFICATION */}
                     {step === 'verification' && (
-                        <motion.div 
+                        <motion.div
                             key="verification"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -348,51 +387,38 @@ export default function SignupPage() {
                                     <ArrowLeft size={16} />
                                 </button>
                                 <h1 className="text-xl font-black text-white tracking-tight uppercase">Confirm <span className="text-cyan-400">Account</span></h1>
-                            </div>
-
-                            {accountType === 'main' ? (
+                            </div>                             {accountType === 'main' ? (
                                 <div className="space-y-4">
-                                    {!isOtpSent ? (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">WhatsApp Number</label>
-                                                <input 
-                                                    type="tel"
-                                                    value={phoneNumber}
-                                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                                    className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all"
-                                                    placeholder="+91 00000-00000"
-                                                />
-                                            </div>
-                                            <button 
-                                                onClick={sendOtp}
-                                                disabled={loading}
-                                                className="w-full bg-white text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
-                                            >
-                                                {loading ? <Loader2 className="animate-spin" /> : 'Send OTP'}
-                                            </button>
+                                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-center space-y-4">
+                                        <div className="w-16 h-16 bg-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto text-cyan-400">
+                                            <ShieldCheck size={32} />
                                         </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <input 
-                                                type="text"
-                                                value={otp}
-                                                onChange={(e) => setOtp(e.target.value)}
-                                                className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white font-mono text-2xl text-center tracking-[0.5em] focus:border-cyan-500 outline-none transition-all"
-                                                placeholder="000000"
-                                            />
-                                            <button 
-                                                onClick={verifyOtpAndNext}
-                                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs"
-                                            >
-                                                Verify Code
-                                            </button>
+                                        <div>
+                                            <h3 className="text-white font-black uppercase text-sm">Secure Identity</h3>
+                                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">FaceID or Fingerprint Required</p>
                                         </div>
-                                    )}
+                                    </div>
+                                    
+                                    <button
+                                        onClick={handleBiometricVerify}
+                                        disabled={loading}
+                                        className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin text-slate-950" /> : (
+                                            <>
+                                                Verify My Identity
+                                                <ArrowRight size={16} />
+                                            </>
+                                        )}
+                                    </button>
+                                    
+                                    <p className="text-[9px] text-slate-600 text-center uppercase font-bold tracking-widest leading-relaxed px-4">
+                                        This links your 1 Lakh BONUS account to this device's secure sensor.
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <Link 
+                                    <Link
                                         href="/api/auth/google"
                                         className="w-full bg-white text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors shadow-lg"
                                     >
@@ -405,14 +431,14 @@ export default function SignupPage() {
                                         <div className="h-px bg-slate-800 flex-1" />
                                     </div>
                                     <div className="space-y-3">
-                                        <input 
+                                        <input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="w-full bg-slate-900 border border-slate-800 px-5 py-3.5 rounded-xl text-white outline-none focus:border-cyan-500 transition-all text-sm"
                                             placeholder="email@example.com"
                                         />
-                                        <button 
+                                        <button
                                             onClick={sendOtp}
                                             disabled={!email || loading}
                                             className="w-full bg-slate-800 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center"
@@ -421,7 +447,7 @@ export default function SignupPage() {
                                         </button>
                                         {isOtpSent && (
                                             <div className="space-y-3 pt-4 border-t border-slate-800">
-                                                <input 
+                                                <input
                                                     type="text"
                                                     value={otp}
                                                     onChange={(e) => setOtp(e.target.value)}
@@ -439,7 +465,7 @@ export default function SignupPage() {
 
                     {/* STEP 3: PASSWORD */}
                     {step === 'details' && (
-                        <motion.div 
+                        <motion.div
                             key="details"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -452,7 +478,7 @@ export default function SignupPage() {
                                 {accountType === 'main' && (
                                     <div>
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Full Name</label>
-                                        <input 
+                                        <input
                                             type="text"
                                             value={realName}
                                             onChange={(e) => setRealName(e.target.value)}
@@ -464,7 +490,7 @@ export default function SignupPage() {
                                 <div>
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Choose Password</label>
                                     <div className="relative">
-                                        <input 
+                                        <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -486,7 +512,7 @@ export default function SignupPage() {
 
                     {/* STEP 4: PROFILE PIC */}
                     {step === 'profile-pic' && (
-                        <motion.div 
+                        <motion.div
                             key="profile-pic"
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -508,8 +534,8 @@ export default function SignupPage() {
                                                 <Loader2 size={32} className="animate-spin text-cyan-400" />
                                             </div>
                                         )}
-                                        <input 
-                                            type="file" 
+                                        <input
+                                            type="file"
                                             accept="image/*"
                                             onChange={handleFileChange}
                                             disabled={uploadState === 'uploading'}
@@ -520,7 +546,7 @@ export default function SignupPage() {
                                         <Plus size={16} strokeWidth={3} />
                                     </div>
                                 </div>
-                                
+
                                 {uploadState === 'done' ? (
                                     <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                                         <ShieldCheck size={14} className="text-emerald-400" />
@@ -533,14 +559,14 @@ export default function SignupPage() {
                                 )}
                             </div>
 
-                            <button 
+                            <button
                                 onClick={handleSignup}
                                 disabled={loading || uploadState === 'uploading'}
                                 className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg group active:scale-95 transition-all text-sm uppercase tracking-widest"
                             >
                                 {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
                             </button>
-                            
+
                             <button onClick={handleSignup} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">
                                 Skip for now
                             </button>
@@ -551,11 +577,11 @@ export default function SignupPage() {
                 {/* Footer Selection */}
                 <p className="mt-10 text-center">
                     <span className="text-slate-600 text-[11px] font-medium uppercase tracking-widest">Already a Trader?</span>
-                    <br/>
+                    <br />
                     <Link href="/login" className="text-cyan-500 font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
                         Log In
                     </Link>
-                    
+
                     <div className="mt-8 pt-6 border-t border-slate-900/50 space-y-2 opacity-40">
                         <p className="text-[9px] text-slate-500 leading-relaxed uppercase tracking-wider">
                             By creating an account, you agree to our
@@ -570,7 +596,7 @@ export default function SignupPage() {
 
             {/* Error Log */}
             {error && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="fixed bottom-6 left-6 right-6 bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl p-4 rounded-2xl shadow-2xl z-50 border-l-4 border-l-rose-500"

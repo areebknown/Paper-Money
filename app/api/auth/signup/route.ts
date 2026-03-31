@@ -5,7 +5,16 @@ import { getUniquePMUID } from '@/lib/pmuid';
 
 export async function POST(req: Request) {
     try {
-        const { username, password, isMainAccount, phoneNumber, email, realName, profileImage } = await req.json();
+        const { 
+            username, 
+            password, 
+            isMainAccount, 
+            phoneNumber, 
+            email, 
+            realName, 
+            profileImage,
+            authenticator // Biometric data from Step 2
+        } = await req.json();
 
         if (!username || !password) {
             return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
@@ -28,7 +37,7 @@ export async function POST(req: Request) {
         const user = await prisma.user.create({
             data: {
                 username: username.toLowerCase(),
-                password, // Plain text for now as per previous instruction, but consider bcrypt later
+                password, 
                 publicId,
                 isMainAccount: !!isMainAccount,
                 phoneNumber: phoneNumber || null,
@@ -37,7 +46,18 @@ export async function POST(req: Request) {
                 profileImage: profileImage || null,
                 balance: starterBalance,
                 isAdmin: username === 'admin',
-            },
+                // Link the biometric authenticator if provided
+                authenticators: authenticator ? {
+                    create: {
+                        credentialID: authenticator.credentialID,
+                        credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, 'base64url'),
+                        counter: BigInt(authenticator.counter),
+                        credentialDeviceType: authenticator.credentialDeviceType,
+                        credentialBackedUp: authenticator.credentialBackedUp,
+                        transports: authenticator.transports,
+                    }
+                } : undefined
+            } as any
         });
 
         // Create JWT
