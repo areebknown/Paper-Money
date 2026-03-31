@@ -7,6 +7,7 @@ import { generatePMUID } from '@/lib/pmuid';
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code');
+    const state = searchParams.get('state') || ''; // This is our picked username
     const error = searchParams.get('error');
 
     if (error) {
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
         const tokenData = await tokenRes.json();
         if (!tokenRes.ok) throw new Error(tokenData.error_description || 'Token exchange failed');
 
-        const { access_token, id_token } = tokenData;
+        const { access_token } = tokenData;
 
         // Fetch user info
         const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -47,12 +48,15 @@ export async function GET(req: Request) {
         });
         const googleUser = await userRes.json();
 
+        // Use the picked username from state if available, otherwise fallback to email prefix
+        const targetUsername = state || googleUser.email.split('@')[0];
+
         // Find or create user
         let user = await prisma.user.findFirst({
             where: { 
                 OR: [
                     { email: googleUser.email },
-                    { username: googleUser.email.split('@')[0] } 
+                    { username: targetUsername } 
                 ]
             }
         });
@@ -61,10 +65,10 @@ export async function GET(req: Request) {
             user = await prisma.user.create({
                 data: {
                     email: googleUser.email,
-                    username: googleUser.email.split('@')[0],
+                    username: targetUsername,
                     realName: googleUser.name,
                     profileImage: googleUser.picture,
-                    isMainAccount: false, // Default to side for Google-only unless linked
+                    isMainAccount: false, // Google-only are side accounts
                     publicId: await generatePMUID(),
                     balance: 0, // Side accounts get 0 starter bonus
                 }
@@ -84,9 +88,11 @@ export async function GET(req: Request) {
 
         const finalRedirectUrl = host.includes('localhost') ? `http://${host}/home` : 'https://wars-bid.vercel.app/home';
         const response = NextResponse.redirect(finalRedirectUrl);
-        (await cookies()).set('token', token, {
+
+        // Set cookie DIRECTLY on the response object for persistence
+        response.cookies.set('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: true, // Always secure for OAuth
             sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60,
         });

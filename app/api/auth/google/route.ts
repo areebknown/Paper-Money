@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const username = searchParams.get('username') || '';
+
     const host = req.headers.get('host') || 'localhost:3000';
     const rootDomain = host.includes('localhost') 
         ? `http://${host}` 
@@ -24,6 +27,7 @@ export async function GET(req: Request) {
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email',
         ].join(' '),
+        state: username, // Pass our chosen username through Google's state parameter
     };
 
     const qs = new URLSearchParams(options);

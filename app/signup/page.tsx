@@ -108,6 +108,54 @@ export default function SignupPage() {
         }
     };
 
+    const sendWhatsappOtp = async () => {
+        if (!phoneNumber) return setError('Please enter your WhatsApp number');
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch('/api/auth/whatsapp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phoneNumber, username }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsOtpSent(true);
+                if (data.simulated) setOtp(data.otp || '');
+            } else {
+                setError(data.error);
+            }
+        } catch (err) {
+            setError('WhatsApp service unavailable');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyWhatsappOtp = async () => {
+        if (otp.length < 6) return setError('Enter the 6-digit code');
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch('/api/auth/whatsapp/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phoneNumber, otp, username }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                // Account created successfully in the verify route
+                router.push('/home');
+            } else {
+                setError(data.error);
+            }
+        } catch (err) {
+            setError('Verification failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSignup = async () => {
         setLoading(true);
         setError('');
@@ -125,7 +173,6 @@ export default function SignupPage() {
                     realName: accountType === 'main' ? realName : null,
                     profileImage,
                     publicId: pmuid,
-                    authenticator: authenticatorData // Send biometric data if available
                 }),
             });
 
@@ -138,44 +185,6 @@ export default function SignupPage() {
             }
         } catch (err) {
             setError('Connection failed');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleBiometricVerify = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            // 1. Get options from server
-            const optionsRes = await fetch('/api/auth/webauthn/options', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username }),
-            });
-            const options = await optionsRes.json();
-            if (!optionsRes.ok) throw new Error(options.error);
-
-            // 2. Trigger browser prompt
-            const attestation = await startRegistration(options);
-
-            // 3. Verify with server
-            const verifyRes = await fetch('/api/auth/webauthn/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attestation }),
-            });
-            const verificationData = await verifyRes.json();
-
-            if (verifyRes.ok && verificationData.verified) {
-                setAuthenticatorData(verificationData.authenticator);
-                nextStep();
-            } else {
-                throw new Error(verificationData.error || 'Verification failed');
-            }
-        } catch (err: any) {
-            console.error(err);
-            setError(err.name === 'NotAllowedError' ? 'Verification cancelled' : err.message);
         } finally {
             setLoading(false);
         }
@@ -388,36 +397,76 @@ export default function SignupPage() {
                             </div>                             {accountType === 'main' ? (
                                 <div className="space-y-4">
                                     <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-center space-y-4">
-                                        <div className="w-16 h-16 bg-[#FBBF24]/10 rounded-2xl flex items-center justify-center mx-auto text-[#FBBF24]">
-                                            <ShieldCheck size={32} />
+                                        <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto text-emerald-400">
+                                            <Smartphone size={32} />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-black uppercase text-sm">Secure Identity</h3>
-                                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">FaceID or Fingerprint Required</p>
+                                            <h3 className="text-white font-black uppercase text-sm">WhatsApp Security</h3>
+                                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">Verification required for bonus</p>
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={handleBiometricVerify}
-                                        disabled={loading}
-                                        className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
-                                    >
-                                        {loading ? <Loader2 className="animate-spin text-slate-950" /> : (
-                                            <>
-                                                Secure Game Identity
-                                                <ArrowRight size={16} />
-                                            </>
+                                    <div className="space-y-3">
+                                        <div className="relative">
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-slate-700">+91</div>
+                                            <input
+                                                type="tel"
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                                className="w-full pl-12 pr-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white outline-none focus:border-[#FBBF24] transition-all text-sm font-mono tracking-widest"
+                                                placeholder="XXXXXXXXXX"
+                                            />
+                                        </div>
+                                        
+                                        {!isOtpSent ? (
+                                            <button
+                                                onClick={sendWhatsappOtp}
+                                                disabled={phoneNumber.length < 10 || loading}
+                                                className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                                            >
+                                                {loading ? <Loader2 className="animate-spin text-slate-950" /> : (
+                                                    <>
+                                                        Send WhatsApp OTP
+                                                        <ArrowRight size={16} />
+                                                    </>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <div className="space-y-4 pt-2">
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        value={otp}
+                                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                        className="w-full bg-slate-900 border border-emerald-500/30 px-5 py-4 rounded-2xl text-white text-center font-mono text-xl tracking-[0.6em] outline-none shadow-[0_0_20px_rgba(16,185,129,0.05)]"
+                                                        placeholder="••••••"
+                                                    />
+                                                </div>
+                                                <button 
+                                                    onClick={verifyWhatsappOtp}
+                                                    disabled={otp.length < 6 || loading}
+                                                    className="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl text-xs uppercase shadow-lg shadow-emerald-500/10 active:scale-95 transition-all flex items-center justify-center"
+                                                >
+                                                    {loading ? <Loader2 size={16} className="animate-spin" /> : 'Claim 1 Lakh Bonus'}
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsOtpSent(false)} 
+                                                    className="w-full py-2 text-[9px] font-black text-slate-600 uppercase tracking-widest"
+                                                >
+                                                    Change Number
+                                                </button>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
 
                                     <p className="text-[9px] text-slate-600 text-center uppercase font-bold tracking-widest leading-relaxed px-4">
-                                        This links your 1 Lakh BONUS account to this device's secure sensor.
+                                        Elite status requires a verified phone identity.
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     <Link
-                                        href="/api/auth/google"
+                                        href={`/api/auth/google?username=${username}`}
                                         className="w-full bg-white text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors shadow-lg"
                                     >
                                         <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="google" />
