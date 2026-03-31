@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-    Eye, 
-    EyeOff, 
-    Lock, 
-    User, 
-    ArrowRight, 
-    ShieldCheck, 
-    Loader2 
+import {
+    Eye,
+    EyeOff,
+    Lock,
+    User,
+    ArrowRight,
+    ShieldCheck,
+    Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LOGO_URL } from '@/lib/cloudinary';
@@ -61,14 +61,14 @@ export default function LoginPage() {
 
             <div className="w-full max-w-md relative z-10">
                 {/* Logo Section */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex flex-col items-center mb-4"
                 >
-                    <img 
-                        src={LOGO_URL} 
-                        alt="Bid Wars" 
+                    <img
+                        src={LOGO_URL}
+                        alt="Bid Wars"
                         className="h-16 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
                     />
                     <div className="mt-2 flex items-center gap-2">
@@ -90,11 +90,11 @@ export default function LoginPage() {
 
                     <div className="mb-4 text-left border-b border-white/5 pb-3">
                         <h1 className="text-lg font-black text-white tracking-tight uppercase">Welcome <span className="text-[#FBBF24]">Trader</span></h1>
-                        <p className="text-slate-500 text-[9px] uppercase tracking-widest mt-0.5">Resume your virtual empire</p>
+                        <p className="text-slate-500 text-[9px] uppercase tracking-widest mt-0.5">Resume your journey</p>
                     </div>
 
                     {error && (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl mb-4 text-[11px] font-medium flex items-center gap-3"
@@ -117,7 +117,7 @@ export default function LoginPage() {
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full pl-10 pr-5 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
-                                    placeholder="handle_v1.0"
+                                    placeholder="Enter your username"
                                     required
                                 />
                             </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-10 pr-10 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
-                                    placeholder="••••••••"
+                                    placeholder="Enter your password"
                                     required
                                 />
                                 <button
@@ -172,8 +172,8 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mt-3">
-                        <Link 
-                            href="/api/auth/google" 
+                        <Link
+                            href="/api/auth/google"
                             className="w-full bg-white text-slate-950 border border-white py-2.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#FBBF24] hover:border-[#FBBF24] transition-all active:scale-[0.98]"
                         >
                             <img src="https://www.google.com/favicon.ico" className="w-3.5 h-3.5" />
@@ -184,11 +184,11 @@ export default function LoginPage() {
 
                 <p className="mt-4 text-center">
                     <span className="text-slate-600 text-[10px] font-medium uppercase tracking-widest leading-none">New to Bid Wars?</span>
-                    <br/>
+                    <br />
                     <Link href="/signup" className="text-[#FBBF24] font-black text-xs uppercase tracking-tight hover:underline transition-all inline-block mt-0.5">
                         Create Account
                     </Link>
-                    
+
                     <div className="mt-4 pt-4 border-t border-slate-900/50 space-y-1.5 opacity-40">
                         <p className="text-[8px] text-slate-500 leading-relaxed uppercase tracking-wider">
                             By signing in, you agree to our

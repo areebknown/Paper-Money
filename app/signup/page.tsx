@@ -166,7 +166,7 @@ export default function SignupPage() {
                 body: JSON.stringify({ attestation }),
             });
             const verificationData = await verifyRes.json();
-            
+
             if (verifyRes.ok && verificationData.verified) {
                 setAuthenticatorData(verificationData.authenticator);
                 nextStep();
@@ -266,8 +266,8 @@ export default function SignupPage() {
                             className="space-y-4"
                         >
                             <div className="text-center mb-4">
-                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Enter the <span className="text-[#FBBF24]">Game</span></h1>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select Your Trading Tier</p>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Join the <span className="text-[#FBBF24]">Game</span></h1>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select Your Account Type</p>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">
@@ -275,8 +275,8 @@ export default function SignupPage() {
                                 <button
                                     onClick={() => setAccountType('main')}
                                     className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main'
-                                            ? 'bg-slate-900 border-[#FBBF24] shadow-[0_0_40px_rgba(251,191,36,0.15)]'
-                                            : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                        ? 'bg-slate-900 border-[#FBBF24] shadow-[0_0_40px_rgba(251,191,36,0.15)]'
+                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
                                         }`}
                                 >
                                     <div className="flex items-start gap-4">
@@ -284,8 +284,8 @@ export default function SignupPage() {
                                             <Sparkles size={24} />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-black text-sm text-white uppercase mb-1">Elite Trader</h3>
-                                            <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh BONUS (Paper Money)</div>
+                                            <h3 className="font-black text-sm text-white uppercase mb-1">Main Account</h3>
+                                            <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh BONUS</div>
                                             <p className="text-[10px] text-slate-500 font-medium">Full Progress. Device Bound.</p>
                                         </div>
                                     </div>
@@ -295,8 +295,8 @@ export default function SignupPage() {
                                 <button
                                     onClick={() => setAccountType('side')}
                                     className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'side'
-                                            ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]'
-                                            : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                        ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]'
+                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
                                         }`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -304,7 +304,7 @@ export default function SignupPage() {
                                             <Globe size={24} />
                                         </div>
                                         <div>
-                                            <h3 className="font-black text-sm text-white uppercase">Lite Trader</h3>
+                                            <h3 className="font-black text-sm text-white uppercase">Finance Account</h3>
                                             <p className="text-[10px] text-slate-500 font-medium">Alternate. Email Linked.</p>
                                         </div>
                                     </div>
@@ -396,7 +396,7 @@ export default function SignupPage() {
                                             <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">FaceID or Fingerprint Required</p>
                                         </div>
                                     </div>
-                                    
+
                                     <button
                                         onClick={handleBiometricVerify}
                                         disabled={loading}
@@ -409,7 +409,7 @@ export default function SignupPage() {
                                             </>
                                         )}
                                     </button>
-                                    
+
                                     <p className="text-[9px] text-slate-600 text-center uppercase font-bold tracking-widest leading-relaxed px-4">
                                         This links your 1 Lakh BONUS account to this device's secure sensor.
                                     </p>
