@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "Bid Wars | The Ultimate UPI Auction Game",
   description: "Join high-stakes digital auctions, trade artifacts, and win real rewards. The most aesthetic UPI gaming ecosystem.",
   other: {
-    "google-site-verification": "REPLACE_WITH_YOUR_CODE_HERE",
+    "google-site-verification": "P2F-6nBdLydsbkhJ3hlPteWEJhG-SPtqIYeBz04tKqI",
   },
 };
 
