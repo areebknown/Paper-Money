@@ -30,12 +30,13 @@ export async function POST(req: Request) {
         });
 
         if (verification.verified && verification.registrationInfo) {
-            const registrationInfo = verification.registrationInfo as any;
-            const credentialID = registrationInfo.credentialID;
-            const credentialPublicKey = registrationInfo.credentialPublicKey;
-            const counter = registrationInfo.counter;
-            const credentialDeviceType = registrationInfo.credentialDeviceType;
-            const credentialBackedUp = registrationInfo.credentialBackedUp;
+            const { registrationInfo } = verification;
+            const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo as any;
+            
+            // In v10+, the identity info is nested in the credential object
+            const credentialID = credential.id;
+            const credentialPublicKey = credential.publicKey;
+            const counter = credential.counter;
 
             // Clear the challenge cookie
             (await cookies()).delete('webauthn-challenge');
