@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Scale, MessageSquare, ShieldAlert, Cpu, ArrowLeft, Gavel, UserX } from 'lucide-react';
+import { LOGO_URL } from '@/lib/cloudinary';
 
 export default function TermsPage() {
     return (
@@ -18,18 +19,25 @@ export default function TermsPage() {
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-12"
+                    className="mb-12 flex flex-col items-center md:items-start"
                 >
-                    <Link href="/login" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-bold mb-8 group">
+                    <Link href="/login" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-bold mb-8 group self-start">
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                        BACK TO TERMINAL
+                        BACK TO LOGIN
                     </Link>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase mb-4">
-                        Protocol of <span className="text-cyan-400">Conduct</span>
+
+                    <img 
+                        src={LOGO_URL} 
+                        alt="Bid Wars" 
+                        className="h-20 w-auto mb-8 drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
+                    />
+
+                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase mb-4 text-center md:text-left">
+                        Terms of <span className="text-cyan-400">Service</span>
                     </h1>
                     <div className="h-1 w-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6" />
-                    <p className="text-slate-500 text-lg leading-relaxed max-w-xl">
-                        By syncing your identity handle with the Paper Money UPI (Bid Wars) ecosystem, you agree to abide by the digital laws of our financial simulation.
+                    <p className="text-slate-500 text-lg leading-relaxed max-w-xl text-center md:text-left">
+                        By using the Bid Wars platform, you agree to abide by the rules of our financial simulation game.
                     </p>
                 </motion.div>
 
@@ -68,9 +76,9 @@ export default function TermsPage() {
                                 Participation in live "Bidding Wars" and "Wait Rooms" is subject to strict rules:
                             </p>
                             <ul className="list-disc pl-5 space-y-2 marker:text-cyan-500">
-                                <li><span className="text-slate-200 font-bold">Fair Bidding:</span> Users must bid in good faith. Manipulation of auction timers via script or exploit is strictly prohibited.</li>
-                                <li><span className="text-slate-200 font-bold">Inventory Integrity:</span> Virtual assets (Real Estate, Vehicles, Resources) acquired through bidding are bound to your PMUID handle and cannot be "cloned" or exploited.</li>
-                                <li><span className="text-slate-200 font-bold">Wait Room Etiquette:</span> Offensive handles or disruptive behavior during auction countdowns will result in immediate identity suspension.</li>
+                                <li><span className="text-slate-200 font-bold">Fair Play:</span> Users must bid in good faith. Manipulation of auction timers via script or exploit is strictly prohibited.</li>
+                                <li><span className="text-slate-200 font-bold">Inventory:</span> Virtual assets (Real Estate, Vehicles, Resources) acquired through bidding are bound to your account and cannot be "cloned" or exploited.</li>
+                                <li><span className="text-slate-200 font-bold">Etiquette:</span> Offensive usernames or disruptive behavior during auction countdowns will result in immediate suspension.</li>
                             </ul>
                         </div>
                     </section>

@@ -69,11 +69,11 @@ export default function LoginPage() {
                     <img 
                         src={LOGO_URL} 
                         alt="Bid Wars" 
-                        className="h-10 w-auto drop-shadow-[0_0_20px_rgba(251,191,36,0.15)]"
+                        className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
                     />
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-4 flex items-center gap-2">
                         <div className="h-px w-6 bg-gradient-to-r from-transparent to-slate-700" />
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">Secure Auth Port</span>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Secure Login</span>
                         <div className="h-px w-6 bg-gradient-to-l from-transparent to-slate-700" />
                     </div>
                 </motion.div>
@@ -89,8 +89,8 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mb-6 text-left border-b border-white/5 pb-4">
-                        <h1 className="text-xl font-black text-white tracking-tight uppercase">Terminal <span className="text-cyan-400">Login</span></h1>
-                        <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-1">Authorized identities only</p>
+                        <h1 className="text-xl font-black text-white tracking-tight uppercase">Welcome <span className="text-cyan-400">Back</span></h1>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-1">Enter your credentials below</p>
                     </div>
 
                     {error && (
@@ -107,7 +107,7 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-4">
                         {/* Username */}
                         <div className="space-y-1.5">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">User Identifier</label>
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username</label>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
                                     <User size={16} />
@@ -126,7 +126,7 @@ export default function LoginPage() {
                         {/* Password */}
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center px-1">
-                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Access Pin</label>
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Password</label>
                             </div>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
@@ -158,7 +158,7 @@ export default function LoginPage() {
                             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
                             {loading ? <Loader2 size={20} className="animate-spin" /> : (
                                 <>
-                                    SYNC IDENTITY
+                                    LOGIN
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -182,16 +182,22 @@ export default function LoginPage() {
                     </div>
                 </motion.div>
 
-                <p className="mt-6 text-center text-slate-600 text-[11px] font-medium leading-relaxed">
-                    New user?{' '}
-                    <Link href="/signup" className="text-cyan-500 font-black hover:underline tracking-tight">
+                <p className="mt-8 text-center">
+                    <span className="text-slate-600 text-[11px] font-medium uppercase tracking-widest">New to Bid Wars?</span>
+                    <br/>
+                    <Link href="/signup" className="text-cyan-500 font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
                         Create Account
                     </Link>
-                    <br/>
-                    <span className="opacity-50">By syncing identity, you agree to our </span>
-                    <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Protocol of Conduct</Link>
-                    <span className="opacity-50"> & </span>
-                    <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Privacy Protocol</Link>
+                    
+                    <div className="mt-8 pt-6 border-t border-slate-900/50 space-y-2 opacity-40">
+                        <p className="text-[9px] text-slate-500 leading-relaxed uppercase tracking-wider">
+                            By signing in, you agree to our
+                        </p>
+                        <div className="flex justify-center gap-4 text-[10px] font-bold uppercase">
+                            <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800">Terms & Conditions</Link>
+                            <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800">Privacy Policy</Link>
+                        </div>
+                    </div>
                 </p>
             </div>
 

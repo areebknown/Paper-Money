@@ -8,21 +8,30 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Admin-only upload endpoint
+/**
+ * Enhanced Upload Endpoint
+ * - Supports Admin artifacts (default)
+ * - Supports User PFPs (allows non-admins if folder is 'user_pfps')
+ */
 export async function POST(req: Request) {
-    // Auth check — use the same helper every other admin route uses
     const user = await getUserFromToken();
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!user.isAdmin) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+    
     try {
         const formData = await req.formData();
         const file = formData.get('file') as File | null;
         const folder = (formData.get('folder') as string) || 'artifacts';
+        const publicId = formData.get('public_id') as string | null;
+
+        // Security Check: 
+        // 1. If not logged in, only allow 'user_pfps' folder (Signup flow)
+        // 2. If logged in but not admin, only allow 'user_pfps' folder (Profile update)
+        // 3. Admin can do anything
+        const isPfpUpload = folder === 'user_pfps';
+        const isAllowed = user?.isAdmin || isPfpUpload;
+
+        if (!isAllowed) {
+            return NextResponse.json({ error: 'Unauthorized folder access' }, { status: 403 });
+        }
 
         if (!file) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -34,13 +43,21 @@ export async function POST(req: Request) {
 
         // Upload to Cloudinary
         const result = await new Promise<any>((resolve, reject) => {
+            const uploadOptions: any = {
+                folder,
+                fetch_format: 'auto',
+                quality: 'auto',
+                transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }], // Optimized for PFPs
+            };
+
+            // If publicId (PMUID) is provided, use it as the filename
+            if (publicId) {
+                uploadOptions.public_id = publicId;
+                uploadOptions.overwrite = true; // Replace previous if exists
+            }
+
             const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder,
-                    fetch_format: 'auto',
-                    quality: 'auto',
-                    transformation: [{ width: 1200, crop: 'limit' }],
-                },
+                uploadOptions,
                 (error, result) => {
                     if (error) reject(error);
                     else resolve(result);
@@ -50,7 +67,6 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({
-            // Inject optimization params so the stored URL is always optimized
             url: result.secure_url.replace('/upload/', '/upload/q_auto,f_auto/'),
             publicId: result.public_id,
             width: result.width,

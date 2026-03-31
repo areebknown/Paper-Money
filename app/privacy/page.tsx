@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Shield, Lock, EyeOff, Fingerprint, ArrowLeft, Database, Globe } from 'lucide-react';
+import { Shield, Lock, EyeOff, Fingerprint, ArrowLeft, Database, Globe, ShieldCheck } from 'lucide-react';
+import { LOGO_URL } from '@/lib/cloudinary';
 
 export default function PrivacyPage() {
     return (
@@ -18,18 +19,25 @@ export default function PrivacyPage() {
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-12"
+                    className="mb-12 flex flex-col items-center md:items-start"
                 >
-                    <Link href="/login" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-bold mb-8 group">
+                    <Link href="/login" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-bold mb-8 group self-start">
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                        BACK TO TERMINAL
+                        BACK TO LOGIN
                     </Link>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase mb-4">
-                        Identity <span className="text-cyan-400">Protocol</span>
+
+                    <img 
+                        src={LOGO_URL} 
+                        alt="Bid Wars" 
+                        className="h-20 w-auto mb-8 drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
+                    />
+
+                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase mb-4 text-center md:text-left">
+                        Privacy <span className="text-cyan-400">Policy</span>
                     </h1>
                     <div className="h-1 w-24 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full mb-6" />
-                    <p className="text-slate-500 text-lg leading-relaxed max-w-xl">
-                        At Paper Money UPI (Bid Wars), your identity handles and financial simulation data are protected under our Secure Identity Node system.
+                    <p className="text-slate-500 text-lg leading-relaxed max-w-xl text-center md:text-left">
+                        At Bid Wars, your privacy and simulated financial data are protected under our Secure Data policy.
                     </p>
                 </motion.div>
 
@@ -45,12 +53,12 @@ export default function PrivacyPage() {
                         </div>
                         <div className="pl-12 space-y-4 text-slate-400 leading-relaxed">
                             <p>
-                                To facilitate the **Paper Money UPI** ecosystem, we collect essential identity markers:
+                                To facilitate the Bid Wars ecosystem, we collect essential identity markers:
                             </p>
                             <ul className="list-disc pl-5 space-y-2 marker:text-cyan-500">
-                                <li><span className="text-slate-200 font-bold">PMUID Handle:</span> An immutable 8-digit unique identifier (e.g., PM-XXXX-XXXX) generated at genesis for every user.</li>
-                                <li><span className="text-slate-200 font-bold">WhatsApp Identity:</span> Used strictly for "Main Account" verification via Meta Business API. We do not store your chat history or personal messages.</li>
-                                <li><span className="text-slate-200 font-bold">Google Auth:</span> We sync your primary email and profile picture to provide seamless cross-device synchronization for "Side Accounts."</li>
+                                <li><span className="text-slate-200 font-bold">PMUID:</span> An immutable 8-digit unique identifier (e.g., PM-XXXX-XXXX) generated for every user to keep your account distinct.</li>
+                                <li><span className="text-slate-200 font-bold">WhatsApp:</span> Used strictly for "Main Account" verification. We do not store your chat history or personal messages.</li>
+                                <li><span className="text-slate-200 font-bold">Google Auth:</span> We sync your primary email and profile picture for "Side Accounts."</li>
                             </ul>
                         </div>
                     </section>

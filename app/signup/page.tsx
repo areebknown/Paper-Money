@@ -15,10 +15,11 @@ import {
     Eye,
     EyeOff,
     Camera,
-    Sparkles
+    Sparkles,
+    Plus,
+    Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { LOGO_URL } from '@/lib/cloudinary';
 
 type SignupStep = 'choice' | 'username' | 'verification' | 'details' | 'profile-pic';
@@ -34,6 +35,7 @@ export default function SignupPage() {
     const [isUsernameValid, setIsUsernameValid] = useState<boolean | null>(null);
     const [checkingUsername, setCheckingUsername] = useState(false);
     
+    const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState('');
     const [isOtpSent, setIsOtpSent] = useState(false);
@@ -43,10 +45,17 @@ export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
+    const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // PMUID for naming PFP
+    const [pmuid, setPmuid] = useState('');
+    useEffect(() => {
+        const digits = Math.floor(10000000 + Math.random() * 90000000).toString();
+        setPmuid(`PM-${digits.slice(0, 4)}-${digits.slice(4)}`);
+    }, []);
 
     // Real-time Username Check
     useEffect(() => {
@@ -71,6 +80,32 @@ export default function SignupPage() {
         return () => clearTimeout(timer);
     }, [username]);
 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadState('uploading');
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('folder', 'user_pfps');
+            fd.append('public_id', pmuid);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: fd,
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            setProfileImage(data.url);
+            setUploadState('done');
+        } catch (err) {
+            setUploadState('error');
+            setError('Image upload failed. Please try again.');
+        }
+    };
+
     const handleSignup = async () => {
         setLoading(true);
         setError('');
@@ -84,8 +119,10 @@ export default function SignupPage() {
                     password,
                     isMainAccount: accountType === 'main',
                     phoneNumber: accountType === 'main' ? phoneNumber : null,
+                    email: accountType === 'side' ? email : null,
                     realName: accountType === 'main' ? realName : null,
-                    profileImage
+                    profileImage,
+                    publicId: pmuid
                 }),
             });
 
@@ -104,20 +141,24 @@ export default function SignupPage() {
     };
 
     const sendOtp = async () => {
-        if (!phoneNumber) return setError('Please enter a phone number');
+        const payload = accountType === 'main' 
+            ? { phoneNumber, type: 'whatsapp' }
+            : { email, type: 'email' };
+            
+        if (accountType === 'main' && !phoneNumber) return setError('Please enter a phone number');
+        if (accountType === 'side' && !email) return setError('Please enter an email address');
+        
         setLoading(true);
         try {
             const res = await fetch('/api/auth/otp/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phoneNumber, type: 'whatsapp' }),
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
             if (res.ok) {
                 setIsOtpSent(true);
-                if (data.simulated) {
-                    setOtp(data.otp); // Fill in Dev for convenience
-                }
+                if (data.simulated) setOtp(data.otp);
             } else {
                 setError(data.error);
             }
@@ -130,7 +171,6 @@ export default function SignupPage() {
 
     const verifyOtpAndNext = () => {
         if (otp.length < 6) return setError('Enter a valid 6-digit code');
-        // Simple client-side flag for now, verified again on final signup submit
         nextStep();
     };
 
@@ -151,23 +191,31 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden font-['Inter'] selection:bg-cyan-500/30">
-            {/* Background Polish */}
-            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-900/10 blur-[120px] rounded-full" />
+            {/* Background Effects */}
+            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-900/5 blur-[120px] rounded-full" />
 
-            <div className="w-full max-w-md relative z-10">
+            <div className="w-full max-w-sm relative z-10">
                 {/* Logo Section */}
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center mb-6"
+                    className="flex flex-col items-center mb-8"
                 >
-                    <img src={LOGO_URL} alt="Logo" className="h-10 w-auto drop-shadow-[0_0_15px_rgba(251,191,36,0.2)]" />
-                    <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mt-2" />
+                    <img 
+                        src={LOGO_URL} 
+                        alt="Bid Wars" 
+                        className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
+                    />
+                    <div className="mt-4 flex items-center gap-2">
+                        <div className="h-px w-6 bg-gradient-to-r from-transparent to-slate-700" />
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Create Account</span>
+                        <div className="h-px w-6 bg-gradient-to-l from-transparent to-slate-700" />
+                    </div>
                 </motion.div>
 
                 <AnimatePresence mode="wait">
-                    {/* STEP 0: ACCOUNT CHOICE */}
+                    {/* STEP 0: CHOICE */}
                     {step === 'choice' && (
                         <motion.div 
                             key="choice"
@@ -177,42 +225,67 @@ export default function SignupPage() {
                             className="space-y-4"
                         >
                             <div className="text-center mb-4">
-                                <h1 className="text-xl font-black text-white tracking-tight leading-tight uppercase">
-                                    Identity <span className="text-cyan-400">Hub</span>
-                                </h1>
-                                <p className="text-slate-500 text-xs mt-1">Select your financial path</p>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Select <span className="text-cyan-400">Path</span></h1>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Tier selection required</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                {/* MAIN ACCOUNT */}
+                                <button 
+                                    onClick={() => setAccountType('main')}
+                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${
+                                        accountType === 'main' 
+                                        ? 'bg-slate-900 border-cyan-500 shadow-[0_0_40px_rgba(6,182,212,0.15)]' 
+                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'main' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                            <Sparkles size={24} />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-black text-sm text-white uppercase">Main Account</h3>
+                                                <div className="px-2 py-0.5 bg-cyan-500 text-slate-950 text-[9px] font-black rounded-lg">₹1L BONUS</div>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 font-medium">Permanent. WhatsApp Verified.</p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {/* SIDE ACCOUNT */}
+                                <button 
+                                    onClick={() => setAccountType('side')}
+                                    className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${
+                                        accountType === 'side' 
+                                        ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]' 
+                                        : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-indigo-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                            <Globe size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-sm text-white uppercase">Side Account</h3>
+                                            <p className="text-[10px] text-slate-500 font-medium">Alternate. Email Linked.</p>
+                                        </div>
+                                    </div>
+                                </button>
                             </div>
 
                             <button 
-                                onClick={() => { setAccountType('main'); nextStep(); }}
-                                className="w-full group relative bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 hover:border-cyan-500/50 p-4 rounded-3xl text-left transition-all hover:scale-[1.01] active:scale-95 shadow-xl"
+                                disabled={!accountType}
+                                onClick={nextStep}
+                                className="w-full mt-2 bg-white text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2 group uppercase tracking-widest text-xs"
                             >
-                                <div className="absolute top-3 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="px-2 py-0.5 bg-cyan-500/20 rounded-full border border-cyan-500/30">
-                                        <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest">+₹1L</span>
-                                    </div>
-                                </div>
-                                <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-2 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all">
-                                    <Smartphone size={20} />
-                                </div>
-                                <h3 className="text-base font-bold text-white mb-0.5 leading-none">Main Account</h3>
-                                <p className="text-slate-500 text-[11px] leading-snug">Full access, verified via WhatsApp. Grants bonus & permissions.</p>
-                            </button>
-
-                            <button 
-                                onClick={() => { setAccountType('side'); nextStep(); }}
-                                className="w-full group relative bg-slate-900/40 border border-slate-800/50 p-4 rounded-3xl text-left transition-all hover:scale-[1.01] active:scale-95 grayscale hover:grayscale-0 opacity-60 hover:opacity-100"
-                            >
-                                <div className="w-10 h-10 bg-slate-800/50 rounded-xl flex items-center justify-center mb-2 text-slate-500">
-                                    <Mail size={18} />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-400 mb-0.5 leading-none">Side Account</h3>
-                                <p className="text-slate-500 text-[11px] leading-snug">Quick setup via Email. No bonus money.</p>
+                                CONTINUE
+                                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </motion.div>
                     )}
 
-                    {/* STEP 1: USERNAME ENTRY */}
+                    {/* STEP 1: USERNAME */}
                     {step === 'username' && (
                         <motion.div 
                             key="username"
@@ -221,50 +294,47 @@ export default function SignupPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-6"
                         >
-                            <div className="flex items-center gap-3 mb-2">
-                                <button onClick={prevStep} className="p-1.5 bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+                            <div className="flex items-center gap-3">
+                                <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
                                     <ArrowLeft size={16} />
                                 </button>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Set Handle</h2>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Choose <span className="text-cyan-400">Username</span></h1>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Your Name in the Game</label>
                                 <div className="relative">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                                     <input 
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                        placeholder="your_handle"
-                                        className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all placeholder:opacity-30"
+                                        className="w-full bg-slate-900 border border-slate-800 px-12 py-4 rounded-2xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all placeholder:text-slate-700"
+                                        placeholder="trader_name"
                                     />
-                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                         {checkingUsername ? (
                                             <Loader2 size={16} className="animate-spin text-slate-500" />
                                         ) : isUsernameValid === true ? (
                                             <CheckCircle2 size={20} className="text-emerald-500" />
                                         ) : isUsernameValid === false ? (
-                                            <div className="text-rose-500 text-[10px] font-bold uppercase">Taken</div>
+                                            <div className="px-2 py-0.5 bg-rose-500/20 text-rose-500 text-[8px] font-black rounded uppercase">Taken</div>
                                         ) : null}
                                     </div>
                                 </div>
-                                <p className="text-slate-500 text-[8px] uppercase tracking-[0.2em] font-black flex items-center gap-1.5 px-1">
-                                    <Sparkles size={10} className="text-cyan-400" />
-                                    Trading handle reserved for your identity
-                                </p>
                             </div>
 
                             <button 
                                 disabled={!isUsernameValid || checkingUsername}
                                 onClick={nextStep}
-                                className="w-full bg-cyan-500 disabled:bg-slate-800 disabled:text-slate-500 text-[#020617] font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs"
                             >
-                                VERIFY IDENTITY
-                                <ArrowRight size={18} />
+                                CONTINUE
                             </button>
                         </motion.div>
                     )}
 
-                    {/* STEP 2: VERIFICATION (WhatsApp or Google) */}
+                    {/* STEP 2: VERIFICATION */}
                     {step === 'verification' && (
                         <motion.div 
                             key="verification"
@@ -274,121 +344,142 @@ export default function SignupPage() {
                             className="space-y-6"
                         >
                             <div className="flex items-center gap-3">
-                                <button onClick={prevStep} className="p-1.5 bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+                                <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
                                     <ArrowLeft size={16} />
                                 </button>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">
-                                    {accountType === 'main' ? 'WhatsApp Verification' : 'Identity Sync'}
-                                </h2>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Confirm <span className="text-cyan-400">Account</span></h1>
                             </div>
 
                             {accountType === 'main' ? (
                                 <div className="space-y-4">
                                     {!isOtpSent ? (
                                         <div className="space-y-4">
-                                            <p className="text-slate-500 text-xs text-center border-b border-slate-800 pb-4">Enter your number to receive an 8-digit verification code.</p>
-                                            <input 
-                                                type="tel"
-                                                placeholder="+91 00000-00000"
-                                                value={phoneNumber}
-                                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                                className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all"
-                                            />
+                                            <div>
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">WhatsApp Number</label>
+                                                <input 
+                                                    type="tel"
+                                                    value={phoneNumber}
+                                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                                    className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all"
+                                                    placeholder="+91 00000-00000"
+                                                />
+                                            </div>
                                             <button 
                                                 onClick={sendOtp}
                                                 disabled={loading}
-                                                className="w-full bg-emerald-500/90 hover:bg-emerald-500 text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
+                                                className="w-full bg-white text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
                                             >
-                                                {loading ? <Loader2 className="animate-spin" /> : 'SEND SECURITY OTP'}
+                                                {loading ? <Loader2 className="animate-spin" /> : 'Send OTP'}
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            <p className="text-slate-500 text-xs text-center">Enter the code sent via WhatsApp</p>
                                             <input 
                                                 type="text"
-                                                placeholder="0 0 0 0 0 0"
                                                 value={otp}
                                                 onChange={(e) => setOtp(e.target.value)}
-                                                className="w-full bg-slate-900 border border-slate-800 px-6 py-4 rounded-xl text-white font-mono text-xl text-center tracking-[0.5em] focus:border-cyan-500 outline-none transition-all"
+                                                className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white font-mono text-2xl text-center tracking-[0.5em] focus:border-cyan-500 outline-none transition-all"
+                                                placeholder="000000"
                                             />
                                             <button 
                                                 onClick={verifyOtpAndNext}
-                                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:scale-[1.01] transition-transform"
+                                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs"
                                             >
-                                                VALIDATE CODE
+                                                Verify Code
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="space-y-6">
-                                    <p className="text-slate-400 text-center">Fast security via your existing Google Identity</p>
-                                    <button 
-                                        onClick={nextStep}
-                                        className="w-full bg-white text-slate-950 font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors"
+                                <div className="space-y-4">
+                                    <Link 
+                                        href="/api/auth/google"
+                                        className="w-full bg-white text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors shadow-lg"
                                     >
-                                        <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="google" />
-                                        Continue with Google
-                                    </button>
-                                    <div className="flex items-center gap-4 text-slate-600">
+                                        <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="google" />
+                                        Sign In with Google
+                                    </Link>
+                                    <div className="flex items-center gap-3 py-2">
                                         <div className="h-px bg-slate-800 flex-1" />
-                                        <span className="text-[10px] font-bold">OR EMAIL OTP</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">OR EMAIL</span>
                                         <div className="h-px bg-slate-800 flex-1" />
                                     </div>
-                                    <input 
-                                        type="email"
-                                        placeholder="email@example.com"
-                                        className="w-full bg-slate-900 border border-slate-800 px-6 py-4 rounded-xl text-white"
-                                    />
+                                    <div className="space-y-3">
+                                        <input 
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-3.5 rounded-xl text-white outline-none focus:border-cyan-500 transition-all text-sm"
+                                            placeholder="email@example.com"
+                                        />
+                                        <button 
+                                            onClick={sendOtp}
+                                            disabled={!email || loading}
+                                            className="w-full bg-slate-800 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center"
+                                        >
+                                            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send Email Code'}
+                                        </button>
+                                        {isOtpSent && (
+                                            <div className="space-y-3 pt-4 border-t border-slate-800">
+                                                <input 
+                                                    type="text"
+                                                    value={otp}
+                                                    onChange={(e) => setOtp(e.target.value)}
+                                                    className="w-full bg-slate-900 border border-slate-800 px-5 py-3 rounded-xl text-white text-center font-mono text-lg tracking-[0.4em] outline-none"
+                                                    placeholder="000000"
+                                                />
+                                                <button onClick={verifyOtpAndNext} className="w-full bg-cyan-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Verify Email</button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </motion.div>
                     )}
 
-                    {/* STEP 3: DETAILS & SECURITY */}
+                    {/* STEP 3: PASSWORD */}
                     {step === 'details' && (
                         <motion.div 
                             key="details"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="space-y-4"
+                            className="space-y-6"
                         >
-                            <h2 className="text-lg font-black text-white uppercase tracking-tight">Security Profile</h2>
+                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Account <span className="text-cyan-400">Password</span></h1>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {accountType === 'main' && (
                                     <div>
-                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Full Legal Name</label>
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Full Name</label>
                                         <input 
                                             type="text"
                                             value={realName}
                                             onChange={(e) => setRealName(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-3 rounded-xl text-white focus:border-cyan-500 outline-none transition-all placeholder:text-slate-700"
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white focus:border-cyan-500 outline-none"
                                             placeholder="John Doe"
                                         />
                                     </div>
                                 )}
                                 <div>
-                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Account Pin</label>
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Choose Password</label>
                                     <div className="relative">
                                         <input 
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-3 rounded-xl text-white focus:border-cyan-500 outline-none"
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white outline-none focus:border-cyan-500"
                                             placeholder="••••••••"
                                         />
-                                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
-                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600">
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <button onClick={nextStep} className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">
-                                NEXT: PERSONALIZE
+                            <button onClick={nextStep} className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all">
+                                NEXT
                             </button>
                         </motion.div>
                     )}
@@ -400,89 +491,95 @@ export default function SignupPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="space-y-6 text-center"
+                            className="space-y-8 text-center"
                         >
-                             <div className="flex items-center gap-3 text-left">
-                                <button onClick={prevStep} className="p-1.5 bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
-                                    <ArrowLeft size={16} />
-                                </button>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Final Polish</h2>
-                            </div>
+                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Profile <span className="text-cyan-400">Picture</span></h1>
 
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="relative group">
-                                    <div className="w-24 h-24 rounded-3xl bg-slate-800 border-2 border-dashed border-slate-700/50 flex items-center justify-center overflow-hidden relative">
+                            <div className="flex flex-col items-center gap-6">
+                                <div className="relative">
+                                    <div className="w-32 h-32 rounded-3xl bg-slate-900 border-2 border-dashed border-slate-800 flex items-center justify-center overflow-hidden relative">
                                         {profileImage ? (
-                                            <img src={profileImage} alt="Preview" className="w-full h-full object-cover" />
+                                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
-                                            <Camera size={32} className="text-slate-600 group-hover:text-cyan-400 transition-colors" />
+                                            <Camera size={40} className={`transition-colors ${uploadState === 'uploading' ? 'animate-pulse text-cyan-400' : 'text-slate-700'}`} />
+                                        )}
+                                        {uploadState === 'uploading' && (
+                                            <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
+                                                <Loader2 size={32} className="animate-spin text-cyan-400" />
+                                            </div>
                                         )}
                                         <input 
                                             type="file" 
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                            onChange={() => {}} 
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            disabled={uploadState === 'uploading'}
+                                            className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
                                         />
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 bg-cyan-500 text-slate-950 p-1.5 rounded-lg shadow-lg border-2 border-[#020617]">
-                                        <Plus size={12} strokeWidth={3} />
+                                    <div className="absolute -bottom-2 -right-2 bg-cyan-500 text-slate-950 p-2 rounded-xl shadow-lg border-2 border-[#020617]">
+                                        <Plus size={16} strokeWidth={3} />
                                     </div>
                                 </div>
-                                <p className="text-slate-500 text-[10px] italic leading-tight">Your picture will be visible to<br/>other traders in bidding wars</p>
+                                
+                                {uploadState === 'done' ? (
+                                    <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                        <ShieldCheck size={14} className="text-emerald-400" />
+                                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Image Saved</span>
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-relaxed">
+                                        Tap box to upload identity icon
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="space-y-3">
-                                <button 
-                                    onClick={handleSignup}
-                                    disabled={loading}
-                                    className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                                >
-                                    {loading ? <Loader2 size={18} className="animate-spin" /> : 'MINT IDENTITY'}
-                                </button>
-                                <button onClick={handleSignup} className="text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:text-slate-400 transition-colors">
-                                    Continue with default
-                                </button>
-                            </div>
+                            <button 
+                                onClick={handleSignup}
+                                disabled={loading || uploadState === 'uploading'}
+                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg group active:scale-95 transition-all text-sm uppercase tracking-widest"
+                            >
+                                {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
+                            </button>
+                            
+                            <button onClick={handleSignup} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">
+                                Skip for now
+                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                <p className="mt-8 text-center text-slate-600 text-[11px] font-medium leading-relaxed">
-                    Already have an account?{' '}
-                    <Link href="/login" className="text-cyan-500 font-bold hover:underline">
-                        Secure Login
-                    </Link>
+                {/* Footer Selection */}
+                <p className="mt-10 text-center">
+                    <span className="text-slate-600 text-[11px] font-medium uppercase tracking-widest">Already a Trader?</span>
                     <br/>
-                    <span className="opacity-50 tracking-tight">By creating identity, you agree to our </span>
-                    <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Protocol of Conduct</Link>
-                    <span className="opacity-50"> & </span>
-                    <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800 transition-colors">Privacy Protocol</Link>
+                    <Link href="/login" className="text-cyan-500 font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
+                        Log In
+                    </Link>
+                    
+                    <div className="mt-8 pt-6 border-t border-slate-900/50 space-y-2 opacity-40">
+                        <p className="text-[9px] text-slate-500 leading-relaxed uppercase tracking-wider">
+                            By creating an account, you agree to our
+                        </p>
+                        <div className="flex justify-center gap-4 text-[10px] font-bold uppercase">
+                            <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800">Terms & Conditions</Link>
+                            <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800">Privacy Policy</Link>
+                        </div>
+                    </div>
                 </p>
             </div>
 
+            {/* Error Log */}
             {error && (
                 <motion.div 
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="fixed bottom-6 left-6 right-6 bg-rose-500/20 border border-rose-500/40 text-rose-300 p-4 rounded-xl text-[10px] font-mono backdrop-blur-xl shadow-2xl z-50 overflow-hidden"
+                    className="fixed bottom-6 left-6 right-6 bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl p-4 rounded-2xl shadow-2xl z-50 border-l-4 border-l-rose-500"
                 >
-                    <div className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 bg-rose-500 rounded-full mt-1 shrink-0 animate-pulse" />
-                        <div className="flex-1">
-                            <span className="font-bold uppercase tracking-wider block mb-1">System Error Log</span>
-                            <code className="opacity-90 leading-tight block whitespace-pre-wrap">{error}</code>
-                        </div>
-                    </div>
+                    <p className="text-rose-500 font-black text-[10px] uppercase tracking-widest mb-1">System Error Log</p>
+                    <p className="text-rose-400 text-[11px] font-mono leading-tight">{error}</p>
                 </motion.div>
             )}
         </div>
     );
 }
 
-function Plus({ size, strokeWidth, className }: { size?: number, strokeWidth?: number, className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth || 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-    )
-}
