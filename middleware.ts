@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
 
     // Redirect to dashboard if already logged in and visiting login/signup
     if (
-        (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup' || request.nextUrl.pathname === '/') &&
+        (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') &&
         token
     ) {
         try {
@@ -38,11 +38,6 @@ export async function middleware(request: NextRequest) {
         } catch (error) {
             // Token invalid, allow access to login/signup
         }
-    }
-
-    // If at root and not logged in, redirect to login
-    if (request.nextUrl.pathname === '/' && !token) {
-        return NextResponse.redirect(new URL('/login', request.url));
     }
 
     return NextResponse.next();
