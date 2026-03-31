@@ -6,10 +6,14 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-const RP_ID = process.env.NEXT_PUBLIC_RP_ID || 'localhost';
-const ORIGIN = process.env.NEXT_PUBLIC_ORIGIN || `http://${RP_ID}:3000`;
-
 export async function POST(req: Request) {
+    // Dynamically determine RP_ID and ORIGIN from request headers
+    const host = req.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    
+    const RP_ID = process.env.NEXT_PUBLIC_RP_ID || host.split(':')[0];
+    const ORIGIN = process.env.NEXT_PUBLIC_ORIGIN || `${protocol}://${host}`;
+
     try {
         const body = await req.json();
         const expectedChallenge = (await cookies()).get('webauthn-challenge')?.value;
