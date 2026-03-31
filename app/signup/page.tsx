@@ -231,10 +231,10 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden font-['Inter'] selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden font-['Inter'] selection:bg-yellow-500/30">
             {/* Background Effects */}
             <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-900/5 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-yellow-900/5 blur-[120px] rounded-full" />
 
             <div className="w-full max-w-sm relative z-10">
                 {/* Logo Section */}
@@ -266,8 +266,8 @@ export default function SignupPage() {
                             className="space-y-4"
                         >
                             <div className="text-center mb-4">
-                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Select <span className="text-cyan-400">Path</span></h1>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Tier selection required</p>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Enter the <span className="text-[#FBBF24]">Game</span></h1>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select Your Trading Tier</p>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">
@@ -275,20 +275,18 @@ export default function SignupPage() {
                                 <button
                                     onClick={() => setAccountType('main')}
                                     className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main'
-                                            ? 'bg-slate-900 border-cyan-500 shadow-[0_0_40px_rgba(6,182,212,0.15)]'
+                                            ? 'bg-slate-900 border-[#FBBF24] shadow-[0_0_40px_rgba(251,191,36,0.15)]'
                                             : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
                                         }`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'main' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                    <div className="flex items-start gap-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${accountType === 'main' ? 'bg-[#FBBF24] text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
                                             <Sparkles size={24} />
                                         </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-black text-sm text-white uppercase">Main Account</h3>
-                                                <div className="px-2 py-0.5 bg-cyan-500 text-slate-950 text-[9px] font-black rounded-lg">₹1 Lakh Starter BONUS</div>
-                                            </div>
-                                            <p className="text-[10px] text-slate-500 font-medium">Permanent. WhatsApp Verified.</p>
+                                        <div className="flex-1">
+                                            <h3 className="font-black text-sm text-white uppercase mb-1">Elite Trader</h3>
+                                            <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh BONUS (Paper Money)</div>
+                                            <p className="text-[10px] text-slate-500 font-medium">Full Progress. Device Bound.</p>
                                         </div>
                                     </div>
                                 </button>
@@ -306,7 +304,7 @@ export default function SignupPage() {
                                             <Globe size={24} />
                                         </div>
                                         <div>
-                                            <h3 className="font-black text-sm text-white uppercase">Side Account</h3>
+                                            <h3 className="font-black text-sm text-white uppercase">Lite Trader</h3>
                                             <p className="text-[10px] text-slate-500 font-medium">Alternate. Email Linked.</p>
                                         </div>
                                     </div>
@@ -316,7 +314,7 @@ export default function SignupPage() {
                             <button
                                 disabled={!accountType}
                                 onClick={nextStep}
-                                className="w-full mt-2 bg-white text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2 group uppercase tracking-widest text-xs"
+                                className="w-full mt-2 bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2 group uppercase tracking-widest text-xs"
                             >
                                 CONTINUE
                                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -337,7 +335,7 @@ export default function SignupPage() {
                                 <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
                                     <ArrowLeft size={16} />
                                 </button>
-                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Choose <span className="text-cyan-400">Username</span></h1>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Choose <span className="text-[#FBBF24]">Username</span></h1>
                             </div>
 
                             <div className="space-y-2">
@@ -348,7 +346,7 @@ export default function SignupPage() {
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                        className="w-full bg-slate-900 border border-slate-800 px-12 py-4 rounded-2xl text-white font-mono text-lg focus:border-cyan-500 outline-none transition-all placeholder:text-slate-700"
+                                        className="w-full bg-slate-900 border border-slate-800 px-12 py-4 rounded-2xl text-white font-mono text-lg focus:border-[#FBBF24] outline-none transition-all placeholder:text-slate-700"
                                         placeholder="trader_name"
                                     />
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -366,7 +364,7 @@ export default function SignupPage() {
                             <button
                                 disabled={!isUsernameValid || checkingUsername}
                                 onClick={nextStep}
-                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs"
+                                className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs"
                             >
                                 CONTINUE
                             </button>
@@ -386,11 +384,11 @@ export default function SignupPage() {
                                 <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
                                     <ArrowLeft size={16} />
                                 </button>
-                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Confirm <span className="text-cyan-400">Account</span></h1>
+                                <h1 className="text-xl font-black text-white tracking-tight uppercase">Confirm <span className="text-[#FBBF24]">Account</span></h1>
                             </div>                             {accountType === 'main' ? (
                                 <div className="space-y-4">
                                     <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-center space-y-4">
-                                        <div className="w-16 h-16 bg-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto text-cyan-400">
+                                        <div className="w-16 h-16 bg-[#FBBF24]/10 rounded-2xl flex items-center justify-center mx-auto text-[#FBBF24]">
                                             <ShieldCheck size={32} />
                                         </div>
                                         <div>
@@ -402,11 +400,11 @@ export default function SignupPage() {
                                     <button
                                         onClick={handleBiometricVerify}
                                         disabled={loading}
-                                        className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                                        className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs"
                                     >
                                         {loading ? <Loader2 className="animate-spin text-slate-950" /> : (
                                             <>
-                                                Verify My Identity
+                                                Secure Game Identity
                                                 <ArrowRight size={16} />
                                             </>
                                         )}
@@ -454,7 +452,7 @@ export default function SignupPage() {
                                                     className="w-full bg-slate-900 border border-slate-800 px-5 py-3 rounded-xl text-white text-center font-mono text-lg tracking-[0.4em] outline-none"
                                                     placeholder="000000"
                                                 />
-                                                <button onClick={verifyOtpAndNext} className="w-full bg-cyan-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Verify Email</button>
+                                                <button onClick={verifyOtpAndNext} className="w-full bg-[#FBBF24] text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Verify Email</button>
                                             </div>
                                         )}
                                     </div>
@@ -472,7 +470,7 @@ export default function SignupPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-6"
                         >
-                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Account <span className="text-cyan-400">Password</span></h1>
+                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Secret <span className="text-[#FBBF24]">Passcode</span></h1>
 
                             <div className="space-y-4">
                                 {accountType === 'main' && (
@@ -482,7 +480,7 @@ export default function SignupPage() {
                                             type="text"
                                             value={realName}
                                             onChange={(e) => setRealName(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white focus:border-cyan-500 outline-none"
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white focus:border-[#FBBF24] outline-none"
                                             placeholder="John Doe"
                                         />
                                     </div>
@@ -504,7 +502,7 @@ export default function SignupPage() {
                                 </div>
                             </div>
 
-                            <button onClick={nextStep} className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all">
+                            <button onClick={nextStep} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all">
                                 NEXT
                             </button>
                         </motion.div>
@@ -519,7 +517,7 @@ export default function SignupPage() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="space-y-8 text-center"
                         >
-                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Profile <span className="text-cyan-400">Picture</span></h1>
+                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Profile <span className="text-[#FBBF24]">Picture</span></h1>
 
                             <div className="flex flex-col items-center gap-6">
                                 <div className="relative">
@@ -527,11 +525,11 @@ export default function SignupPage() {
                                         {profileImage ? (
                                             <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
-                                            <Camera size={40} className={`transition-colors ${uploadState === 'uploading' ? 'animate-pulse text-cyan-400' : 'text-slate-700'}`} />
+                                            <Camera size={40} className={`transition-colors ${uploadState === 'uploading' ? 'animate-pulse text-[#FBBF24]' : 'text-slate-700'}`} />
                                         )}
                                         {uploadState === 'uploading' && (
                                             <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
-                                                <Loader2 size={32} className="animate-spin text-cyan-400" />
+                                                <Loader2 size={32} className="animate-spin text-[#FBBF24]" />
                                             </div>
                                         )}
                                         <input
@@ -542,7 +540,7 @@ export default function SignupPage() {
                                             className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
                                         />
                                     </div>
-                                    <div className="absolute -bottom-2 -right-2 bg-cyan-500 text-slate-950 p-2 rounded-xl shadow-lg border-2 border-[#020617]">
+                                    <div className="absolute -bottom-2 -right-2 bg-[#FBBF24] text-slate-950 p-2 rounded-xl shadow-lg border-2 border-[#020617]">
                                         <Plus size={16} strokeWidth={3} />
                                     </div>
                                 </div>
@@ -562,7 +560,7 @@ export default function SignupPage() {
                             <button
                                 onClick={handleSignup}
                                 disabled={loading || uploadState === 'uploading'}
-                                className="w-full bg-cyan-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg group active:scale-95 transition-all text-sm uppercase tracking-widest"
+                                className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl shadow-lg group active:scale-95 transition-all text-sm uppercase tracking-widest"
                             >
                                 {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
                             </button>
@@ -578,7 +576,7 @@ export default function SignupPage() {
                 <p className="mt-10 text-center">
                     <span className="text-slate-600 text-[11px] font-medium uppercase tracking-widest">Already a Trader?</span>
                     <br />
-                    <Link href="/login" className="text-cyan-500 font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
+                    <Link href="/login" className="text-[#FBBF24] font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
                         Log In
                     </Link>
 

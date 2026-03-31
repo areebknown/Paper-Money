@@ -6,6 +6,7 @@ import BottomNav from '@/components/BottomNav';
 // Pages that should NOT show the global bottom nav
 // (they have their own UI or are non-app pages)
 const EXCLUDED_PREFIXES = [
+    '/',          // landing page
     '/admin',
     '/login',
     '/signup',

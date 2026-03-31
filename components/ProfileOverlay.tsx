@@ -1,5 +1,4 @@
-'use client';
-
+import React from 'react';
 import { motion } from 'framer-motion';
 import { 
     User, 
@@ -24,18 +23,26 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     const router = useRouter();
 
     const menuOptions = [
-        { label: 'Public Profile', icon: User, path: `/profile/${user?.id}`, color: 'text-cyan-400' },
-        { label: 'Edit Profile', icon: Edit2, path: '/profile/edit', color: 'text-blue-400' },
-        { label: 'Rank Rewards', icon: Award, path: '/rank', color: 'text-[#FBBF24]' },
-        { label: 'Friends', icon: Users, path: '/friends', color: 'text-indigo-400' },
-        { label: 'Settings', icon: Settings, path: '/settings', color: 'text-slate-400' },
-        { label: 'Switch Account', icon: RefreshCcw, path: '/api/auth/switch', color: 'text-emerald-400' },
+        { label: 'Public Profile', path: `/profile/${user?.id}`, color: 'text-cyan-400' },
+        { label: 'Edit Profile', path: '/profile/edit', color: 'text-blue-400' },
+        { label: 'Rank Rewards', path: '/rank', color: 'text-[#FBBF24]' },
+        { label: 'Friends', path: '/friends', color: 'text-indigo-400' },
+        { label: 'Settings', path: '/settings', color: 'text-slate-400' },
+        { label: 'Switch Account', path: '/api/auth/switch', color: 'text-emerald-400' },
     ];
 
     const handleLogout = async () => {
         const res = await fetch('/api/auth/logout', { method: 'POST' });
         if (res.ok) router.push('/login');
     };
+
+    const TenLines = () => (
+        <div className="flex gap-0.5 justify-center py-1.5 opacity-20 group-hover:opacity-40 transition-opacity">
+            {[...Array(10)].map((_, i) => (
+                <div key={i} className="w-1.5 h-[1.5px] bg-slate-400 rounded-full" />
+            ))}
+        </div>
+    );
 
     return (
         <div className="fixed inset-0 z-[110] flex items-start justify-end p-4 pointer-events-none">
@@ -50,87 +57,77 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
 
             {/* Content Card */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="relative w-full max-w-[320px] bg-[#0f172a] border border-white/10 shadow-2xl rounded-3xl overflow-hidden pointer-events-auto"
+                initial={{ opacity: 0, scale: 0, originX: 1, originY: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 220 }}
+                className="relative w-full max-w-[260px] bg-[#0f172a] border border-white/10 shadow-2xl rounded-[2.5rem] overflow-hidden pointer-events-auto origin-top-right"
             >
                 {/* Header Context Line */}
                 <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#FBBF24] to-transparent" />
 
-                <div className="p-6 space-y-6">
+                <div className="p-5">
                     {/* Identity Header */}
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-xl">
-                            <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 overflow-hidden flex items-center justify-center">
+                    <div className="flex flex-col items-center text-center mb-6 pt-2">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-xl mb-3">
+                            <div className="w-full h-full rounded-full border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
                                 {user?.profileImage ? (
                                     <img src={user.profileImage} alt="PFP" className="w-full h-full object-cover" />
                                 ) : (
-                                    <User className="text-white w-8 h-8" />
+                                    <User className="text-white w-6 h-6" />
                                 )}
                             </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-lg font-bold text-white font-['Russo_One'] truncate leading-tight">
+                        <div className="min-w-0">
+                            <h2 className="text-base font-bold text-white font-['Russo_One'] truncate tracking-tight uppercase leading-none mb-1">
                                 {user?.username || 'GUEST USER'}
                             </h2>
-                            <p className="text-xs text-slate-400 flex items-center gap-1">
-                                {user?.isMainAccount && <ShieldCheck size={12} className="text-[#FBBF24]" />}
+                            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase truncate max-w-[180px]">
                                 {user?.email || user?.phoneNumber || 'Identity Not Linked'}
                             </p>
-                            {/* PMUID Display */}
-                            <div className="mt-1 flex items-center gap-1">
-                                <span className="bg-white/5 text-[9px] px-2 py-0.5 rounded border border-white/10 text-white font-mono uppercase tracking-tighter">
-                                    {user?.publicId || 'ID-FETCHING...'}
-                                </span>
-                            </div>
                         </div>
-                        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full text-slate-500 transition-colors">
-                            <X size={18} />
+                        <button onClick={onClose} className="absolute top-6 right-6 p-1 hover:bg-white/10 rounded-full text-slate-500">
+                            <X size={16} />
                         </button>
                     </div>
 
                     {/* Menu List */}
-                    <nav className="space-y-1">
-                        {menuOptions.map((option) => (
-                            <button
-                                key={option.label}
-                                onClick={() => {
-                                    router.push(option.path);
-                                    onClose();
-                                }}
-                                className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 text-slate-300 transition-all active:scale-[0.98] group"
-                            >
-                                <div className={`p-2 rounded-xl bg-white/5 group-hover:bg-white/10 transition-colors ${option.color}`}>
-                                    <option.icon size={18} />
-                                </div>
-                                <span className="text-sm font-semibold tracking-wide">{option.label}</span>
-                            </button>
+                    <nav className="space-y-0.5">
+                        {menuOptions.map((option, idx) => (
+                            <React.Fragment key={option.label}>
+                                <button
+                                    onClick={() => {
+                                        router.push(option.path);
+                                        onClose();
+                                    }}
+                                    className="w-full text-center py-2.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-[0.96] group"
+                                >
+                                    <span className="text-[11px] font-black uppercase tracking-[0.15em]">{option.label}</span>
+                                </button>
+                                {idx < menuOptions.length - 1 && <TenLines />}
+                            </React.Fragment>
                         ))}
 
                         {/* Special Logout Option */}
-                        <div className="pt-2 mt-2 border-t border-white/5">
+                        <div className="pt-2 mt-4 border-t border-white/5">
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-red-500/10 text-red-400 transition-all active:scale-[0.98] group"
+                                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl hover:bg-red-500/10 text-red-500 transition-all active:scale-[0.98] group"
                             >
-                                <div className="p-2 rounded-xl bg-red-500/5 group-hover:bg-red-500/10 transition-colors">
-                                    <LogOut size={18} />
-                                </div>
-                                <span className="text-sm font-bold uppercase tracking-widest">Logout System</span>
+                                <LogOut size={14} />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Logout System</span>
                             </button>
                         </div>
                     </nav>
                 </div>
                 
                 {/* Footer Status Bar */}
-                <div className="bg-black/40 px-6 py-3 flex justify-between items-center text-[10px] text-slate-500 font-mono">
-                    <span className="flex items-center gap-1 italic lowercase">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        Server Link Active
+                <div className="bg-black/40 px-6 py-2 flex justify-between items-center text-[9px] text-slate-600 font-mono font-bold uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5 ">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        online
                     </span>
-                    <span className="opacity-50">v2.4.0</span>
+                    <span className="opacity-30">v2.4.0</span>
                 </div>
             </motion.div>
         </div>

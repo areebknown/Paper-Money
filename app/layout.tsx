@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bid Wars | The Ultimate UPI Auction Game",
-  description: "Join high-stakes digital auctions, trade artifacts, and win real rewards. The most aesthetic UPI gaming ecosystem.",
+  title: "Bid Wars | The Ultimate Virtual Bidding Game",
+  description: "Join the virtual bidding challenge, collect legendary artifacts, and climb the SSS+ ranks using 100% Paper Money.",
   other: {
     "google-site-verification": "P2F-6nBdLydsbkhJ3hlPteWEJhG-SPtqIYeBz04tKqI",
   },

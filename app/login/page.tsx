@@ -64,16 +64,16 @@ export default function LoginPage() {
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center mb-6"
+                    className="flex flex-col items-center mb-4"
                 >
                     <img 
                         src={LOGO_URL} 
                         alt="Bid Wars" 
-                        className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
+                        className="h-16 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]"
                     />
-                    <div className="mt-4 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2">
                         <div className="h-px w-6 bg-gradient-to-r from-transparent to-slate-700" />
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Secure Login</span>
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">Secure Login</span>
                         <div className="h-px w-6 bg-gradient-to-l from-transparent to-slate-700" />
                     </div>
                 </motion.div>
@@ -82,41 +82,41 @@ export default function LoginPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden"
+                    className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-[2rem] p-5 md:p-7 relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <ShieldCheck size={80} className="text-white" />
+                        <ShieldCheck size={60} className="text-white" />
                     </div>
 
-                    <div className="mb-6 text-left border-b border-white/5 pb-4">
-                        <h1 className="text-xl font-black text-white tracking-tight uppercase">Welcome <span className="text-cyan-400">Back</span></h1>
-                        <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-1">Enter your credentials below</p>
+                    <div className="mb-4 text-left border-b border-white/5 pb-3">
+                        <h1 className="text-lg font-black text-white tracking-tight uppercase">Welcome <span className="text-[#FBBF24]">Trader</span></h1>
+                        <p className="text-slate-500 text-[9px] uppercase tracking-widest mt-0.5">Resume your virtual empire</p>
                     </div>
 
                     {error && (
                         <motion.div 
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-2xl mb-6 text-sm font-medium flex items-center gap-3"
+                            className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl mb-4 text-[11px] font-medium flex items-center gap-3"
                         >
-                            <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                            <div className="w-1 h-1 bg-rose-500 rounded-full animate-pulse" />
                             {error}
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-3">
                         {/* Username */}
-                        <div className="space-y-1.5">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username</label>
+                        <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username</label>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                                    <User size={16} />
+                                    <User size={14} />
                                 </div>
                                 <input
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full pl-11 pr-5 py-3.5 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-sm placeholder:text-slate-800"
+                                    className="w-full pl-10 pr-5 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
                                     placeholder="handle_v1.0"
                                     required
                                 />
@@ -124,28 +124,28 @@ export default function LoginPage() {
                         </div>
 
                         {/* Password */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <div className="flex justify-between items-center px-1">
-                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Password</label>
+                                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Password</label>
                             </div>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                                    <Lock size={16} />
+                                    <Lock size={14} />
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-11 pr-11 py-3.5 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-sm placeholder:text-slate-800"
+                                    className="w-full pl-10 pr-10 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
                                     placeholder="••••••••"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                                 >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
                         </div>
@@ -153,47 +153,47 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full group bg-cyan-500 text-slate-950 font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-95 shadow-lg relative overflow-hidden"
+                            className="w-full group bg-[#FBBF24] text-slate-950 font-black py-3.5 rounded-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-95 shadow-lg relative overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                            {loading ? <Loader2 size={20} className="animate-spin" /> : (
+                            {loading ? <Loader2 size={18} className="animate-spin" /> : (
                                 <>
                                     LOGIN
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-5 flex items-center gap-3 text-slate-700">
+                    <div className="mt-4 flex items-center gap-3 text-slate-700">
                         <div className="h-px bg-slate-800/50 flex-1" />
                         <span className="text-[8px] font-black uppercase tracking-widest">Connect Via</span>
                         <div className="h-px bg-slate-800/50 flex-1" />
                     </div>
 
-                    <div className="mt-4">
+                    <div className="mt-3">
                         <Link 
                             href="/api/auth/google" 
-                            className="w-full bg-slate-950/50 border border-slate-800 py-3 rounded-xl flex items-center justify-center gap-2 text-slate-400 text-xs font-bold hover:bg-slate-900 hover:text-white transition-all active:scale-[0.98]"
+                            className="w-full bg-white text-slate-950 border border-white py-2.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#FBBF24] hover:border-[#FBBF24] transition-all active:scale-[0.98]"
                         >
-                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale opacity-50" />
-                            Google Auth
+                            <img src="https://www.google.com/favicon.ico" className="w-3.5 h-3.5" />
+                            Google Login
                         </Link>
                     </div>
                 </motion.div>
 
-                <p className="mt-8 text-center">
-                    <span className="text-slate-600 text-[11px] font-medium uppercase tracking-widest">New to Bid Wars?</span>
+                <p className="mt-4 text-center">
+                    <span className="text-slate-600 text-[10px] font-medium uppercase tracking-widest leading-none">New to Bid Wars?</span>
                     <br/>
-                    <Link href="/signup" className="text-cyan-500 font-black text-sm uppercase tracking-tight hover:underline transition-all inline-block mt-1">
+                    <Link href="/signup" className="text-[#FBBF24] font-black text-xs uppercase tracking-tight hover:underline transition-all inline-block mt-0.5">
                         Create Account
                     </Link>
                     
-                    <div className="mt-8 pt-6 border-t border-slate-900/50 space-y-2 opacity-40">
-                        <p className="text-[9px] text-slate-500 leading-relaxed uppercase tracking-wider">
+                    <div className="mt-4 pt-4 border-t border-slate-900/50 space-y-1.5 opacity-40">
+                        <p className="text-[8px] text-slate-500 leading-relaxed uppercase tracking-wider">
                             By signing in, you agree to our
                         </p>
-                        <div className="flex justify-center gap-4 text-[10px] font-bold uppercase">
+                        <div className="flex justify-center gap-4 text-[9px] font-bold uppercase">
                             <Link href="/terms" className="text-slate-400 hover:text-white underline decoration-slate-800">Terms & Conditions</Link>
                             <Link href="/privacy" className="text-slate-400 hover:text-white underline decoration-slate-800">Privacy Policy</Link>
                         </div>
