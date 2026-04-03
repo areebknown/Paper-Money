@@ -7,7 +7,8 @@ import {
     TrendingUp, 
     Gavel, 
     ArrowRight,
-    Award
+    Award,
+    MessageCircle
 } from 'lucide-react';
 import { LOGO_URL } from '@/lib/cloudinary';
 
@@ -93,14 +94,14 @@ export default function LandingPage() {
                         </motion.p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
                         {/* Connecting Line (Desktop only) */}
-                        <div className="hidden md:block absolute top-[40%] left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-slate-800 to-transparent -z-10" />
+                        <div className="hidden lg:block absolute top-[40%] left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-slate-800 to-transparent -z-10" />
 
                         <motion.div 
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
+                            viewport={{ once: true, amount: 0.1 }}
                             transition={{ delay: 0.1 }}
                             className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm group hover:border-[#FBBF24]/50 transition-all text-center relative overflow-hidden"
                         >
@@ -118,7 +119,7 @@ export default function LandingPage() {
                         <motion.div 
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
+                            viewport={{ once: true, amount: 0.1 }}
                             transition={{ delay: 0.2 }}
                             className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm group hover:border-blue-500/50 transition-all text-center relative overflow-hidden"
                         >
@@ -136,7 +137,7 @@ export default function LandingPage() {
                         <motion.div 
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
+                            viewport={{ once: true, amount: 0.1 }}
                             transition={{ delay: 0.3 }}
                             className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm group hover:border-emerald-500/50 transition-all text-center relative overflow-hidden"
                         >
@@ -150,6 +151,24 @@ export default function LandingPage() {
                             </p>
                             <div className="text-[9px] font-black uppercase tracking-widest text-slate-600">Rule The Market</div>
                         </motion.div>
+
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, amount: 0.1 }}
+                            transition={{ delay: 0.4 }}
+                            className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm group hover:border-purple-500/50 transition-all text-center relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center text-purple-400 mb-6 mx-auto group-hover:scale-110 group-hover:bg-purple-500/10 transition-all shadow-xl">
+                                <MessageCircle size={32} />
+                            </div>
+                            <h3 className="text-xl font-black uppercase tracking-tight mb-3">4. Talk Market</h3>
+                            <p className="text-slate-400 text-sm font-medium leading-relaxed mb-4">
+                                Chat live with other players to discuss virtual market trends, negotiate prices, or brag about your prized vault.
+                            </p>
+                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-600">Join The Community</div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
@@ -160,7 +179,7 @@ export default function LandingPage() {
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: true, amount: 0.2 }}
                         className="p-10 rounded-[2rem] bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 relative overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none" />
