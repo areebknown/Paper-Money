@@ -2,144 +2,178 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Scale, MessageSquare, ShieldAlert, Cpu, ArrowLeft, Gavel, UserX } from 'lucide-react';
+import { Scale, ShieldAlert, ArrowLeft, Gavel, UserX, BookOpen, AlertTriangle, RefreshCw, FileText } from 'lucide-react';
 import { LOGO_URL } from '@/lib/cloudinary';
+
+const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 24 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: EASE_OUT_EXPO } },
+};
+
+const stagger = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+};
+
+function Section({ icon, color, title, children }: {
+    icon: React.ReactNode;
+    color: string;
+    title: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <motion.section variants={fadeUp} className="space-y-5">
+            <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${color}`}>{icon}</div>
+                <h2 className="text-lg font-black text-white uppercase tracking-widest">{title}</h2>
+            </div>
+            <div className="pl-14 space-y-4 text-slate-400 leading-relaxed text-sm">
+                {children}
+            </div>
+        </motion.section>
+    );
+}
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-300 font-['Inter'] selection:bg-yellow-500/30 overflow-x-hidden">
-            {/* Ambient Background */}
+        <div className="min-h-screen bg-[#020617] text-slate-300 selection:bg-yellow-500/30 overflow-x-hidden">
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-yellow-900/5 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-900/5 blur-[120px] rounded-full" />
             </div>
 
             <div className="max-w-3xl mx-auto px-6 py-16 relative z-10">
+
+                {/* Back Link */}
+                <Link href="/" className="inline-flex items-center gap-2 text-[#FBBF24] hover:text-yellow-300 transition-colors text-xs font-black uppercase tracking-widest mb-12 group">
+                    <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                    Back to Home
+                </Link>
+
                 {/* Header */}
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-12 flex flex-col items-center md:items-start"
+                <motion.div
+                    variants={stagger}
+                    initial="hidden"
+                    animate="show"
+                    className="mb-16"
                 >
-                    <Link href="/login" className="inline-flex items-center gap-2 text-[#FBBF24] hover:text-yellow-300 transition-colors text-sm font-bold mb-8 group self-start">
-                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                        BACK TO LOGIN
-                    </Link>
+                    <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
+                        <img src={LOGO_URL} alt="Bid Wars" className="h-12 w-auto object-contain" />
+                    </motion.div>
 
-                    <img 
-                        src={LOGO_URL} 
-                        alt="Bid Wars" 
-                        className="h-20 w-auto mb-8 drop-shadow-[0_4px_30px_rgba(251,191,36,0.2)]"
-                    />
+                    <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-black text-white tracking-tight uppercase mb-3">
+                        Terms of <span className="text-[#FBBF24]">Service</span>
+                    </motion.h1>
+                    <div className="h-0.5 w-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full mb-6" />
 
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase mb-4 text-center md:text-left">
-                        Game <span className="text-[#FBBF24]">Rules</span>
-                    </h1>
-                    <div className="h-1 w-24 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full mb-6" />
-                    
-                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl mb-6 text-center md:text-left">
-                        <p className="text-[#FBBF24] text-xs font-black uppercase tracking-[0.2em]">
-                           🎮 100% Virtual • No Real Money • For Fun
-                        </p>
-                    </div>
-
-                    <p className="text-slate-500 text-lg leading-relaxed max-w-xl text-center md:text-left">
-                        By playing Bid Wars, you agree to these game rules. This is a virtual simulation for fun and artifact collection.
-                    </p>
+                    <motion.p variants={fadeUp} className="text-slate-500 text-sm leading-relaxed max-w-2xl">
+                        Effective Date: April 1, 2026 &nbsp;·&nbsp; Last Revised: April 3, 2026
+                    </motion.p>
+                    <motion.p variants={fadeUp} className="text-slate-400 text-base leading-relaxed max-w-2xl mt-4">
+                        These Terms of Service ("Terms") constitute a legally binding agreement between you ("User") and the areebknown ecosystem ("we," "us," "our"), governing your access to and use of the Bid Wars platform, available at bidwars.xyz and any associated applications. By accessing or using the platform, you agree to be bound by these Terms in their entirety.
+                    </motion.p>
                 </motion.div>
 
-                {/* Main Content */}
-                <div className="space-y-12">
-                    {/* 1. The Virtual Sandbox */}
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                            <div className="p-2 bg-yellow-500/10 rounded-lg text-[#FBBF24]">
-                                <Cpu size={24} />
-                            </div>
-                            <h2 className="text-xl font-bold uppercase tracking-wide">1. The Virtual Sandbox</h2>
-                        </div>
-                        <div className="pl-12 space-y-4 text-slate-400 leading-relaxed">
-                            <p>
-                                Bid Wars is a **purely virtual gaming experience**. You acknowledge and agree that:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2 marker:text-[#FBBF24]">
-                                <li>All "Paper Money" (₹) balances are for game-use only and hold **zero real-world value**.</li>
-                                <li>Game currency, assets, and inventory cannot be cashed out or used in any real-world financial systems.</li>
-                                <li>The Game assumes no liability for virtual losses, artifact trades, or in-game market fluctuations.</li>
-                            </ul>
-                        </div>
-                    </section>
+                {/* Sections */}
+                <motion.div
+                    variants={stagger}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.05 }}
+                    className="space-y-14"
+                >
+                    <Section icon={<BookOpen size={20} className="text-[#FBBF24]" />} color="bg-yellow-500/10" title="1. Nature of the Platform">
+                        <p>Bid Wars is an entertainment and strategy platform that simulates an economic bidding environment using an internal virtual currency designated as "Paper Money" (₹). Users acknowledge and agree that:</p>
+                        <ul className="list-disc pl-5 space-y-2 marker:text-[#FBBF24]">
+                            <li>Paper Money and all virtual assets (estates, vehicles, resources, and artifacts) held within the platform carry no real-world monetary value and cannot be exchanged for legal tender or any form of real currency.</li>
+                            <li>Platform rankings, scores, and ownership records are internal metrics relevant solely to the Bid Wars ecosystem and hold no legal or financial standing outside of the platform.</li>
+                            <li>Bid Wars does not constitute gambling, a financial product, an investment scheme, or any service regulated under financial services legislation.</li>
+                        </ul>
+                    </Section>
 
-                    {/* 2. Bidding Wars Rules */}
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                            <div className="p-2 bg-orange-500/10 rounded-lg text-orange-400">
-                                <Gavel size={24} />
-                            </div>
-                            <h2 className="text-xl font-bold uppercase tracking-wide">2. Fair Play Protocols</h2>
-                        </div>
-                        <div className="pl-12 space-y-4 text-slate-400 leading-relaxed">
-                            <p>
-                                Participation in live "Bidding Wars" and "Wait Rooms" is for fun and strategy:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2 marker:text-orange-500">
-                                <li><span className="text-slate-200 font-bold">Good Sportsmanship:</span> Use of scripts, bots, or external hacks to manipulate timers is strictly against the game's competitive spirit.</li>
-                                <li><span className="text-slate-200 font-bold">Virtual Assets:</span> Artifacts acquired through bidding (Estates, Vehicles, etc.) are digital collectibles for your game vault.</li>
-                                <li><span className="text-slate-200 font-bold">Respect:</span> Keep it fun for everyone. Offensive usernames or disruptive chat during auctions will result in game suspension.</li>
-                            </ul>
-                        </div>
-                    </section>
+                    <Section icon={<UserX size={20} className="text-blue-400" />} color="bg-blue-500/10" title="2. Eligibility & Account Registration">
+                        <p>To register an account on Bid Wars, users must meet the following requirements:</p>
+                        <ul className="list-disc pl-5 space-y-2 marker:text-blue-400">
+                            <li>You must be at least 13 years of age. Users under 18 are advised to obtain parental or guardian consent prior to registration.</li>
+                            <li>You must provide accurate and truthful information during the registration process.</li>
+                            <li>You are responsible for maintaining the confidentiality of your account credentials. Any activity conducted through your account is your responsibility.</li>
+                            <li><span className="text-slate-200 font-semibold">Main Accounts</span> require a verified email address and are eligible for the full platform feature set, including the introductory Paper Money bonus.</li>
+                            <li><span className="text-slate-200 font-semibold">Finance Accounts</span> are authenticated via Google OAuth or email OTP and provide access to select platform features as outlined in the platform documentation.</li>
+                        </ul>
+                        <p>Creating multiple accounts to circumvent bans, exploit bonus systems, or manipulate competitive rankings is strictly prohibited and may result in permanent termination of all associated accounts.</p>
+                    </Section>
 
-                    {/* 3. Account Identity */}
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                                <Scale size={24} />
-                            </div>
-                            <h2 className="text-xl font-bold uppercase tracking-wide">3. Game Account Integrity</h2>
-                        </div>
-                        <div className="pl-12 space-y-4 text-slate-400 leading-relaxed">
-                            <p>
-                                We use secure device binding to keep your game progress safe:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2 marker:text-blue-500">
-                                <li><span className="text-slate-200 font-bold">Elite Traders:</span> Use device-secure biometrics to protect your rank and bonus. These accounts receive exclusive starter paper money.</li>
-                                <li><span className="text-slate-200 font-bold">Lite Traders:</span> Simple accounts for exploring the game. These do not receive the same Paper Money bonuses.</li>
-                                <li><span className="text-slate-200 font-bold">Multi-Account Clause:</span> Creating multiple accounts to cheat or manipulate game ranks is not allowed.</li>
-                            </ul>
-                        </div>
-                    </section>
+                    <Section icon={<Gavel size={20} className="text-orange-400" />} color="bg-orange-500/10" title="3. Auction Participation & Fair Play">
+                        <p>Participation in Bid Wars auctions is governed by the following conduct standards:</p>
+                        <ul className="list-disc pl-5 space-y-2 marker:text-orange-400">
+                            <li><span className="text-slate-200 font-semibold">Bid Commitment:</span> All bids placed by a user during a live auction constitute a binding commitment to pay the stated Paper Money amount from their account balance if the bid is successful. Bid withdrawal is not permitted once placed.</li>
+                            <li><span className="text-slate-200 font-semibold">Snipe Mechanics:</span> The platform implements a 10-second snipe extension window. Users agree that this mechanic is by design and waive any objection to its application during live auctions.</li>
+                            <li><span className="text-slate-200 font-semibold">Automation Prohibition:</span> The use of bots, scripts, macros, or any automated tooling to place bids, interact with the platform, or gain a competitive advantage is strictly prohibited.</li>
+                            <li><span className="text-slate-200 font-semibold">Claim Window:</span> Following a successful auction, winning users must complete payment within the designated claim window. Failure to do so will result in forfeiture of the item and may result in a platform penalty.</li>
+                        </ul>
+                    </Section>
 
-                    {/* 4. Game Moderation */}
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-3 text-white">
-                            <div className="p-2 bg-rose-500/10 rounded-lg text-rose-400">
-                                <ShieldAlert size={24} />
-                            </div>
-                            <h2 className="text-xl font-bold uppercase tracking-wide">4. Fair Play Enforcement</h2>
+                    <Section icon={<Scale size={20} className="text-emerald-400" />} color="bg-emerald-500/10" title="4. Virtual Market & Economy">
+                        <p>The Bid Wars virtual market allows players to list, buy, and trade virtual assets accumulated through auctions and gameplay. The following terms govern market interactions:</p>
+                        <ul className="list-disc pl-5 space-y-2 marker:text-emerald-400">
+                            <li>Market prices are determined by platform-defined parameters and user activity. We do not guarantee any specific return on virtual investments or trades.</li>
+                            <li>Collusive trading, artificial price inflation, and coordinated market manipulation between multiple accounts or players are prohibited.</li>
+                            <li>We reserve the right to adjust market mechanics, asset valuations, and economy parameters at our discretion to maintain platform balance and integrity.</li>
+                        </ul>
+                    </Section>
+
+                    <Section icon={<ShieldAlert size={20} className="text-rose-400" />} color="bg-rose-500/10" title="5. Prohibited Conduct">
+                        <p>The following actions constitute a material breach of these Terms and may result in immediate account suspension or permanent termination:</p>
+                        <div className="space-y-2 mt-2">
+                            {[
+                                'Using the platform to engage in fraud, deception, or impersonation of other users.',
+                                'Attempting to exploit technical vulnerabilities, security flaws, or undocumented platform behaviours.',
+                                'Disseminating offensive, harassing, or threatening content in any user-facing communication feature.',
+                                'Circumventing account restrictions, bans, or geographic limitations through alternative accounts or proxies.',
+                                'Reverse engineering, scraping, or reproducing any portion of the Bid Wars platform without explicit written consent.',
+                            ].map(item => (
+                                <div key={item} className="flex items-start gap-3 p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl">
+                                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full mt-1.5 shrink-0" />
+                                    <span className="text-xs text-slate-400">{item}</span>
+                                </div>
+                            ))}
                         </div>
-                        <div className="pl-12 text-slate-400 leading-relaxed space-y-4">
-                            <p>
-                                Breaking game rules will result in:
-                            </p>
-                            <div className="flex items-center gap-3 p-4 bg-rose-500/5 border border-rose-500/20 rounded-xl">
-                                <UserX size={20} className="text-rose-500 shrink-0" />
-                                <span className="text-xs font-black uppercase tracking-widest text-rose-300">Game Account Suspension</span>
-                            </div>
-                            <p>
-                                Our game community moderation team monitors the environment to ensure a fair and safe experience for all bidders.
-                            </p>
-                        </div>
-                    </section>
-                </div>
+                    </Section>
+
+                    <Section icon={<AlertTriangle size={20} className="text-yellow-500" />} color="bg-yellow-500/10" title="6. Disclaimers & Limitation of Liability">
+                        <p>The Bid Wars platform is provided on an "as-is" and "as-available" basis. We make no representations or warranties, express or implied, regarding:</p>
+                        <ul className="list-disc pl-5 space-y-2 marker:text-yellow-500">
+                            <li>Uninterrupted or error-free platform availability.</li>
+                            <li>The accuracy or completeness of any market data, rankings, or platform statistics.</li>
+                            <li>The preservation of virtual assets, balances, or progress in the event of a technical failure, platform reset, or service discontinuation.</li>
+                        </ul>
+                        <p>To the fullest extent permitted by applicable law, the areebknown ecosystem shall not be liable for any indirect, incidental, consequential, or punitive damages arising from your use or inability to use the platform.</p>
+                    </Section>
+
+                    <Section icon={<RefreshCw size={20} className="text-indigo-400" />} color="bg-indigo-500/10" title="7. Platform Modifications & Termination">
+                        <p>We reserve the right to modify, suspend, or discontinue any aspect of the Bid Wars platform at any time without prior notice, including but not limited to: game mechanics, virtual economy parameters, user interface, feature sets, and account tier structures.</p>
+                        <p>We also reserve the right to terminate or suspend access to accounts that are found to be in violation of these Terms, at our sole discretion, with or without notice in cases of severe or repeated breaches.</p>
+                    </Section>
+
+                    <Section icon={<FileText size={20} className="text-slate-400" />} color="bg-slate-800/60" title="8. Governing Law & Amendments">
+                        <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of the platform shall be subject to the exclusive jurisdiction of the competent courts located in India.</p>
+                        <p>We reserve the right to revise these Terms at any time. Continued use of the platform following the publication of revised Terms constitutes your acceptance of those changes. We encourage users to review this page periodically.</p>
+                        <p>For any queries regarding these Terms, please contact us at <a href="mailto:support@bidwars.xyz" className="text-[#FBBF24] hover:underline">support@bidwars.xyz</a>.</p>
+                    </Section>
+                </motion.div>
 
                 {/* Footer */}
-                <div className="mt-20 pt-12 border-t border-slate-800 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600">
-                        Bid Wars · Game Community Protection Team
+                <div className="mt-20 pt-12 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-600">
+                        © 2026 areebknown ecosystem · All rights reserved
                     </p>
-                    <p className="text-[9px] text-slate-700 mt-2">v4.0.0 Global Revision for Fans & Kids</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-700">
+                        <a href="mailto:support@bidwars.xyz" className="hover:text-[#FBBF24] transition-colors">support@bidwars.xyz</a>
+                    </p>
                 </div>
+
             </div>
         </div>
     );

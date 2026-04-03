@@ -14,6 +14,8 @@ const EXCLUDED_PREFIXES = [
     '/reset-password',
     '/bid',       // live auction pages
     '/invest/',   // asset specific market pages
+    '/privacy',
+    '/terms',
 ];
 
 export default function ConditionalBottomNav() {
