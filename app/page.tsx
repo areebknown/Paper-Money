@@ -13,6 +13,8 @@ import {
 import { LOGO_URL } from '@/lib/cloudinary';
 
 // Animation variants for smooth, orchestrated reveals
+const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
 const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -32,7 +34,7 @@ const cardVariants = {
         scale: 1,
         transition: {
             duration: 0.7,
-            ease: [0.22, 1, 0.36, 1], // easeOutExpo — fast deceleration
+            ease: EASE_OUT_EXPO,
         },
     },
 };
@@ -44,7 +46,7 @@ const fadeUpVariants = {
         y: 0,
         transition: {
             duration: 0.7,
-            ease: [0.22, 1, 0.36, 1],
+            ease: EASE_OUT_EXPO,
         },
     },
 };
@@ -75,7 +77,7 @@ export default function LandingPage() {
                     <motion.h1
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                        transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.1 }}
                         className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-8"
                     >
                         Bid. Collect. <br />
@@ -85,7 +87,7 @@ export default function LandingPage() {
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.22 }}
+                        transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.22 }}
                         className="text-slate-400 text-sm md:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-12"
                     >
                         The ultimate virtual bidding ecosystem. Collect legendary artifacts, outsmart rivals in 10-second snipes, and ascend the elite player ranks using pure strategy.
@@ -94,7 +96,7 @@ export default function LandingPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.36 }}
+                        transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.36 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-6"
                     >
                         <Link 
