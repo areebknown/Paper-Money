@@ -7,7 +7,7 @@ export async function GET(req: Request) {
     const host = req.headers.get('host') || 'localhost:3000';
     const rootDomain = host.includes('localhost') 
         ? `http://${host}` 
-        : 'https://wars-bid.vercel.app';
+        : 'https://bidwars.xyz';
     
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
     const REDIRECT_URI = `${rootDomain}/api/auth/google/callback`;

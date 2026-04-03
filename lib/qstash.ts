@@ -6,9 +6,9 @@ const client = new Client({
 });
 
 // The URL QStash will POST webhooks to.
-// Set QSTASH_WEBHOOK_URL in Vercel to override (e.g., https://wars-bid.vercel.app).
+// Set QSTASH_WEBHOOK_URL in Vercel to override (e.g., https://bidwars.xyz).
 // This MUST be your production/public domain - NOT a preview deployment URL.
-const WEBHOOK_BASE_URL = process.env.QSTASH_WEBHOOK_URL || 'https://wars-bid.vercel.app';
+const WEBHOOK_BASE_URL = process.env.QSTASH_WEBHOOK_URL || 'https://bidwars.xyz';
 
 export const qstash = {
     /**

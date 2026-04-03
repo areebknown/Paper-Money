@@ -184,11 +184,11 @@ export default function LandingPage() {
                         </p>
                     </div>
                     
-                    <div className="flex gap-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
-                        <Link href="/terms" className="hover:text-[#FBBF24] transition-colors">Term of Service</Link>
-                        <Link href="/privacy" className="hover:text-[#FBBF24] transition-colors">Privacy Policy</Link>
-                        <a href="mailto:support@wars-bid.vercel.app" className="hover:text-[#FBBF24] transition-colors">Support</a>
-                    </div>
+                    <nav className="flex gap-4 sm:gap-6 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                        <Link href="/terms" className="hover:text-[#FBBF24] transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-[#FBBF24] transition-colors">Privacy</Link>
+                        <a href="mailto:support@bidwars.xyz" className="hover:text-[#FBBF24] transition-colors">Support</a>
+                    </nav>
 
                     <div className="flex items-center gap-4">
                         <div className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg flex items-center gap-2">

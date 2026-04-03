@@ -26,8 +26,8 @@ export async function sendAuctionBeamsNotification(
                 notification: {
                     title,
                     body,
-                    icon: 'https://wars-bid.vercel.app/icon-192.png',
-                    deep_link: 'https://wars-bid.vercel.app/home',
+                    icon: 'https://bidwars.xyz/icon-192.png',
+                    deep_link: 'https://bidwars.xyz/home',
                     requireInteraction: true,
                 } as any,
             },

@@ -11,19 +11,19 @@ export async function GET(req: Request) {
 
     if (error) {
         const host = req.headers.get('host') || 'localhost:3000';
-        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://bidwars.xyz';
         return NextResponse.redirect(`${rootDomain}/login?error=Google auth failed: ${error}`);
     }
 
     if (!code) {
         const host = req.headers.get('host') || 'localhost:3000';
-        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://bidwars.xyz';
         return NextResponse.redirect(`${rootDomain}/login?error=No code provided`);
     }
 
     try {
         const host = req.headers.get('host') || 'localhost:3000';
-        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://bidwars.xyz';
 
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
             .setExpirationTime('30d')
             .sign(secret);
 
-        const finalRedirectUrl = host.includes('localhost') ? `http://${host}/home` : 'https://wars-bid.vercel.app/home';
+        const finalRedirectUrl = host.includes('localhost') ? `http://${host}/home` : 'https://bidwars.xyz/home';
         const response = NextResponse.redirect(finalRedirectUrl);
 
         // Set cookie DIRECTLY on the response object — path is required for middleware to read it
@@ -104,7 +104,7 @@ export async function GET(req: Request) {
     } catch (err) {
         console.error('[Google Callback Error]', err);
         const host = req.headers.get('host') || 'localhost:3000';
-        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://wars-bid.vercel.app';
+        const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://bidwars.xyz';
         return NextResponse.redirect(`${rootDomain}/login?error=Google integration error: ${(err as Error).message}`);
     }
 }

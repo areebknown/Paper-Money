@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
         // Send email using Resend REST API
         // Prioritize the environment variable, but fallback to the production domain instead of localhost
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://paper-money.vercel.app';
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
         const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
 
         // Use fallback for FROM_EMAIL if not set
