@@ -190,38 +190,51 @@ export default function SignupPage() {
         }
     };
 
-    const sendOtp = async () => {
-        const payload = accountType === 'main'
-            ? { phoneNumber, type: 'whatsapp' }
-            : { email, type: 'email' };
-
-        if (accountType === 'main' && !phoneNumber) return setError('Please enter a phone number');
-        if (accountType === 'side' && !email) return setError('Please enter an email address');
-
+    const sendEmailOtp = async () => {
+        if (!email) return setError('Please enter your email address');
         setLoading(true);
+        setError('');
         try {
-            const res = await fetch('/api/auth/otp/send', {
+            const res = await fetch('/api/auth/email/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ email, username }),
             });
             const data = await res.json();
             if (res.ok) {
                 setIsOtpSent(true);
-                if (data.simulated) setOtp(data.otp);
+                if (data.simulated) setOtp(data.otp || '');
             } else {
-                setError(data.error);
+                setError(data.error || 'Failed to send code');
             }
         } catch (err) {
-            setError('Failed to send code');
+            setError('Email service unavailable');
         } finally {
             setLoading(false);
         }
     };
 
-    const verifyOtpAndNext = () => {
-        if (otp.length < 6) return setError('Enter a valid 6-digit code');
-        nextStep();
+    const verifyEmailOtp = async () => {
+        if (otp.length < 6) return setError('Enter the 6-digit code from your email');
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch('/api/auth/email/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp, username }),
+            });
+            const data = await res.json();
+            if (res.ok && data.verified) {
+                nextStep();
+            } else {
+                setError(data.error || 'Verification failed');
+            }
+        } catch (err) {
+            setError('Verification failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const nextStep = () => {
@@ -417,7 +430,7 @@ export default function SignupPage() {
                                                 placeholder="XXXXXXXXXX"
                                             />
                                         </div>
-                                        
+
                                         {!isOtpSent ? (
                                             <button
                                                 onClick={sendWhatsappOtp}
@@ -442,15 +455,15 @@ export default function SignupPage() {
                                                         placeholder="••••••"
                                                     />
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={verifyWhatsappOtp}
                                                     disabled={otp.length < 6 || loading}
                                                     className="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl text-xs uppercase shadow-lg shadow-emerald-500/10 active:scale-95 transition-all flex items-center justify-center"
                                                 >
                                                     {loading ? <Loader2 size={16} className="animate-spin" /> : 'Claim 1 Lakh Bonus'}
                                                 </button>
-                                                <button 
-                                                    onClick={() => setIsOtpSent(false)} 
+                                                <button
+                                                    onClick={() => setIsOtpSent(false)}
                                                     className="w-full py-2 text-[9px] font-black text-slate-600 uppercase tracking-widest"
                                                 >
                                                     Change Number
@@ -460,7 +473,7 @@ export default function SignupPage() {
                                     </div>
 
                                     <p className="text-[9px] text-slate-600 text-center uppercase font-bold tracking-widest leading-relaxed px-4">
-                                        Elite status requires a verified phone identity.
+                                        Main Account requires to verify phone.
                                     </p>
                                 </div>
                             ) : (
@@ -482,26 +495,40 @@ export default function SignupPage() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-3.5 rounded-xl text-white outline-none focus:border-cyan-500 transition-all text-sm"
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-3.5 rounded-xl text-white outline-none focus:border-[#FBBF24] transition-all text-sm"
                                             placeholder="email@example.com"
                                         />
-                                        <button
-                                            onClick={sendOtp}
-                                            disabled={!email || loading}
-                                            className="w-full bg-slate-800 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center"
-                                        >
-                                            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send Email Code'}
-                                        </button>
-                                        {isOtpSent && (
+                                        {!isOtpSent ? (
+                                            <button
+                                                onClick={sendEmailOtp}
+                                                disabled={!email || loading}
+                                                className="w-full bg-slate-800 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center"
+                                            >
+                                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send Email Code'}
+                                            </button>
+                                        ) : (
                                             <div className="space-y-3 pt-4 border-t border-slate-800">
+                                                <p className="text-[10px] text-slate-500 text-center">Code sent to <span className="text-[#FBBF24] font-bold">{email}</span></p>
                                                 <input
                                                     type="text"
                                                     value={otp}
-                                                    onChange={(e) => setOtp(e.target.value)}
+                                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                     className="w-full bg-slate-900 border border-slate-800 px-5 py-3 rounded-xl text-white text-center font-mono text-lg tracking-[0.4em] outline-none"
                                                     placeholder="000000"
                                                 />
-                                                <button onClick={verifyOtpAndNext} className="w-full bg-[#FBBF24] text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Verify Email</button>
+                                                <button
+                                                    onClick={verifyEmailOtp}
+                                                    disabled={otp.length < 6 || loading}
+                                                    className="w-full bg-[#FBBF24] text-slate-950 font-black py-3 rounded-xl text-xs uppercase flex items-center justify-center"
+                                                >
+                                                    {loading ? <Loader2 size={16} className="animate-spin" /> : 'Verify Email'}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setIsOtpSent(false); setOtp(''); }}
+                                                    className="w-full py-1.5 text-[9px] font-black text-slate-600 uppercase tracking-widest"
+                                                >
+                                                    Change Email
+                                                </button>
                                             </div>
                                         )}
                                     </div>

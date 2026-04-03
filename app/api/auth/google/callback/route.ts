@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { generatePMUID } from '@/lib/pmuid';
 
@@ -51,28 +50,30 @@ export async function GET(req: Request) {
         // Use the picked username from state if available, otherwise fallback to email prefix
         const targetUsername = state || googleUser.email.split('@')[0];
 
-        // Find or create user
-        let user = await prisma.user.findFirst({
-            where: { 
-                OR: [
-                    { email: googleUser.email },
-                    { username: targetUsername } 
-                ]
-            }
-        });
+        // Find or create user — prioritise email match to avoid wrong-user collisions
+        let user = await prisma.user.findUnique({ where: { email: googleUser.email } })
+            ?? await prisma.user.findUnique({ where: { username: targetUsername } });
 
         if (!user) {
+            // Safe username: if targetUsername is taken by someone else, fall back to email prefix
+            let finalUsername = targetUsername;
+            const taken = await prisma.user.findUnique({ where: { username: targetUsername } });
+            if (taken) finalUsername = googleUser.email.split('@')[0];
+
             user = await prisma.user.create({
                 data: {
                     email: googleUser.email,
-                    username: targetUsername,
+                    username: finalUsername,
                     realName: googleUser.name,
                     profileImage: googleUser.picture,
-                    isMainAccount: false, // Google-only are side accounts
+                    isMainAccount: false,
                     publicId: await generatePMUID(),
-                    balance: 0, // Side accounts get 0 starter bonus
+                    balance: 0,
                 }
             });
+        } else if (!user.email) {
+            // Backfill email if user was found by username but has no email
+            await prisma.user.update({ where: { id: user.id }, data: { email: googleUser.email, profileImage: user.profileImage ?? googleUser.picture } });
         }
 
         // Generate JWT
@@ -89,11 +90,12 @@ export async function GET(req: Request) {
         const finalRedirectUrl = host.includes('localhost') ? `http://${host}/home` : 'https://wars-bid.vercel.app/home';
         const response = NextResponse.redirect(finalRedirectUrl);
 
-        // Set cookie DIRECTLY on the response object for persistence
+        // Set cookie DIRECTLY on the response object — path is required for middleware to read it
         response.cookies.set('token', token, {
             httpOnly: true,
-            secure: true, // Always secure for OAuth
+            secure: true,
             sameSite: 'lax',
+            path: '/',
             maxAge: 30 * 24 * 60 * 60,
         });
 
