@@ -253,7 +253,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden font-['Inter'] selection:bg-yellow-500/30">
+        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden selection:bg-yellow-500/30">
             {/* Background Effects */}
             <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-yellow-900/5 blur-[120px] rounded-full" />
@@ -297,12 +297,12 @@ export default function SignupPage() {
                                 <button
                                     onClick={() => setAccountType('main')}
                                     className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main'
-                                        ? 'bg-slate-900 border-[#FBBF24] shadow-[0_0_40px_rgba(251,191,36,0.15)]'
+                                        ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]'
                                         : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
                                         }`}
                                 >
                                     <div className="flex items-start gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${accountType === 'main' ? 'bg-[#FBBF24] text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${accountType === 'main' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
                                             <Sparkles size={24} />
                                         </div>
                                         <div className="flex-1">
@@ -317,12 +317,12 @@ export default function SignupPage() {
                                 <button
                                     onClick={() => setAccountType('side')}
                                     className={`relative group p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'side'
-                                        ? 'bg-slate-900 border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.15)]'
+                                        ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]'
                                         : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'
                                         }`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-indigo-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
                                             <Globe size={24} />
                                         </div>
                                         <div>
