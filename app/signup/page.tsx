@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     CheckCircle2,
-    Smartphone,
     Mail,
     User,
     ShieldCheck,
@@ -19,9 +18,7 @@ import {
     Plus,
     Globe,
     Link2,
-    RefreshCw,
-    Timer,
-    XCircle
+    XCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOGO_URL } from '@/lib/cloudinary';
@@ -31,24 +28,33 @@ type AccountType = 'main' | 'side' | null;
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
+// Telegram SVG icon
+function TelegramIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+        </svg>
+    );
+}
+
 export default function SignupPage() {
     const router = useRouter();
 
     const [step, setStep] = useState<SignupStep>('choice');
     const [accountType, setAccountType] = useState<AccountType>(null);
 
-    // Username Check
+    // Username
     const [username, setUsername] = useState('');
     const [isUsernameValid, setIsUsernameValid] = useState<boolean | null>(null);
     const [checkingUsername, setCheckingUsername] = useState(false);
 
-    // Main Account — Phone
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [isPhoneAvailable, setIsPhoneAvailable] = useState<boolean | null>(null);
-    const [checkingPhone, setCheckingPhone] = useState(false);
-    const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-    const [phoneOtp, setPhoneOtp] = useState('');
-    const [phoneVerified, setPhoneVerified] = useState(false);
+    // Telegram auth (Main Account)
+    const [telegramSessionId, setTelegramSessionId] = useState('');
+    const [telegramBotLink, setTelegramBotLink] = useState('');
+    const [telegramPolling, setTelegramPolling] = useState(false);
+    const [telegramVerified, setTelegramVerified] = useState(false);
+    const [telegramId, setTelegramId] = useState('');
+    const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
     // Finance Account — Email
     const [email, setEmail] = useState('');
@@ -66,20 +72,6 @@ export default function SignupPage() {
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
 
-    // SMS countdown & resend
-    const [otpCountdown, setOtpCountdown] = useState(0); // seconds remaining
-    const countdownRef = useRef<NodeJS.Timeout | null>(null);
-    const startCountdown = useCallback(() => {
-        setOtpCountdown(60);
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        countdownRef.current = setInterval(() => {
-            setOtpCountdown(prev => {
-                if (prev <= 1) { clearInterval(countdownRef.current!); return 0; }
-                return prev - 1;
-            });
-        }, 1000);
-    }, []);
-
     // Link account (Finance → Main)
     const [linkUsername, setLinkUsername] = useState('');
     const [linkMainUserId, setLinkMainUserId] = useState('');
@@ -95,7 +87,33 @@ export default function SignupPage() {
         return `PM-${digits.slice(0, 4)}-${digits.slice(4)}`;
     });
 
-    // --- Real-time Username Check ---
+    // ─── Restore Telegram state after callback page redirect ───────────────────
+    useEffect(() => {
+        const stored = sessionStorage.getItem('tg_auth');
+        if (!stored) return;
+        try {
+            const { sessionId, telegramId: tgId, username: storedUsername } = JSON.parse(stored);
+            sessionStorage.removeItem('tg_auth');
+            if (storedUsername) setUsername(storedUsername);
+            setTelegramSessionId(sessionId);
+            setTelegramId(tgId);
+            setTelegramVerified(true);
+            setIsUsernameValid(true);
+            setAccountType('main');
+            setStep('details'); // Skip straight to password/name step
+        } catch {
+            sessionStorage.removeItem('tg_auth');
+        }
+    }, []);
+
+    // ─── Cleanup polling on unmount ─────────────────────────────────────────────
+    useEffect(() => {
+        return () => {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+        };
+    }, []);
+
+    // ─── Username check ─────────────────────────────────────────────────────────
     useEffect(() => {
         if (username.length < 3) { setIsUsernameValid(null); return; }
         setCheckingUsername(true);
@@ -110,22 +128,7 @@ export default function SignupPage() {
         return () => clearTimeout(timer);
     }, [username]);
 
-    // --- Real-time Phone Check ---
-    useEffect(() => {
-        if (phoneNumber.length !== 10) { setIsPhoneAvailable(null); return; }
-        setCheckingPhone(true);
-        const timer = setTimeout(async () => {
-            try {
-                const res = await fetch(`/api/user/check-phone?phone=${phoneNumber}`);
-                const data = await res.json();
-                setIsPhoneAvailable(data.available);
-            } catch { setIsPhoneAvailable(false); }
-            finally { setCheckingPhone(false); }
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [phoneNumber]);
-
-    // --- Real-time Email Check ---
+    // ─── Email check ────────────────────────────────────────────────────────────
     useEffect(() => {
         if (!email.includes('@') || email.length < 5) { setIsEmailAvailable(null); return; }
         setCheckingEmail(true);
@@ -140,6 +143,57 @@ export default function SignupPage() {
         return () => clearTimeout(timer);
     }, [email]);
 
+    // ─── Telegram polling ───────────────────────────────────────────────────────
+    const startPolling = useCallback((sessionId: string) => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        pollingRef.current = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/auth/telegram/status?s=${sessionId}`);
+                const data = await res.json();
+                if (data.status === 'verified' && data.telegramId) {
+                    clearInterval(pollingRef.current!);
+                    setTelegramPolling(false);
+                    setTelegramVerified(true);
+                    setTelegramId(data.telegramId);
+                    setStep('details');
+                } else if (data.status === 'expired') {
+                    clearInterval(pollingRef.current!);
+                    setTelegramPolling(false);
+                    setError('Verification expired. Please try again.');
+                    setTelegramSessionId('');
+                    setTelegramBotLink('');
+                }
+            } catch { /* keep polling */ }
+        }, 2000);
+    }, []);
+
+    const initTelegramAuth = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch(`/api/auth/telegram/init?username=${encodeURIComponent(username)}`);
+            const data = await res.json();
+            setTelegramSessionId(data.sessionId);
+            setTelegramBotLink(data.botLink);
+            setTelegramPolling(true);
+            startPolling(data.sessionId);
+            window.open(data.botLink, '_blank');
+        } catch {
+            setError('Could not start Telegram verification. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetTelegramAuth = () => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setTelegramPolling(false);
+        setTelegramSessionId('');
+        setTelegramBotLink('');
+        setError('');
+    };
+
+    // ─── File upload ────────────────────────────────────────────────────────────
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -150,7 +204,7 @@ export default function SignupPage() {
             fd.append('folder', 'user_pfps');
             fd.append('public_id', pmuid);
             const res = await fetch('/api/upload', { method: 'POST', body: fd });
-            if (!res.ok) throw new Error('Upload failed');
+            if (!res.ok) throw new Error();
             const data = await res.json();
             setProfileImage(data.url);
             setUploadState('done');
@@ -160,56 +214,7 @@ export default function SignupPage() {
         }
     };
 
-    const sendSmsOtp = async () => {
-        setLoading(true); setError('');
-        try {
-            const res = await fetch('/api/auth/sms/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phoneNumber, username }),
-            });
-            const data = await res.json();
-            if (res.ok) { setPhoneOtpSent(true); startCountdown(); }
-            else { setError(data.error || 'Failed to send OTP'); }
-        } catch { setError('SMS service unavailable'); }
-        finally { setLoading(false); }
-    };
-
-    const resendSmsOtp = async () => {
-        setPhoneOtp('');
-        setError('');
-        setLoading(true);
-        try {
-            const res = await fetch('/api/auth/sms/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phoneNumber, username }),
-            });
-            const data = await res.json();
-            if (res.ok) { startCountdown(); }
-            else { setError(data.error || 'Failed to resend OTP'); }
-        } catch { setError('SMS service unavailable'); }
-        finally { setLoading(false); }
-    };
-
-    const verifySmsOtp = async () => {
-        if (phoneOtp.length < 6) return setError('Enter the 6-digit code');
-        setLoading(true); setError('');
-        try {
-            const res = await fetch('/api/auth/sms/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phoneNumber, otp: phoneOtp }),
-            });
-            const data = await res.json();
-            if (res.ok && data.verified) {
-                setPhoneVerified(true);
-                nextStep();
-            } else { setError(data.error || 'Verification failed'); }
-        } catch { setError('Verification failed'); }
-        finally { setLoading(false); }
-    };
-
+    // ─── Email OTP ──────────────────────────────────────────────────────────────
     const sendEmailOtp = async () => {
         setLoading(true); setError('');
         try {
@@ -241,6 +246,7 @@ export default function SignupPage() {
         finally { setLoading(false); }
     };
 
+    // ─── Final signup ───────────────────────────────────────────────────────────
     const handleSignup = async () => {
         setLoading(true); setError('');
         try {
@@ -251,7 +257,7 @@ export default function SignupPage() {
                     username,
                     password,
                     isMainAccount: accountType === 'main',
-                    phoneNumber: accountType === 'main' ? phoneNumber : null,
+                    telegramId: accountType === 'main' ? telegramId : null,
                     email: accountType === 'side' ? email : null,
                     realName: accountType === 'main' ? realName : null,
                     profileImage,
@@ -265,24 +271,7 @@ export default function SignupPage() {
         finally { setLoading(false); }
     };
 
-    const nextStep = () => {
-        if (step === 'choice') setStep('username');
-        else if (step === 'username' && isUsernameValid) setStep('verification');
-        else if (step === 'verification') setStep('details');
-        else if (step === 'details') setStep('profile-pic');
-        else if (step === 'profile-pic' && accountType === 'side') setStep('link-account');
-        else if (step === 'profile-pic' && accountType === 'main') handleSignup();
-        else if (step === 'link-account') handleSignup();
-    };
-
-    const prevStep = () => {
-        if (step === 'username') setStep('choice');
-        else if (step === 'verification') setStep('username');
-        else if (step === 'details') setStep('verification');
-        else if (step === 'profile-pic') setStep('details');
-        else if (step === 'link-account') setStep('profile-pic');
-    };
-
+    // ─── Link account (Finance → Main) ─────────────────────────────────────────
     const sendLinkOtp = async () => {
         if (!linkUsername.trim()) return;
         setLinkLoading(true); setError('');
@@ -303,9 +292,7 @@ export default function SignupPage() {
         if (linkOtp.length < 6) return;
         setLinkLoading(true); setError('');
         try {
-            // First complete signup to get a session cookie
             await handleSignup();
-            // Then link
             const res = await fetch('/api/auth/link-account/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -315,6 +302,29 @@ export default function SignupPage() {
             if (!res.ok) { setError(data.error || 'Link failed — account created but not linked'); }
         } catch { setError('Link verification failed'); }
         finally { setLinkLoading(false); }
+    };
+
+    // ─── Navigation ─────────────────────────────────────────────────────────────
+    const nextStep = () => {
+        if (step === 'choice') setStep('username');
+        else if (step === 'username' && isUsernameValid) setStep('verification');
+        else if (step === 'verification') setStep('details');
+        else if (step === 'details') setStep('profile-pic');
+        else if (step === 'profile-pic' && accountType === 'side') setStep('link-account');
+        else if (step === 'profile-pic' && accountType === 'main') handleSignup();
+        else if (step === 'link-account') handleSignup();
+    };
+
+    const prevStep = () => {
+        if (step === 'username') setStep('choice');
+        else if (step === 'verification') setStep('username');
+        else if (step === 'details') {
+            // If coming back to details after Telegram verify, go back to verification step
+            // but reset Telegram so they can re-verify if needed
+            setStep('verification');
+        }
+        else if (step === 'profile-pic') setStep('details');
+        else if (step === 'link-account') setStep('profile-pic');
     };
 
     const AvailabilityIndicator = ({ checking, available }: { checking: boolean; available: boolean | null }) => {
@@ -332,7 +342,7 @@ export default function SignupPage() {
             <div className="w-full max-w-sm relative z-10">
                 {/* Logo */}
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8">
-                    <img src={LOGO_URL} alt="Bid Wars" className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(34,211,238,0.2)]" />
+                    <img src={LOGO_URL} alt="Bid Wars" className="h-20 w-auto drop-shadow-[0_4px_30px_rgba(96,165,250,0.2)]" />
                     <div className="mt-4 flex items-center gap-2">
                         <div className="h-px w-6 bg-gradient-to-r from-transparent to-slate-700" />
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Create Account</span>
@@ -341,7 +351,8 @@ export default function SignupPage() {
                 </motion.div>
 
                 <AnimatePresence mode="wait">
-                    {/* STEP 0: ACCOUNT TYPE */}
+
+                    {/* ── STEP 0: ACCOUNT TYPE ─────────────────────────────────────── */}
                     {step === 'choice' && (
                         <motion.div key="choice" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-4">
                             <div className="text-center mb-4">
@@ -349,19 +360,39 @@ export default function SignupPage() {
                                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select Your Account Type</p>
                             </div>
                             <div className="grid grid-cols-1 gap-3">
-                                <button onClick={() => setAccountType('main')} className={`relative p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main' ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]' : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'}`}>
+                                {/* Main Account card */}
+                                <button
+                                    onClick={() => setAccountType('main')}
+                                    className={`relative p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'main' ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]' : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'}`}
+                                >
                                     <div className="flex items-start gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${accountType === 'main' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}><Sparkles size={24} /></div>
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${accountType === 'main' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                            <Sparkles size={24} />
+                                        </div>
                                         <div className="flex-1">
-                                            <h3 className="font-black text-sm text-white uppercase mb-1">Main Account</h3>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-black text-sm text-white uppercase">Main Account</h3>
+                                            </div>
                                             <div className="px-2 py-0.5 bg-[#FBBF24] text-slate-950 text-[8px] font-black rounded-lg inline-block mb-1.5 uppercase tracking-tighter">₹1 Lakh Starter Bonus</div>
-                                            <p className="text-[10px] text-slate-500 font-medium">Full Progress. Phone Verified.</p>
+                                            <p className="text-[10px] text-slate-500 font-medium">Full Progress. Telegram Verified.</p>
+                                            {/* Telegram requirement one-liner */}
+                                            <div className="flex items-center gap-1 mt-1.5">
+                                                <TelegramIcon className="w-3 h-3 text-blue-400" />
+                                                <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Requires Telegram</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </button>
-                                <button onClick={() => setAccountType('side')} className={`relative p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'side' ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]' : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'}`}>
+
+                                {/* Finance Account card */}
+                                <button
+                                    onClick={() => setAccountType('side')}
+                                    className={`relative p-4 rounded-3xl text-left transition-all border-2 ${accountType === 'side' ? 'bg-slate-900 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.15)]' : 'bg-slate-900/50 border-slate-800/50 hover:border-slate-700'}`}
+                                >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}><Globe size={24} /></div>
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${accountType === 'side' ? 'bg-blue-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+                                            <Globe size={24} />
+                                        </div>
                                         <div>
                                             <h3 className="font-black text-sm text-white uppercase">Finance Account</h3>
                                             <p className="text-[10px] text-slate-500 font-medium">Alternate. Email Linked.</p>
@@ -375,7 +406,7 @@ export default function SignupPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 1: USERNAME */}
+                    {/* ── STEP 1: USERNAME ─────────────────────────────────────────── */}
                     {step === 'username' && (
                         <motion.div key="username" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-6">
                             <div className="flex items-center gap-3">
@@ -404,7 +435,7 @@ export default function SignupPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 2: VERIFICATION */}
+                    {/* ── STEP 2: VERIFICATION ─────────────────────────────────────── */}
                     {step === 'verification' && (
                         <motion.div key="verification" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-6">
                             <div className="flex items-center gap-3">
@@ -412,90 +443,62 @@ export default function SignupPage() {
                                 <h1 className="text-xl font-black text-white tracking-tight uppercase">Confirm <span className="text-[#FBBF24]">Account</span></h1>
                             </div>
 
-                            {/* MAIN — SMS OTP */}
+                            {/* ── MAIN: Telegram Verification ─────────────────────── */}
                             {accountType === 'main' ? (
                                 <div className="space-y-4">
-                                    <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-3xl text-center space-y-3">
-                                        <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto text-emerald-400"><Smartphone size={28} /></div>
-                                        <div>
-                                            <h3 className="text-white font-black uppercase text-sm">SMS Verification</h3>
-                                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">One number, one Main Account</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {/* Phone Input */}
-                                        {!phoneOtpSent && (
-                                            <>
-                                                <div className="relative">
-                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-slate-600">+91</div>
-                                                    <input
-                                                        type="tel"
-                                                        value={phoneNumber}
-                                                        onChange={(e) => { setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10)); setPhoneOtpSent(false); }}
-                                                        className="w-full pl-12 pr-12 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white outline-none focus:border-[#FBBF24] transition-all text-sm font-mono tracking-widest"
-                                                        placeholder="XXXXXXXXXX"
-                                                    />
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                        <AvailabilityIndicator checking={checkingPhone} available={isPhoneAvailable} />
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={sendSmsOtp}
-                                                    disabled={phoneNumber.length < 10 || isPhoneAvailable !== true || loading}
-                                                    className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-30 disabled:grayscale"
-                                                >
-                                                    {loading ? <Loader2 className="animate-spin" size={18} /> : <><Smartphone size={16} /> Send SMS OTP</>}
-                                                </button>
-                                            </>
-                                        )}
-
-                                        {/* OTP Input */}
-                                        {phoneOtpSent && (
-                                            <div className="space-y-3 pt-1">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Timer size={12} className="text-slate-600" />
-                                                    <p className="text-[10px] text-slate-500 text-center">OTP sent to <span className="text-[#FBBF24] font-bold">+91 {phoneNumber}</span></p>
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={phoneOtp}
-                                                    onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                    className="w-full bg-slate-900 border border-emerald-500/30 px-5 py-4 rounded-2xl text-white text-center font-mono text-xl tracking-[0.6em] outline-none"
-                                                    placeholder="••••••"
-                                                />
-                                                {otpCountdown > 0 ? (
-                                                    <p className="text-[9px] text-center text-slate-600 font-mono">
-                                                        SMS may take up to 45 sec to arrive · resend in {otpCountdown}s
-                                                    </p>
-                                                ) : (
-                                                    <button
-                                                        onClick={resendSmsOtp}
-                                                        disabled={loading}
-                                                        className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-[#FBBF24] transition-colors disabled:opacity-40"
-                                                    >
-                                                        <RefreshCw size={10} />
-                                                        Resend OTP
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={verifySmsOtp}
-                                                    disabled={phoneOtp.length < 6 || loading}
-                                                    className="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center"
-                                                >
-                                                    {loading ? <Loader2 size={16} className="animate-spin" /> : 'Verify OTP'}
-                                                </button>
-                                                <button onClick={() => { setPhoneOtpSent(false); setPhoneOtp(''); setOtpCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }} className="w-full py-1.5 text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                                                    Change Number
-                                                </button>
+                                    {!telegramSessionId ? (
+                                        /* Initial state */
+                                        <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-3xl text-center space-y-4">
+                                            <div className="w-14 h-14 bg-blue-400/10 rounded-2xl flex items-center justify-center mx-auto">
+                                                <TelegramIcon className="w-8 h-8 text-blue-400" />
                                             </div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                <h3 className="text-white font-black uppercase text-sm">Telegram Verification</h3>
+                                                <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">One Telegram = One Main Account</p>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 leading-relaxed">
+                                                We verify your identity through Telegram — no SMS codes, no copy-pasting.
+                                                Just tap <strong className="text-white">Start</strong> in the bot and you're done.
+                                            </p>
+                                            <button
+                                                onClick={initTelegramAuth}
+                                                disabled={loading}
+                                                className="w-full bg-blue-400 text-slate-950 font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-40"
+                                            >
+                                                {loading
+                                                    ? <Loader2 className="animate-spin" size={18} />
+                                                    : <><TelegramIcon className="w-4 h-4" /> Verify with Telegram</>
+                                                }
+                                            </button>
+                                        </div>
+                                    ) : telegramPolling ? (
+                                        /* Polling — waiting for user to tap Start in bot */
+                                        <div className="bg-slate-900/50 border border-blue-400/20 p-5 rounded-3xl text-center space-y-4">
+                                            <div className="w-14 h-14 bg-blue-400/10 rounded-2xl flex items-center justify-center mx-auto">
+                                                <Loader2 className="animate-spin text-blue-400" size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-black uppercase text-sm">Waiting for Telegram...</h3>
+                                                <p className="text-[10px] text-slate-500 mt-1">Open the bot and tap <strong className="text-white">Start</strong></p>
+                                            </div>
+                                            <button
+                                                onClick={() => window.open(telegramBotLink, '_blank')}
+                                                className="w-full bg-blue-400 text-slate-950 font-black py-3 rounded-2xl text-xs uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <TelegramIcon className="w-4 h-4" /> Open Telegram Bot
+                                            </button>
+                                            <button onClick={resetTelegramAuth} className="text-[9px] font-black text-slate-600 uppercase tracking-widest hover:text-slate-400 transition-colors">
+                                                Start Over
+                                            </button>
+                                        </div>
+                                    ) : null}
+
                                     <p className="text-[9px] text-slate-600 text-center uppercase font-bold tracking-widest leading-relaxed px-4">
-                                        Each phone number can only be linked to one Main Account.
+                                        Each Telegram account can only be linked to one Main Account.
                                     </p>
                                 </div>
                             ) : (
-                                /* FINANCE — Google or Email */
+                                /* ── FINANCE: Google or Email ──────────────────────── */
                                 <div className="space-y-4">
                                     <Link
                                         href={`/api/auth/google?username=${username}&mode=signup`}
@@ -512,8 +515,7 @@ export default function SignupPage() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        {/* Email Input */}
-                                        {!emailOtpSent && (
+                                        {!emailOtpSent ? (
                                             <>
                                                 <div className="relative">
                                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
@@ -536,10 +538,7 @@ export default function SignupPage() {
                                                     {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send Email Code'}
                                                 </button>
                                             </>
-                                        )}
-
-                                        {/* Email OTP Input */}
-                                        {emailOtpSent && (
+                                        ) : (
                                             <div className="space-y-3 pt-3 border-t border-slate-800">
                                                 <p className="text-[10px] text-slate-500 text-center">Code sent to <span className="text-[#FBBF24] font-bold">{email}</span></p>
                                                 <input
@@ -567,10 +566,21 @@ export default function SignupPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 3: PASSWORD & NAME */}
+                    {/* ── STEP 3: PASSWORD & NAME ───────────────────────────────────── */}
                     {step === 'details' && (
                         <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-6">
-                            <h1 className="text-xl font-black text-white tracking-tight uppercase">Secret <span className="text-[#FBBF24]">Passcode</span></h1>
+                            <div className="flex items-center gap-3">
+                                <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400"><ArrowLeft size={16} /></button>
+                                <div>
+                                    <h1 className="text-xl font-black text-white tracking-tight uppercase">Secret <span className="text-[#FBBF24]">Passcode</span></h1>
+                                    {telegramVerified && (
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <TelegramIcon className="w-3 h-3 text-blue-400" />
+                                            <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Telegram Verified ✓</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             <div className="space-y-4">
                                 {accountType === 'main' && (
                                     <div>
@@ -594,33 +604,43 @@ export default function SignupPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 4: PROFILE PIC */}
+                    {/* ── STEP 4: PROFILE PIC ───────────────────────────────────────── */}
                     {step === 'profile-pic' && (
                         <motion.div key="profile-pic" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-8 text-center">
                             <h1 className="text-xl font-black text-white tracking-tight uppercase">Profile <span className="text-[#FBBF24]">Picture</span></h1>
                             <div className="flex flex-col items-center gap-6">
                                 <div className="relative">
                                     <div className="w-32 h-32 rounded-3xl bg-slate-900 border-2 border-dashed border-slate-800 flex items-center justify-center overflow-hidden relative">
-                                        {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <Camera size={40} className={`transition-colors ${uploadState === 'uploading' ? 'animate-pulse text-[#FBBF24]' : 'text-slate-700'}`} />}
-                                        {uploadState === 'uploading' && <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center"><Loader2 size={32} className="animate-spin text-[#FBBF24]" /></div>}
+                                        {profileImage
+                                            ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                            : <Camera size={40} className={`transition-colors ${uploadState === 'uploading' ? 'animate-pulse text-[#FBBF24]' : 'text-slate-700'}`} />
+                                        }
+                                        {uploadState === 'uploading' && (
+                                            <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
+                                                <Loader2 size={32} className="animate-spin text-[#FBBF24]" />
+                                            </div>
+                                        )}
                                         <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploadState === 'uploading'} className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" />
                                     </div>
-                                    <div className="absolute -bottom-2 -right-2 bg-[#FBBF24] text-slate-950 p-2 rounded-xl shadow-lg border-2 border-[#020617]"><Plus size={16} strokeWidth={3} /></div>
-                                </div>
-                                {uploadState === 'done' ? (
-                                    <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                                        <ShieldCheck size={14} className="text-emerald-400" />
-                                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Image Saved</span>
+                                    <div className="absolute -bottom-2 -right-2 bg-[#FBBF24] text-slate-950 p-2 rounded-xl shadow-lg border-2 border-[#020617]">
+                                        <Plus size={16} strokeWidth={3} />
                                     </div>
-                                ) : <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Tap to upload your avatar</p>}
+                                </div>
+                                {uploadState === 'done'
+                                    ? (
+                                        <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                            <ShieldCheck size={14} className="text-emerald-400" />
+                                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Image Saved</span>
+                                        </div>
+                                    )
+                                    : <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Tap to upload your avatar</p>
+                                }
                             </div>
 
-                            {/* Finance: next goes to link-account step; Main: creates account directly */}
                             {accountType === 'side' ? (
                                 <div className="space-y-3">
                                     <button onClick={nextStep} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2">
-                                        <Link2 size={16} />
-                                        Link Main Account
+                                        <Link2 size={16} /> Link Main Account
                                     </button>
                                     <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">You can also do this later from settings.</p>
                                     <button onClick={handleSignup} disabled={loading} className="w-full py-3 border border-slate-800 rounded-2xl text-slate-400 font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
@@ -638,7 +658,7 @@ export default function SignupPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 5 (Finance only): LINK MAIN ACCOUNT */}
+                    {/* ── STEP 5 (Finance only): LINK MAIN ACCOUNT ─────────────────── */}
                     {step === 'link-account' && (
                         <motion.div key="link-account" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-6">
                             <div className="flex items-center gap-3">
@@ -672,14 +692,14 @@ export default function SignupPage() {
                                     </div>
                                     {error && <p className="text-rose-400 text-[11px] font-medium">{error}</p>}
                                     <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
-                                        {linkLoading ? <Loader2 size={16} className="animate-spin" /> : <><Smartphone size={14} /> Send Verification OTP</>}
+                                        {linkLoading ? <Loader2 size={16} className="animate-spin" /> : 'Send Verification OTP'}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     <div className="bg-slate-900/50 border border-emerald-500/20 p-4 rounded-2xl text-center">
                                         <ShieldCheck size={24} className="text-emerald-400 mx-auto mb-2" />
-                                        <p className="text-slate-300 text-sm font-bold">OTP sent to <span className="text-[#FBBF24]">@{linkUsername}</span>'s phone</p>
+                                        <p className="text-slate-300 text-sm font-bold">OTP sent to <span className="text-[#FBBF24]">@{linkUsername}</span>'s Telegram</p>
                                         <p className="text-slate-500 text-[10px] mt-1">Ask the Main Account holder to share the code</p>
                                     </div>
                                     <input
@@ -702,6 +722,7 @@ export default function SignupPage() {
                             </button>
                         </motion.div>
                     )}
+
                 </AnimatePresence>
 
                 <p className="mt-10 text-center">
@@ -718,9 +739,10 @@ export default function SignupPage() {
                 </p>
             </div>
 
-            {error && (
+            {/* Error toast */}
+            {error && step !== 'link-account' && (
                 <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="fixed bottom-6 left-6 right-6 bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl p-4 rounded-2xl shadow-2xl z-50 border-l-4 border-l-rose-500">
-                    <p className="text-rose-500 font-black text-[10px] uppercase tracking-widest mb-1">System Error Log</p>
+                    <p className="text-rose-500 font-black text-[10px] uppercase tracking-widest mb-1">Error</p>
                     <p className="text-rose-400 text-[11px] font-mono leading-tight">{error}</p>
                 </motion.div>
             )}

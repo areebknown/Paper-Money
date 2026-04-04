@@ -23,6 +23,7 @@ model User {
   realName    String?
   profileImage String?
   phoneNumber  String?  @unique
+  telegramId   String?  @unique // Telegram chat.id — one human = one Main Account
 
   resetToken       String?
   resetTokenExpiry DateTime?
