@@ -135,8 +135,8 @@ function getTransactionConfig(type: TransactionType) {
         case 'BID':
             return {
                 icon: <TrendingUp className="w-5 h-5 text-blue-400" />,
-                bgColor: 'bg-blue-500/10',
-                borderColor: 'border-blue-500',
+                bgColor: 'bg-blue-400/10',
+                borderColor: 'border-blue-400',
                 amountColor: 'text-blue-400',
             };
         case 'RANK':

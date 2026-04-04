@@ -106,7 +106,7 @@ export default function PaymentPage() {
                 </div>
 
                 {/* Instructions */}
-                <div className="card bg-blue-500/5 border-blue-500/20">
+                <div className="card bg-blue-400/5 border-blue-400/20">
                     <h3 className="text-sm font-bold text-blue-400 mb-2">Payment Instructions</h3>
                     <ul className="space-y-2 text-xs text-gray-400">
                         <li>• Scan the QR code using any UPI app</li>

@@ -56,8 +56,8 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Ambient Background Glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-900/10 blur-[150px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-900/10 blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-400/10 blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-400/5 blur-[150px] rounded-full pointer-events-none" />
 
             <div className="w-full max-w-md relative z-10">
                 {/* Logo Section */}
@@ -109,14 +109,14 @@ export default function LoginPage() {
                         <div className="space-y-1">
                             <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username</label>
                             <div className="relative group">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
                                     <User size={14} />
                                 </div>
                                 <input
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full pl-10 pr-5 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
+                                    className="w-full pl-10 pr-5 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-blue-400/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
                                     placeholder="Enter your username"
                                     required
                                 />
@@ -129,14 +129,14 @@ export default function LoginPage() {
                                 <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-tight block">Password</label>
                             </div>
                             <div className="relative group">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
                                     <Lock size={14} />
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-10 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-cyan-500/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
+                                    className="w-full pl-10 pr-10 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-blue-400/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
                                     placeholder="Enter your password"
                                     required
                                 />

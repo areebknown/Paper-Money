@@ -326,7 +326,7 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden selection:bg-yellow-500/30">
-            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/15 via-blue-900/5 to-transparent rounded-full pointer-events-none" />
+            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-400/15 via-blue-400/5 to-transparent rounded-full pointer-events-none" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-900/10 via-yellow-900/5 to-transparent rounded-full pointer-events-none" />
 
             <div className="w-full max-w-sm relative z-10">
@@ -653,7 +653,7 @@ export default function SignupPage() {
                                 <div className="space-y-4">
                                     <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400"><Link2 size={20} /></div>
+                                            <div className="w-10 h-10 bg-blue-400/10 rounded-xl flex items-center justify-center text-blue-400"><Link2 size={20} /></div>
                                             <div>
                                                 <p className="text-white font-black text-sm uppercase">Verify Ownership</p>
                                                 <p className="text-slate-500 text-[10px]">OTP will be sent to that account's phone</p>

@@ -76,7 +76,7 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('bids')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'bids'
-                            ? 'bg-[#FBBF24] text-[#1E3A8A] z-30'
+                            ? 'bg-[#FBBF24] text-blue-400 z-30'
                             : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >
@@ -90,7 +90,7 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('market')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'market'
-                            ? 'bg-[#FBBF24] text-[#1E3A8A] z-30'
+                            ? 'bg-[#FBBF24] text-blue-400 z-30'
                             : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >
@@ -378,10 +378,10 @@ function BidsContent({ userId }: { userId?: string }) {
             {/* Scheduled Bids */}
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest flex items-center gap-2 m-0">
+                    <h2 className="text-lg font-['Russo_One'] text-blue-400 uppercase tracking-widest flex items-center gap-2 m-0">
                         <span className="material-icons-round">schedule</span> Scheduled Bids
                     </h2>
-                    <button onClick={() => setShowExactTime(!showExactTime)} className="text-[#3B82F6] hover:text-blue-400 active:scale-95 transition-transform flex items-center justify-center p-1">
+                    <button onClick={() => setShowExactTime(!showExactTime)} className="text-blue-400 hover:text-blue-300 active:scale-95 transition-transform flex items-center justify-center p-1">
                         <span className="material-icons-round text-xl">{showExactTime ? 'hourglass_empty' : 'alarm'}</span>
                     </button>
                 </div>
@@ -415,7 +415,7 @@ function BidsContent({ userId }: { userId?: string }) {
                                     badgeColor = 'bg-gray-700'; // Dark color for exact time
                                 } else {
                                     badgeText = getTimeUntil(bid.scheduledAt);
-                                    badgeColor = 'bg-blue-500'; // Blue for "Starts in X"
+                                    badgeColor = 'bg-blue-400'; // Blue for "Starts in X"
                                 }
                             }
 
@@ -456,7 +456,7 @@ function BidsContent({ userId }: { userId?: string }) {
                                     {!isLiveOrWaiting && (
                                         <button
                                             onClick={(e) => openNotificationDialog(e, bid)}
-                                            className={`absolute top-6 right-0 text-white px-2.5 py-1.5 rounded-l-xl flex items-center shadow-md z-20 transition-colors active:scale-95 ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-600'}`}
+                                            className={`absolute top-6 right-0 text-white px-2.5 py-1.5 rounded-l-xl flex items-center shadow-md z-20 transition-colors active:scale-95 ${subscribedAuctions.has(bid.id) ? 'bg-yellow-500' : 'bg-blue-400'}`}
                                         >
                                             <span className="material-icons-round text-[14px] text-white">
                                                 {subscribedAuctions.has(bid.id) ? 'notifications_active' : 'notifications'}
@@ -472,7 +472,7 @@ function BidsContent({ userId }: { userId?: string }) {
 
             {/* Won Shutters */}
             <div className="mb-8">
-                <h2 className="text-lg font-['Russo_One'] text-[#3B82F6] uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-['Russo_One'] text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span className="material-icons-round">emoji_events</span> Won Shutters
                 </h2>
                 {wonBids.length === 0 ? (
@@ -607,8 +607,7 @@ function BidsContent({ userId }: { userId?: string }) {
                 <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setNotificationDialog(null)}>
                     <div className="absolute inset-0 bg-black/60" />
                     <div className="relative w-full max-w-md bg-gray-900 rounded-t-3xl px-6 pt-5 pb-28 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="w-10 h-1 rounded-full bg-gray-600 mx-auto mb-6" />
-                        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4"><span className="material-icons-round text-white text-3xl">notifications</span></div>
+                        <div className="w-14 h-14 rounded-2xl bg-blue-400 flex items-center justify-center mx-auto mb-4"><span className="material-icons-round text-white text-3xl">notifications</span></div>
                         <h2 className="text-center text-white font-['Russo_One'] text-lg mb-1">Get Notified?</h2>
                         <p className="text-center text-gray-400 text-xs mb-5">We'll ping you when the waiting room opens and when bidding goes live.</p>
                         <div className="bg-gray-800 rounded-2xl p-4 mb-6 space-y-2">
@@ -618,7 +617,7 @@ function BidsContent({ userId }: { userId?: string }) {
                         </div>
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => setNotificationDialog(null)} className="flex-1 py-3.5 rounded-2xl border-2 border-gray-500 text-gray-300 font-bold text-sm active:scale-95 transition-transform">Cancel</button>
-                            <button onClick={confirmNotification} className="flex-[2] py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-lg active:scale-95 transition-all">{subscribedAuctions.has(notificationDialog.id) ? 'Turn Off' : 'Notify Me'}</button>
+                            <button onClick={confirmNotification} className="flex-[2] py-3.5 rounded-2xl bg-blue-400 text-white font-bold text-sm shadow-lg active:scale-95 transition-all">{subscribedAuctions.has(notificationDialog.id) ? 'Turn Off' : 'Notify Me'}</button>
                         </div>
                     </div>
                 </div>

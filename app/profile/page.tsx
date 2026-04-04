@@ -54,7 +54,7 @@ export default function ProfilePage() {
             <main className="px-6 py-6">
                 {/* Profile Header */}
                 <div className="card text-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div className="w-20 h-20 bg-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
                         <User className="w-10 h-10 text-white" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-100 mb-1">{userData.username}</h2>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
+                            className="h-full bg-blue-400 transition-all duration-500"
                             style={{ width: `${rankProgress}%` }}
                         />
                     </div>

@@ -52,7 +52,7 @@ export default function Header() {
                     <div className="flex items-center gap-3 w-24 justify-end">
                         <button className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition active:scale-95">
                             <span className="material-icons-round text-white">notifications</span>
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1E3A8A]"></span>
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-blue-400"></span>
                         </button>
                         
                         {/* Profile Trigger */}

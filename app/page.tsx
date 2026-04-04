@@ -171,9 +171,9 @@ export default function LandingPage() {
                             <div className="text-[9px] font-black uppercase tracking-widest text-slate-600">Timing is Everything</div>
                         </motion.div>
 
-                        <motion.div variants={cardVariants} className="p-8 rounded-3xl bg-[#090F22] border border-slate-800 group md:hover:border-blue-500/50 transition-colors text-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center text-blue-400 mb-6 mx-auto md:group-hover:scale-110 md:group-hover:bg-blue-500/10 transition-all shadow-xl">
+                        <motion.div variants={cardVariants} className="p-8 rounded-3xl bg-[#090F22] border border-slate-800 group md:hover:border-blue-400/50 transition-colors text-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-blue-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center text-blue-400 mb-6 mx-auto md:group-hover:scale-110 md:group-hover:bg-blue-400/10 transition-all shadow-xl">
                                 <Award size={32} />
                             </div>
                             <h3 className="text-xl font-black uppercase tracking-tight mb-3">2. Win Artifacts</h3>

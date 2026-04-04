@@ -44,7 +44,7 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-blue-400 text-slate-950 shadow-lg shadow-blue-400/20 hover:shadow-blue-400/40 hover:-translate-y-0.5 active:translate-y-0 font-black uppercase tracking-widest;
   }
 
   .btn-secondary {

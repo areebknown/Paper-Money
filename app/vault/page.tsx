@@ -71,7 +71,7 @@ export default function VaultPage() {
                     <button
                         onClick={() => setActiveTab('contracts')}
                         className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'contracts'
-                                ? 'bg-cyan-500 text-white shadow-lg'
+                                ? 'bg-blue-400 text-slate-950 shadow-lg'
                                 : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
@@ -80,7 +80,7 @@ export default function VaultPage() {
                     <button
                         onClick={() => setActiveTab('stored')}
                         className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-all ${activeTab === 'stored'
-                                ? 'bg-cyan-500 text-white shadow-lg'
+                                ? 'bg-blue-400 text-slate-950 shadow-lg'
                                 : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
@@ -119,7 +119,7 @@ function ContractsTab({ contracts }: { contracts: Contract[] }) {
             {contracts.map((contract) => (
                 <div key={contract.id} className="card cursor-pointer hover:shadow-lg transition-all">
                     <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${contract.type === 'LOAN' ? 'bg-blue-500/10' :
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${contract.type === 'LOAN' ? 'bg-blue-400/10' :
                                 contract.type === 'PAWN' ? 'bg-purple-500/10' :
                                     'bg-green-500/10'
                             }`}>
@@ -151,7 +151,7 @@ function ContractsTab({ contracts }: { contracts: Contract[] }) {
 
                     {contract.status === 'ACTIVE' && (
                         <div className="flex gap-2 mt-4">
-                            <button className="flex-1 py-2 bg-cyan-500 text-white rounded-lg font-semibold text-sm hover:bg-cyan-600 transition">
+                            <button className="flex-1 py-2 bg-blue-400 text-slate-950 rounded-lg font-semibold text-sm hover:bg-blue-500 transition">
                                 Repay
                             </button>
                             <button className="flex-1 py-2 bg-gray-800 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-700 transition">

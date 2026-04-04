@@ -23,10 +23,10 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     const router = useRouter();
 
     const menuOptions = [
-        { label: 'Public Profile', path: `/profile/${user?.id}`, color: 'text-cyan-400' },
+        { label: 'Public Profile', path: `/profile/${user?.id}`, color: 'text-blue-400' },
         { label: 'Edit Profile', path: '/profile/edit', color: 'text-blue-400' },
         { label: 'Rank Rewards', path: '/rank', color: 'text-[#FBBF24]' },
-        { label: 'Friends', path: '/friends', color: 'text-indigo-400' },
+        { label: 'Friends', path: '/friends', color: 'text-blue-400' },
         { label: 'Settings', path: '/settings', color: 'text-slate-400' },
         { label: 'Switch Account', path: '/api/auth/switch', color: 'text-emerald-400' },
     ];

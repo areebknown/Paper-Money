@@ -40,7 +40,7 @@ export default function TermsPage() {
     return (
         <div className="min-h-screen bg-[#020617] text-slate-300 selection:bg-yellow-500/30 overflow-x-hidden">
             <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-900/5 blur-[120px] rounded-full" />
             </div>
 
@@ -93,7 +93,7 @@ export default function TermsPage() {
                         </ul>
                     </Section>
 
-                    <Section icon={<UserX size={20} className="text-blue-400" />} color="bg-blue-500/10" title="2. Eligibility & Account Registration">
+                    <Section icon={<UserX size={20} className="text-blue-400" />} color="bg-blue-400/10" title="2. Eligibility & Account Registration">
                         <p>To register an account on Bid Wars, users must meet the following requirements:</p>
                         <ul className="list-disc pl-5 space-y-2 marker:text-blue-400">
                             <li>You must be at least 13 years of age. Users under 18 are advised to obtain parental or guardian consent prior to registration.</li>
