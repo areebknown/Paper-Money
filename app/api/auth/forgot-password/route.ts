@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { sendMessage } from '@/lib/telegram';
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
@@ -73,8 +74,49 @@ function buildResetEmailHtml(resetUrl: string, username: string) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email } = body;
+        const { email, telegramUsername } = body;
 
+        // ── TELEGRAM reset path (Main Accounts) ──────────────────────────────────
+        if (telegramUsername && !email) {
+            const user = await prisma.user.findUnique({
+                where: { username: (telegramUsername as string).toLowerCase() },
+                select: { id: true, username: true, telegramId: true, isMainAccount: true },
+            });
+
+            if (!user || !user.isMainAccount) {
+                return NextResponse.json(
+                    { error: 'No Main Account found with that username.' },
+                    { status: 404 }
+                );
+            }
+
+            if (!user.telegramId) {
+                return NextResponse.json(
+                    { error: 'This account has no linked Telegram. Try email recovery instead.' },
+                    { status: 400 }
+                );
+            }
+
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const resetTokenExpiry = new Date(Date.now() + 3_600_000); // 1 hour
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { resetToken, resetTokenExpiry },
+            });
+
+            const resetUrl = `https://bidwars.xyz/reset-password?token=${resetToken}`;
+
+            await sendMessage(
+                user.telegramId,
+                `🔑 <b>Bid Wars — Password Reset</b>\n\nA password reset was requested for <b>@${user.username}</b>.\n\nTap below to set a new password. This link is valid for <b>1 hour</b>.\n\n<i>If you didn't request this, ignore this message — your account is safe.</i>`,
+                [{ text: '🔑  Reset My Password  →', url: resetUrl }]
+            );
+
+            return NextResponse.json({ success: true, message: 'Reset link sent to your Telegram.' });
+        }
+
+        // ── EMAIL reset path (Finance Accounts) ──────────────────────────────────
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
