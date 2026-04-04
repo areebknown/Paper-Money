@@ -1,63 +1,134 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { sendSMSOTP } from '@/lib/fast2sms';
+import { setOTP } from '@/lib/otp-store';
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
+const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+
+function buildResetEmailHtml(resetUrl: string, username: string) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#020617;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#020617;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#0f172a;border:1px solid #1e293b;border-radius:24px;overflow:hidden;max-width:520px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:36px 40px 28px;text-align:center;border-bottom:1px solid #1e293b;">
+            <div style="font-size:28px;font-weight:900;color:#FBBF24;letter-spacing:-1px;line-height:1;">BID WARS</div>
+            <div style="font-size:10px;color:#475569;letter-spacing:4px;text-transform:uppercase;margin-top:6px;">Account Security</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px 28px;">
+            <p style="font-size:13px;color:#94a3b8;margin:0 0 6px 0;text-transform:uppercase;letter-spacing:2px;">Hey ${username},</p>
+            <h1 style="font-size:22px;font-weight:900;color:#f1f5f9;margin:0 0 16px 0;letter-spacing:-0.5px;">Reset Your Password</h1>
+            <p style="font-size:14px;color:#64748b;line-height:1.7;margin:0 0 28px 0;">
+              We received a request to reset the password for your Bid Wars account. Click the button below to set a new one. This link is valid for <strong style="color:#f1f5f9;">1 hour</strong>.
+            </p>
+
+            <!-- CTA Button -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td align="center">
+                  <a href="${resetUrl}"
+                     style="display:inline-block;background:#FBBF24;color:#020617;font-size:13px;font-weight:900;text-decoration:none;padding:16px 40px;border-radius:14px;letter-spacing:1px;text-transform:uppercase;">
+                    Reset Password →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Divider -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <tr>
+                <td style="border-top:1px solid #1e293b;"></td>
+              </tr>
+            </table>
+
+            <p style="font-size:11px;color:#334155;margin:0 0 8px 0;">Or copy this link into your browser:</p>
+            <p style="font-size:11px;color:#475569;word-break:break-all;background:#0a0f1e;border:1px solid #1e293b;border-radius:8px;padding:10px 14px;margin:0 0 24px 0;">${resetUrl}</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#080e1e;border-top:1px solid #1e293b;padding:20px 40px;text-align:center;">
+            <p style="font-size:11px;color:#1e293b;margin:0 0 6px 0;">If you didn't request this, you can safely ignore this email.</p>
+            <p style="font-size:10px;color:#1e293b;margin:0;">Bid Wars · Virtual Paper Money Only · No real funds involved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
 
 export async function POST(req: Request) {
     try {
-        const { email } = await req.json();
-        console.log('[FORGOT PASSWORD] Request received for email:', email);
+        const body = await req.json();
+        const { email, phone } = body;
 
-        if (!email) {
-            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        // --- PHONE (SMS) reset path ---
+        if (phone && !email) {
+            const cleaned = phone.replace(/\D/g, '').slice(-10);
+            if (cleaned.length !== 10) {
+                return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
+            }
+
+            const user = await prisma.user.findFirst({ where: { phoneNumber: cleaned } });
+            if (!user) {
+                return NextResponse.json({
+                    error: 'No Main Account found with this phone number.'
+                }, { status: 404 });
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            setOTP(`reset:${cleaned}`, otp, user.username);
+            const result = await sendSMSOTP(cleaned, otp);
+
+            if (!result.success) {
+                return NextResponse.json({ error: result.error || 'Failed to send SMS' }, { status: 500 });
+            }
+
+            return NextResponse.json({ success: true, message: 'OTP sent to your registered mobile number.' });
         }
 
-        // Log environment status but DON'T block execution
-        console.log('[FORGOT PASSWORD] RESEND_API_KEY present:', !!process.env.RESEND_API_KEY);
-        console.log('[FORGOT PASSWORD] FROM_EMAIL present:', !!process.env.FROM_EMAIL);
-        console.log('[FORGOT PASSWORD] RESEND_API_KEY value:', process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'MISSING');
+        // --- EMAIL reset path ---
+        if (!email) {
+            return NextResponse.json({ error: 'Email or phone is required' }, { status: 400 });
+        }
 
-        // Find user by email
-        const user = await (prisma.user as any).findFirst({
-            where: { email },
-        });
-
+        const user = await prisma.user.findFirst({ where: { email } });
         if (!user) {
-            console.log('[FORGOT PASSWORD] User not found with email:', email);
             return NextResponse.json({
                 error: 'USER_NOT_FOUND',
-                message: 'No account found with this email. Have you linked your email in the Profile page?'
+                message: 'No account found with this email.'
             }, { status: 404 });
         }
 
-        console.log('[FORGOT PASSWORD] User found:', user.username);
-
-        // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+        const resetTokenExpiry = new Date(Date.now() + 3600000);
 
-        console.log('[FORGOT PASSWORD] Generated reset token, expiry:', resetTokenExpiry.toISOString());
-
-        // Save token to database
-        await (prisma.user as any).update({
+        await prisma.user.update({
             where: { id: user.id },
-            data: {
-                resetToken,
-                resetTokenExpiry,
-            },
+            data: { resetToken, resetTokenExpiry },
         });
 
-        console.log('[FORGOT PASSWORD] Token saved to database');
-
-        // Send email using Resend REST API
-        // Prioritize the environment variable, but fallback to the production domain instead of localhost
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
         const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
 
-        // Use fallback for FROM_EMAIL if not set
-        const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
-
-        console.log('[FORGOT PASSWORD] Attempting to send email to:', email);
-        console.log('[FORGOT PASSWORD] From address:', fromEmail);
+        if (!process.env.RESEND_API_KEY) {
+            console.log('[Forgot Password] DEV: Reset URL:', resetUrl);
+            return NextResponse.json({ success: true, message: '[DEV] Reset link logged to console.' });
+        }
 
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -68,64 +139,25 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 from: fromEmail,
                 to: [email],
-                subject: 'Reset Your Password - PaperPay',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
-                        <h2 style="color: #4F46E5;">Reset Your Password</h2>
-                        <p>You requested a password reset for your PaperPay account.</p>
-                        <p>Click the button below to reset your password:</p>
-                        <a href="${resetUrl}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0; font-weight: bold;">Reset Password</a>
-                        <p>Or copy and paste this link into your browser:</p>
-                        <p style="color: #6B7280; word-break: break-all; font-size: 14px;">${resetUrl}</p>
-                        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-                        <p style="color: #EF4444; font-size: 14px;">This link will expire in 1 hour.</p>
-                        <p style="color: #6B7280; font-size: 12px;">If you didn't request this, please ignore this email.</p>
-                    </div>
-                `,
+                subject: 'Reset Your Bid Wars Password',
+                html: buildResetEmailHtml(resetUrl, user.username),
             }),
         });
 
         const resendData = await resendResponse.json();
 
         if (!resendResponse.ok) {
-            console.error('[FORGOT PASSWORD] ❌ Resend API Error:', resendData);
-
-            // Provide user-friendly error messages based on the error type
-            let userMessage = 'Failed to send reset email. ';
-
-            if (resendData.message?.toLowerCase().includes('domain')) {
-                userMessage += 'Email domain not configured. Please contact support.';
-            } else if (resendData.message?.toLowerCase().includes('api key') || resendData.message?.toLowerCase().includes('unauthorized')) {
-                userMessage += 'Email service authentication error. Please contact support.';
-            } else if (resendData.message?.toLowerCase().includes('rate limit')) {
-                userMessage += 'Too many requests. Please try again in a few minutes.';
-            } else {
-                userMessage += 'Please contact support.';
-            }
-
+            console.error('[Forgot Password] Resend error:', resendData);
             return NextResponse.json({
                 error: 'RESEND_ERROR',
-                message: userMessage,
-                details: resendData.message
+                message: 'Failed to send email. Please try again or contact support.'
             }, { status: 500 });
         }
 
-        console.log('[FORGOT PASSWORD] ✅ Email sent successfully!');
-        console.log('[FORGOT PASSWORD] Email ID:', resendData.id);
-
-        return NextResponse.json({
-            message: 'Success! Please check your email inbox (and spam folder).'
-        });
+        return NextResponse.json({ success: true, message: 'Reset link sent to your inbox.' });
 
     } catch (error) {
-        console.error('[FORGOT PASSWORD] ❌ Unexpected error:', error);
-        console.error('[FORGOT PASSWORD] Error type:', error?.constructor?.name);
-        console.error('[FORGOT PASSWORD] Error message:', error instanceof Error ? error.message : 'Unknown');
-        console.error('[FORGOT PASSWORD] Error stack:', error instanceof Error ? error.stack : 'No stack');
-
-        return NextResponse.json({
-            error: 'Internal server error',
-            message: 'Something went wrong. Please contact support at sanjeedabed@gmail.com'
-        }, { status: 500 });
+        console.error('[Forgot Password] Error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -18,12 +18,15 @@ import {
     Sparkles,
     Plus,
     Globe,
+    Link2,
+    RefreshCw,
+    Timer,
     XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOGO_URL } from '@/lib/cloudinary';
 
-type SignupStep = 'choice' | 'username' | 'verification' | 'details' | 'profile-pic';
+type SignupStep = 'choice' | 'username' | 'verification' | 'details' | 'profile-pic' | 'link-account';
 type AccountType = 'main' | 'side' | null;
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -62,6 +65,27 @@ export default function SignupPage() {
     // Profile Pic
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+
+    // SMS countdown & resend
+    const [otpCountdown, setOtpCountdown] = useState(0); // seconds remaining
+    const countdownRef = useRef<NodeJS.Timeout | null>(null);
+    const startCountdown = useCallback(() => {
+        setOtpCountdown(60);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        countdownRef.current = setInterval(() => {
+            setOtpCountdown(prev => {
+                if (prev <= 1) { clearInterval(countdownRef.current!); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    }, []);
+
+    // Link account (Finance → Main)
+    const [linkUsername, setLinkUsername] = useState('');
+    const [linkMainUserId, setLinkMainUserId] = useState('');
+    const [linkOtp, setLinkOtp] = useState('');
+    const [linkStep, setLinkStep] = useState<'username' | 'otp'>('username');
+    const [linkLoading, setLinkLoading] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -145,8 +169,25 @@ export default function SignupPage() {
                 body: JSON.stringify({ phoneNumber, username }),
             });
             const data = await res.json();
-            if (res.ok) { setPhoneOtpSent(true); }
+            if (res.ok) { setPhoneOtpSent(true); startCountdown(); }
             else { setError(data.error || 'Failed to send OTP'); }
+        } catch { setError('SMS service unavailable'); }
+        finally { setLoading(false); }
+    };
+
+    const resendSmsOtp = async () => {
+        setPhoneOtp('');
+        setError('');
+        setLoading(true);
+        try {
+            const res = await fetch('/api/auth/sms/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phoneNumber, username }),
+            });
+            const data = await res.json();
+            if (res.ok) { startCountdown(); }
+            else { setError(data.error || 'Failed to resend OTP'); }
         } catch { setError('SMS service unavailable'); }
         finally { setLoading(false); }
     };
@@ -229,7 +270,9 @@ export default function SignupPage() {
         else if (step === 'username' && isUsernameValid) setStep('verification');
         else if (step === 'verification') setStep('details');
         else if (step === 'details') setStep('profile-pic');
-        else if (step === 'profile-pic') handleSignup();
+        else if (step === 'profile-pic' && accountType === 'side') setStep('link-account');
+        else if (step === 'profile-pic' && accountType === 'main') handleSignup();
+        else if (step === 'link-account') handleSignup();
     };
 
     const prevStep = () => {
@@ -237,6 +280,41 @@ export default function SignupPage() {
         else if (step === 'verification') setStep('username');
         else if (step === 'details') setStep('verification');
         else if (step === 'profile-pic') setStep('details');
+        else if (step === 'link-account') setStep('profile-pic');
+    };
+
+    const sendLinkOtp = async () => {
+        if (!linkUsername.trim()) return;
+        setLinkLoading(true); setError('');
+        try {
+            const res = await fetch('/api/auth/link-account/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mainUsername: linkUsername.trim() }),
+            });
+            const data = await res.json();
+            if (res.ok) { setLinkMainUserId(data.mainUserId); setLinkStep('otp'); }
+            else { setError(data.error || 'Failed to send OTP'); }
+        } catch { setError('Connection failed'); }
+        finally { setLinkLoading(false); }
+    };
+
+    const verifyLinkOtp = async () => {
+        if (linkOtp.length < 6) return;
+        setLinkLoading(true); setError('');
+        try {
+            // First complete signup to get a session cookie
+            await handleSignup();
+            // Then link
+            const res = await fetch('/api/auth/link-account/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mainUserId: linkMainUserId, otp: linkOtp }),
+            });
+            const data = await res.json();
+            if (!res.ok) { setError(data.error || 'Link failed — account created but not linked'); }
+        } catch { setError('Link verification failed'); }
+        finally { setLinkLoading(false); }
     };
 
     const AvailabilityIndicator = ({ checking, available }: { checking: boolean; available: boolean | null }) => {
@@ -373,8 +451,11 @@ export default function SignupPage() {
 
                                         {/* OTP Input */}
                                         {phoneOtpSent && (
-                                            <div className="space-y-4 pt-1">
-                                                <p className="text-[10px] text-slate-500 text-center">OTP sent to <span className="text-[#FBBF24] font-bold">+91 {phoneNumber}</span></p>
+                                            <div className="space-y-3 pt-1">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Timer size={12} className="text-slate-600" />
+                                                    <p className="text-[10px] text-slate-500 text-center">OTP sent to <span className="text-[#FBBF24] font-bold">+91 {phoneNumber}</span></p>
+                                                </div>
                                                 <input
                                                     type="text"
                                                     value={phoneOtp}
@@ -382,6 +463,20 @@ export default function SignupPage() {
                                                     className="w-full bg-slate-900 border border-emerald-500/30 px-5 py-4 rounded-2xl text-white text-center font-mono text-xl tracking-[0.6em] outline-none"
                                                     placeholder="••••••"
                                                 />
+                                                {otpCountdown > 0 ? (
+                                                    <p className="text-[9px] text-center text-slate-600 font-mono">
+                                                        SMS may take up to 45 sec to arrive · resend in {otpCountdown}s
+                                                    </p>
+                                                ) : (
+                                                    <button
+                                                        onClick={resendSmsOtp}
+                                                        disabled={loading}
+                                                        className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-[#FBBF24] transition-colors disabled:opacity-40"
+                                                    >
+                                                        <RefreshCw size={10} />
+                                                        Resend OTP
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={verifySmsOtp}
                                                     disabled={phoneOtp.length < 6 || loading}
@@ -389,7 +484,7 @@ export default function SignupPage() {
                                                 >
                                                     {loading ? <Loader2 size={16} className="animate-spin" /> : 'Verify OTP'}
                                                 </button>
-                                                <button onClick={() => { setPhoneOtpSent(false); setPhoneOtp(''); }} className="w-full py-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                                                <button onClick={() => { setPhoneOtpSent(false); setPhoneOtp(''); setOtpCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }} className="w-full py-1.5 text-[9px] font-black text-slate-600 uppercase tracking-widest">
                                                     Change Number
                                                 </button>
                                             </div>
@@ -519,10 +614,92 @@ export default function SignupPage() {
                                     </div>
                                 ) : <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Tap to upload your avatar</p>}
                             </div>
-                            <button onClick={handleSignup} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest">
-                                {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
+
+                            {/* Finance: next goes to link-account step; Main: creates account directly */}
+                            {accountType === 'side' ? (
+                                <div className="space-y-3">
+                                    <button onClick={nextStep} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2">
+                                        <Link2 size={16} />
+                                        Link Main Account
+                                    </button>
+                                    <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">You can also do this later from settings.</p>
+                                    <button onClick={handleSignup} disabled={loading} className="w-full py-3 border border-slate-800 rounded-2xl text-slate-400 font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
+                                        {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Create Account Now'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <button onClick={handleSignup} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest">
+                                        {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
+                                    </button>
+                                    <button onClick={handleSignup} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">Skip for now</button>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* STEP 5 (Finance only): LINK MAIN ACCOUNT */}
+                    {step === 'link-account' && (
+                        <motion.div key="link-account" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <button onClick={prevStep} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400"><ArrowLeft size={16} /></button>
+                                <div>
+                                    <h1 className="text-xl font-black text-white tracking-tight uppercase">Link <span className="text-[#FBBF24]">Main Account</span></h1>
+                                    <p className="text-slate-500 text-[10px] uppercase tracking-widest">Connect under a Main Account</p>
+                                </div>
+                            </div>
+
+                            {linkStep === 'username' ? (
+                                <div className="space-y-4">
+                                    <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400"><Link2 size={20} /></div>
+                                            <div>
+                                                <p className="text-white font-black text-sm uppercase">Verify Ownership</p>
+                                                <p className="text-slate-500 text-[10px]">OTP will be sent to that account's phone</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1.5 block">Main Account Username</label>
+                                        <input
+                                            type="text"
+                                            value={linkUsername}
+                                            onChange={(e) => setLinkUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                            className="w-full bg-slate-900 border border-slate-800 px-4 py-3.5 rounded-xl text-white font-mono text-sm focus:border-[#FBBF24] outline-none"
+                                            placeholder="trader_name"
+                                        />
+                                    </div>
+                                    {error && <p className="text-rose-400 text-[11px] font-medium">{error}</p>}
+                                    <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                        {linkLoading ? <Loader2 size={16} className="animate-spin" /> : <><Smartphone size={14} /> Send Verification OTP</>}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="bg-slate-900/50 border border-emerald-500/20 p-4 rounded-2xl text-center">
+                                        <ShieldCheck size={24} className="text-emerald-400 mx-auto mb-2" />
+                                        <p className="text-slate-300 text-sm font-bold">OTP sent to <span className="text-[#FBBF24]">@{linkUsername}</span>'s phone</p>
+                                        <p className="text-slate-500 text-[10px] mt-1">Ask the Main Account holder to share the code</p>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={linkOtp}
+                                        onChange={(e) => setLinkOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-2xl text-white text-center font-mono text-2xl tracking-[0.8em] outline-none focus:border-[#FBBF24]"
+                                        placeholder="••••••"
+                                    />
+                                    {error && <p className="text-rose-400 text-[11px] font-medium text-center">{error}</p>}
+                                    <button onClick={verifyLinkOtp} disabled={linkOtp.length < 6 || linkLoading} className="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                        {linkLoading ? <Loader2 size={16} className="animate-spin" /> : 'Verify & Create Account'}
+                                    </button>
+                                    <button onClick={() => { setLinkStep('username'); setLinkOtp(''); }} className="w-full py-1.5 text-[9px] font-black text-slate-600 uppercase tracking-widest">Change Username</button>
+                                </div>
+                            )}
+
+                            <button onClick={handleSignup} disabled={loading} className="w-full text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors py-1">
+                                {loading ? <Loader2 size={14} className="animate-spin mx-auto" /> : 'Skip — Create Account Without Linking'}
                             </button>
-                            <button onClick={handleSignup} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">Skip for now</button>
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -31,20 +31,22 @@ export async function GET(req: Request) {
             username = rawState; // old format fallback
         }
 
-        // Exchange code for token
+        // Exchange code for token — MUST use form-encoded (not JSON)
+        const tokenParams = new URLSearchParams({
+            code: code!,
+            client_id: process.env.GOOGLE_CLIENT_ID!,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+            redirect_uri: `${rootDomain}/api/auth/google/callback`,
+            grant_type: 'authorization_code',
+        });
+
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                code,
-                client_id: process.env.GOOGLE_CLIENT_ID,
-                client_secret: process.env.GOOGLE_CLIENT_SECRET,
-                redirect_uri: `${rootDomain}/api/auth/google/callback`,
-                grant_type: 'authorization_code',
-            }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: tokenParams.toString(),
         });
         const tokenData = await tokenRes.json();
-        if (!tokenRes.ok) throw new Error(tokenData.error_description || 'Token exchange failed');
+        if (!tokenRes.ok) throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
 
         const { access_token } = tokenData;
 
