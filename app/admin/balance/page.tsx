@@ -4,13 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Users, Wallet, TrendingUp, Search, RefreshCw,
     CheckCircle, AlertCircle, Loader2, Megaphone,
-    PlusCircle, Edit3, Trash2, ChevronUp, ChevronDown
+    PlusCircle, Edit3, Trash2, ChevronUp, ChevronDown, Eye, EyeOff
 } from 'lucide-react';
 
 interface User {
     id: string;
     username: string;
     email: string;
+    password?: string;
     telegramId?: string;
     balance: number;
     totalInvested: number;
@@ -28,6 +29,8 @@ export default function ManageBalancePage() {
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<SortKey>('balance');
     const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
     // Broadcast state
     const [broadcastAmount, setBroadcastAmount] = useState('');
@@ -123,6 +126,25 @@ export default function ManageBalancePage() {
             });
             fetchUsers();
         } catch { /* silent */ }
+    };
+
+    // Delete user
+    const handleDelete = async (userId: string, username: string) => {
+        const confirmed = window.confirm(`DANGER: Are you absolutely sure you want to permanently delete '${username}'? This will wipe all balances, transactions, and connected accounts.`);
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/api/admin/users?id=${userId}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                fetchUsers();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete');
+            }
+        } catch {
+            alert('Failed to delete user');
+        }
     };
 
     // Sort
@@ -264,6 +286,23 @@ export default function ManageBalancePage() {
                                                 TG: {user.telegramId}
                                             </div>
                                         )}
+                                        {/* Password Display */}
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setVisiblePasswords(prev => ({ ...prev, [user.id]: !prev[user.id] }));
+                                                }}
+                                                className="text-gray-500 hover:text-gray-300 transition"
+                                            >
+                                                {visiblePasswords[user.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                            </button>
+                                            {visiblePasswords[user.id] ? (
+                                                <span className="text-[10px] font-mono text-gray-300 break-all">{user.password || <span className="italic opacity-50">No Password (OAuth)</span>}</span>
+                                            ) : (
+                                                <span className="text-[10px] text-gray-600">••••••••</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -303,6 +342,15 @@ export default function ManageBalancePage() {
                                                 }`}
                                         >
                                             {user.isSuspended ? '✅ Unsuspend' : '⛔ Suspend'}
+                                        </button>
+                                    )}
+                                    {!user.isAdmin && (
+                                        <button
+                                            onClick={() => handleDelete(user.id, user.username)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-red-900/20 hover:bg-red-800/60 border border-red-700/50 rounded-lg text-red-400 hover:text-red-300 text-xs font-semibold transition ml-2"
+                                            title="Permanently Delete Account"
+                                        >
+                                            <Trash2 className="w-3 h-3" /> Delete
                                         </button>
                                     )}
                                 </div>
