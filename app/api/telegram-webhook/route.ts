@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import { verifySession, getSession } from '@/lib/telegram-session';
 import { sendMessage } from '@/lib/telegram';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
+// Resolve the production app URL — strip any accidental path suffix (e.g. /login)
+function getAppUrl(): string {
+    const raw =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+        'https://bidwars.xyz';
+    // Keep only the origin (scheme + host), discard any path
+    try { return new URL(raw).origin; } catch { return 'https://bidwars.xyz'; }
+}
 
 export async function POST(req: Request) {
     try {
@@ -60,7 +68,7 @@ export async function POST(req: Request) {
         verifySession(sessionId, String(chatId));
 
         // Build the return URL (callback page)
-        const returnUrl = `${APP_URL}/auth/telegram-callback?s=${sessionId}`;
+        const returnUrl = `${getAppUrl()}/auth/telegram-callback?s=${sessionId}`;
 
         // Send confirmation + return button
         await sendMessage(
