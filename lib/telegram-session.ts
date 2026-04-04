@@ -8,13 +8,18 @@
  */
 
 export type TelegramSession = {
-    status: 'pending' | 'verified';
+    status: 'pending' | 'pending_contact' | 'verified';
     telegramId?: string;
+    phoneNumber?: string;
+    chatId?: string;     // chatId of the user who opened the bot
     username: string;
     createdAt: number;
 };
 
 const sessionStore = new Map<string, TelegramSession>();
+
+// Maps chatId → sessionId for the pending_contact step
+const contactStore = new Map<string, string>();
 
 const SESSION_TTL = 10 * 60 * 1000; // 10 minutes
 
@@ -38,11 +43,29 @@ export function createSession(sessionId: string, username: string): void {
     });
 }
 
-export function verifySession(sessionId: string, telegramId: string): boolean {
+/** Called when the user opens the bot — locks the session to that chatId and requests contact */
+export function awaitContact(sessionId: string, chatId: string): boolean {
+    const session = sessionStore.get(sessionId);
+    if (!session || session.status !== 'pending') return false;
+    session.status = 'pending_contact';
+    session.chatId = chatId;
+    contactStore.set(chatId, sessionId);
+    return true;
+}
+
+/** Look up which sessionId a chatId is pending for */
+export function getSessionIdByChatId(chatId: string): string | null {
+    return contactStore.get(chatId) ?? null;
+}
+
+export function verifySession(sessionId: string, telegramId: string, phoneNumber: string): boolean {
     const session = sessionStore.get(sessionId);
     if (!session || session.status === 'verified') return false;
     session.status = 'verified';
     session.telegramId = telegramId;
+    session.phoneNumber = phoneNumber;
+    // Clean up the contact store entry
+    if (session.chatId) contactStore.delete(session.chatId);
     return true;
 }
 

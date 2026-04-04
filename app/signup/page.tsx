@@ -54,6 +54,7 @@ export default function SignupPage() {
     const [telegramPolling, setTelegramPolling] = useState(false);
     const [telegramVerified, setTelegramVerified] = useState(false);
     const [telegramId, setTelegramId] = useState('');
+    const [telegramPhoneNumber, setTelegramPhoneNumber] = useState('');
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
     // Finance Account — Email
@@ -94,11 +95,12 @@ export default function SignupPage() {
         const stored = sessionStorage.getItem('tg_auth');
         if (!stored) return;
         try {
-            const { sessionId, telegramId: tgId, username: storedUsername } = JSON.parse(stored);
+            const { sessionId, telegramId: tgId, phoneNumber: tgPhone, username: storedUsername } = JSON.parse(stored);
             sessionStorage.removeItem('tg_auth');
             if (storedUsername) setUsername(storedUsername);
             setTelegramSessionId(sessionId);
             setTelegramId(tgId);
+            if (tgPhone) setTelegramPhoneNumber(tgPhone);
             setTelegramVerified(true);
             setIsUsernameValid(true);
             setAccountType('main');
@@ -174,6 +176,7 @@ export default function SignupPage() {
                     setTelegramPolling(false);
                     setTelegramVerified(true);
                     setTelegramId(data.telegramId);
+                    if (data.phoneNumber) setTelegramPhoneNumber(data.phoneNumber);
                     setStep('details');
                 } else if (data.status === 'expired') {
                     clearInterval(pollingRef.current!);
@@ -277,6 +280,7 @@ export default function SignupPage() {
                     password,
                     isMainAccount: accountType === 'main',
                     telegramId: accountType === 'main' ? telegramId : null,
+                    phoneNumber: accountType === 'main' ? telegramPhoneNumber : null,
                     email: accountType === 'side' ? email : null,
                     realName: accountType === 'main' ? realName : null,
                     profileImage,

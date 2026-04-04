@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
         status: session.status,
         telegramId: session.status === 'verified' ? session.telegramId : undefined,
+        phoneNumber: session.status === 'verified' ? session.phoneNumber : undefined,
         username: session.status === 'verified' ? session.username : undefined,
     });
 }

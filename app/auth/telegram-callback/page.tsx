@@ -35,6 +35,7 @@ function CallbackContent() {
                         JSON.stringify({
                             sessionId,
                             telegramId: data.telegramId,
+                            phoneNumber: data.phoneNumber || '',
                             username: data.username || '',
                         })
                     );

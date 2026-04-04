@@ -14,7 +14,8 @@ interface InlineButton {
 export async function sendMessage(
     chatId: string | number,
     text: string,
-    inlineButtons?: InlineButton[]
+    inlineButtons?: InlineButton[],
+    replyMarkup?: Record<string, unknown>
 ): Promise<void> {
     const body: Record<string, unknown> = {
         chat_id: chatId,
@@ -26,6 +27,8 @@ export async function sendMessage(
         body.reply_markup = {
             inline_keyboard: [inlineButtons.map((btn) => ({ text: btn.text, url: btn.url }))],
         };
+    } else if (replyMarkup) {
+        body.reply_markup = replyMarkup;
     }
 
     await fetch(`${BASE}/sendMessage`, {
