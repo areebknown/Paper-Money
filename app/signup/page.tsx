@@ -78,6 +78,8 @@ export default function SignupPage() {
     const [linkOtp, setLinkOtp] = useState('');
     const [linkStep, setLinkStep] = useState<'username' | 'otp'>('username');
     const [linkLoading, setLinkLoading] = useState(false);
+    const [linkUsernameCheck, setLinkUsernameCheck] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+    const [linkUsernameHint, setLinkUsernameHint] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -127,6 +129,23 @@ export default function SignupPage() {
         }, 500);
         return () => clearTimeout(timer);
     }, [username]);
+
+    // ─── Link account username check ────────────────────────────────────────────
+    useEffect(() => {
+        if (linkUsername.trim().length < 3) { setLinkUsernameCheck('idle'); setLinkUsernameHint(''); return; }
+        setLinkUsernameCheck('checking');
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/user/check-main-account?username=${encodeURIComponent(linkUsername.trim())}`);
+                const data = await res.json();
+                if (!data.exists) { setLinkUsernameCheck('invalid'); setLinkUsernameHint('Not found'); }
+                else if (!data.isMain) { setLinkUsernameCheck('invalid'); setLinkUsernameHint('Not a Main Account'); }
+                else if (!data.hasTelegram) { setLinkUsernameCheck('invalid'); setLinkUsernameHint('No Telegram linked'); }
+                else { setLinkUsernameCheck('valid'); setLinkUsernameHint('Valid'); }
+            } catch { setLinkUsernameCheck('idle'); }
+        }, 600);
+        return () => clearTimeout(timer);
+    }, [linkUsername]);
 
     // ─── Email check ────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -676,22 +695,33 @@ export default function SignupPage() {
                                             <div className="w-10 h-10 bg-blue-400/10 rounded-xl flex items-center justify-center text-blue-400"><Link2 size={20} /></div>
                                             <div>
                                                 <p className="text-white font-black text-sm uppercase">Verify Ownership</p>
-                                                <p className="text-slate-500 text-[10px]">OTP will be sent to that account's phone</p>
+                                                <p className="text-slate-500 text-[10px]">OTP will be sent to that account via Telegram</p>
                                             </div>
                                         </div>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1.5 block">Main Account Username</label>
-                                        <input
-                                            type="text"
-                                            value={linkUsername}
-                                            onChange={(e) => setLinkUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                            className="w-full bg-slate-900 border border-slate-800 px-4 py-3.5 rounded-xl text-white font-mono text-sm focus:border-[#FBBF24] outline-none"
-                                            placeholder="trader_name"
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={linkUsername}
+                                                onChange={(e) => { setLinkUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); }}
+                                                className={`w-full bg-slate-900 border px-4 py-3.5 rounded-xl text-white font-mono text-sm outline-none transition-all pr-24 ${
+                                                    linkUsernameCheck === 'valid' ? 'border-emerald-500/50 focus:border-emerald-500' :
+                                                    linkUsernameCheck === 'invalid' ? 'border-rose-500/30 focus:border-rose-500/50' :
+                                                    'border-slate-800 focus:border-[#FBBF24]'
+                                                }`}
+                                                placeholder="trader_name"
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                {linkUsernameCheck === 'checking' && <Loader2 size={14} className="animate-spin text-slate-500" />}
+                                                {linkUsernameCheck === 'valid' && <><CheckCircle2 size={14} className="text-emerald-500" /><span className="text-[9px] text-emerald-500 font-bold uppercase">{linkUsernameHint}</span></>}
+                                                {linkUsernameCheck === 'invalid' && <><XCircle size={14} className="text-rose-500" /><span className="text-[9px] text-rose-500 font-bold uppercase leading-tight text-right max-w-[70px]">{linkUsernameHint}</span></>}
+                                            </div>
+                                        </div>
                                     </div>
                                     {error && <p className="text-rose-400 text-[11px] font-medium">{error}</p>}
-                                    <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                    <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading || linkUsernameCheck !== 'valid'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
                                         {linkLoading ? <Loader2 size={16} className="animate-spin" /> : 'Send Verification OTP'}
                                     </button>
                                 </div>

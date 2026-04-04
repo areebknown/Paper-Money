@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifySession, getSession } from '@/lib/telegram-session';
 import { sendMessage } from '@/lib/telegram';
+import { prisma } from '@/lib/db';
 
 // Production URL — hardcoded so env-var misconfig can never corrupt bot links
 const APP_URL = 'https://bidwars.xyz';
@@ -55,6 +56,20 @@ export async function POST(req: Request) {
         // Already verified
         if (session.status === 'verified') {
             await sendMessage(chatId, '✅ This session has already been verified!');
+            return NextResponse.json({ ok: true });
+        }
+
+        // ── DUPLICATE CHECK: reject if this Telegram account is already registered ──
+        const existingUser = await prisma.user.findUnique({
+            where: { telegramId: String(chatId) },
+            select: { username: true },
+        });
+
+        if (existingUser) {
+            await sendMessage(
+                chatId,
+                `⚠️ <b>Telegram Already Registered</b>\n\nThis Telegram account is already linked to the Bid Wars Main Account <b>@${existingUser.username}</b>.\n\nEach Telegram account can only be used for <b>one Main Account</b>.\n\n<i>If you believe this is an error, please contact support.</i>`
+            );
             return NextResponse.json({ ok: true });
         }
 
