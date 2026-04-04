@@ -88,7 +88,7 @@ export default function LoginPage() {
                         <ShieldCheck size={60} className="text-white" />
                     </div>
 
-                    <div className="mb-4 text-left border-b border-white/5 pb-3">
+                    <div className="mb-4 text-center border-b border-white/5 pb-3">
                         <h1 className="text-lg font-black text-white tracking-tight uppercase">Welcome <span className="text-[#FBBF24]">Trader</span></h1>
                         <p className="text-slate-500 text-[9px] uppercase tracking-widest mt-0.5">Resume your journey</p>
                     </div>
