@@ -173,7 +173,7 @@ export default function LoginPage() {
 
                     <div className="mt-3">
                         <Link
-                            href="/api/auth/google"
+                            href="/api/auth/google?mode=login"
                             className="w-full bg-white text-slate-950 border border-white py-2.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#FBBF24] hover:border-[#FBBF24] transition-all active:scale-[0.98]"
                         >
                             <img src="https://www.google.com/favicon.ico" className="w-3.5 h-3.5" />
@@ -187,6 +187,10 @@ export default function LoginPage() {
                     <br />
                     <Link href="/signup" className="text-[#FBBF24] font-black text-xs uppercase tracking-tight hover:underline transition-all inline-block mt-0.5">
                         Create Account
+                    </Link>
+                    <span className="text-slate-700 mx-2 text-xs">·</span>
+                    <Link href="/forgot-password" className="text-slate-500 font-black text-xs uppercase tracking-tight hover:text-slate-300 transition-all inline-block mt-0.5">
+                        Forgot Password
                     </Link>
 
                     <div className="mt-4 pt-4 border-t border-slate-900/50 space-y-1.5 opacity-40">

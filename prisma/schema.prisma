@@ -49,6 +49,11 @@ model User {
   
   // WebAuthn Biometrics
   authenticators       Authenticator[]
+
+  // Finance Account → Main Account link
+  parentAccountId String?
+  parentAccount   User?   @relation("FinanceToMain", fields: [parentAccountId], references: [id])
+  financeAccounts User[]  @relation("FinanceToMain")
 }
 
 enum AuctionStatus {

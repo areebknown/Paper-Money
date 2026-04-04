@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const username = searchParams.get('username') || '';
+    const mode = searchParams.get('mode') || 'login'; // 'login' | 'signup'
 
     const host = req.headers.get('host') || 'localhost:3000';
     const rootDomain = host.includes('localhost') 
@@ -16,6 +17,9 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Google Client ID not configured' }, { status: 500 });
     }
 
+    // Pass both username and mode through Google's state parameter
+    const state = JSON.stringify({ username, mode });
+
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const options = {
         redirect_uri: REDIRECT_URI,
@@ -27,10 +31,9 @@ export async function GET(req: Request) {
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email',
         ].join(' '),
-        state: username, // Pass our chosen username through Google's state parameter
+        state,
     };
 
     const qs = new URLSearchParams(options);
-
     return NextResponse.redirect(`${rootUrl}?${qs.toString()}`);
 }
