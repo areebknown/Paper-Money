@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
-import { sendSMSOTP } from '@/lib/fast2sms';
-import { setOTP } from '@/lib/otp-store';
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
@@ -75,36 +73,10 @@ function buildResetEmailHtml(resetUrl: string, username: string) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email, phone } = body;
+        const { email } = body;
 
-        // --- PHONE (SMS) reset path ---
-        if (phone && !email) {
-            const cleaned = phone.replace(/\D/g, '').slice(-10);
-            if (cleaned.length !== 10) {
-                return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
-            }
-
-            const user = await prisma.user.findFirst({ where: { phoneNumber: cleaned } });
-            if (!user) {
-                return NextResponse.json({
-                    error: 'No Main Account found with this phone number.'
-                }, { status: 404 });
-            }
-
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            setOTP(`reset:${cleaned}`, otp, user.username);
-            const result = await sendSMSOTP(cleaned, otp);
-
-            if (!result.success) {
-                return NextResponse.json({ error: result.error || 'Failed to send SMS' }, { status: 500 });
-            }
-
-            return NextResponse.json({ success: true, message: 'OTP sent to your registered mobile number.' });
-        }
-
-        // --- EMAIL reset path ---
         if (!email) {
-            return NextResponse.json({ error: 'Email or phone is required' }, { status: 400 });
+            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
         const user = await prisma.user.findFirst({ where: { email } });

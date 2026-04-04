@@ -1,5 +1,8 @@
 'use client';
 
+// This page reads search params at runtime — must not be statically prerendered
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';

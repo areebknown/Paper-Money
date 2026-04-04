@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { sendSMSOTP } from '@/lib/fast2sms';
 import { setOTP } from '@/lib/otp-store';
 import { prisma } from '@/lib/db';
+import { sendMessage } from '@/lib/telegram';
 
 /**
- * Sends an OTP to a Main Account's registered phone number.
+ * Sends a linking OTP to a Main Account holder via their Telegram.
  * Used during Finance Account → Main Account linking flow.
  */
 export async function POST(req: Request) {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         const mainUser = await prisma.user.findUnique({
             where: { username: mainUsername.toLowerCase() },
-            select: { id: true, isMainAccount: true, phoneNumber: true },
+            select: { id: true, isMainAccount: true, telegramId: true },
         });
 
         if (!mainUser) {
@@ -28,18 +28,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'That username is not a Main Account' }, { status: 400 });
         }
 
-        if (!mainUser.phoneNumber) {
-            return NextResponse.json({ error: 'Main account has no linked phone number' }, { status: 400 });
+        if (!mainUser.telegramId) {
+            return NextResponse.json(
+                { error: 'That Main Account has not completed Telegram verification. Ask them to re-verify.' },
+                { status: 400 }
+            );
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         setOTP(`link:${mainUser.id}`, otp);
 
-        const result = await sendSMSOTP(mainUser.phoneNumber, otp);
-
-        if (!result.success) {
-            return NextResponse.json({ error: result.error || 'Failed to send SMS' }, { status: 500 });
-        }
+        await sendMessage(
+            mainUser.telegramId,
+            `🔗 <b>Bid Wars — Account Linking Request</b>\n\nSomeone is trying to link a Finance Account to your Main Account (<b>${mainUsername}</b>).\n\n<b>Your verification code:</b>\n<code>${otp}</code>\n\n<i>Valid for 5 minutes. If this wasn't you, ignore this message.</i>`
+        );
 
         return NextResponse.json({ success: true, mainUserId: mainUser.id });
 
