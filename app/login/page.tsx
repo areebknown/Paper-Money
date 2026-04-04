@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import { LOGO_URL } from '@/lib/cloudinary';
 
 export default function LoginPage() {
-    const [username, setUsername] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -32,7 +32,7 @@ export default function LoginPage() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ identifier, password }),
             });
 
             const data = await res.json();
@@ -107,17 +107,17 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-3">
                         {/* Username */}
                         <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username</label>
+                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1 leading-tight block">Username / Email / Phone</label>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
                                     <User size={14} />
                                 </div>
                                 <input
                                     type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    value={identifier}
+                                    onChange={(e) => setIdentifier(e.target.value)}
                                     className="w-full pl-10 pr-5 py-3 bg-slate-950/50 border border-slate-800 rounded-xl focus:border-blue-400/50 outline-none transition-all text-white font-mono text-xs placeholder:text-slate-800"
-                                    placeholder="Enter your username"
+                                    placeholder="Username, Email, or Phone"
                                     required
                                 />
                             </div>

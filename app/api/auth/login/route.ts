@@ -7,14 +7,22 @@ import { processWeeklyPerks } from '@/lib/rank-rewards';
 
 export async function POST(req: Request) {
     try {
-        const { username, password } = await req.json();
+        const body = await req.json();
+        const identifier = body.identifier || body.username;
+        const password = body.password;
 
-        if (!username || !password) {
-            return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+        if (!identifier || !password) {
+            return NextResponse.json({ error: 'Username, email, or phone number and password are required' }, { status: 400 });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { username },
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { username: identifier.toLowerCase() },
+                    { email: identifier.toLowerCase() },
+                    { phoneNumber: identifier }
+                ]
+            },
         });
 
         if (!user) {

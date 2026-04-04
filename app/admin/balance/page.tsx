@@ -11,6 +11,7 @@ interface User {
     id: string;
     username: string;
     email: string;
+    telegramId?: string;
     balance: number;
     totalInvested: number;
     isAdmin: boolean;
@@ -257,7 +258,12 @@ export default function ManageBalancePage() {
                                             {user.isAdmin && <span className="text-[10px] bg-red-900/50 text-red-400 border border-red-800 px-1.5 py-0.5 rounded-full font-bold">ADMIN</span>}
                                             {user.isSuspended && <span className="text-[10px] bg-yellow-900/50 text-yellow-400 border border-yellow-800 px-1.5 py-0.5 rounded-full font-bold">SUSPENDED</span>}
                                         </div>
-                                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                                        <div className="text-xs text-gray-500 truncate">{user.email || 'No email'}</div>
+                                        {user.telegramId && (
+                                            <div className="text-[10px] text-blue-400 truncate mt-0.5 font-mono">
+                                                TG: {user.telegramId}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
