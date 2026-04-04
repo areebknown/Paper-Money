@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { sendMessage } from '@/lib/telegram';
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bidwars.xyz';
+const APP_URL = 'https://bidwars.xyz';
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 
 function buildResetEmailHtml(resetUrl: string, username: string) {
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
             data: { resetToken, resetTokenExpiry },
         });
 
-        const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+        const resetUrl = `${APP_URL}/reset-password?token=${resetToken}`;
 
         if (!process.env.RESEND_API_KEY) {
             console.log('[Forgot Password] DEV: Reset URL:', resetUrl);
