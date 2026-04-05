@@ -70,7 +70,7 @@ export async function POST(req: Request) {
             publicId: user.publicId,
         })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('24h')
+            .setExpirationTime('30d')
             .sign(secret);
 
         const response = NextResponse.json({
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
         response.cookies.set('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24,
+            maxAge: 30 * 24 * 60 * 60,
             path: '/',
         });
 

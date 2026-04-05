@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
         const token = await new SignJWT({ userId: user.id, username: user.username, isAdmin: user.isAdmin })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('24h')
+            .setExpirationTime('30d')
             .sign(secret);
 
         const response = NextResponse.json({ success: true, user: { id: user.id, username: user.username, balance: user.balance, isAdmin: user.isAdmin } });
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         response.cookies.set('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24, // 1 day
+            maxAge: 30 * 24 * 60 * 60, // 30 days
             path: '/',
         });
 
