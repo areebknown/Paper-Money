@@ -164,9 +164,7 @@ export default function ForgotPasswordPage() {
                     transition={{ duration: 0.5, ease: EASE }}
                     className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-[2rem] p-6 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <ShieldCheck size={60} className="text-white" />
-                    </div>
+
 
                     <AnimatePresence mode="wait">
 

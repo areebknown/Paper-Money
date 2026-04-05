@@ -56,6 +56,7 @@ export async function POST(req: Request) {
                 realName: realName || null,
                 profileImage: profileImage || null,
                 balance: starterBalance,
+                greenMoney: starterBalance,
                 isAdmin: username === 'admin',
             } as any,
         });

@@ -89,9 +89,7 @@ function ResetPasswordContent() {
                     transition={{ duration: 0.5, ease: EASE }}
                     className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-[2rem] p-6 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <ShieldCheck size={60} className="text-white" />
-                    </div>
+
 
                     {success ? (
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-6 text-center space-y-4">

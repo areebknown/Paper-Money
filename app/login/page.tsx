@@ -84,9 +84,7 @@ export default function LoginPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-[#0f172a] border border-white/5 shadow-2xl rounded-[2rem] p-5 md:p-7 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <ShieldCheck size={60} className="text-white" />
-                    </div>
+
 
                     <div className="mb-4 text-center border-b border-white/5 pb-3">
                         <h1 className="text-lg font-black text-white tracking-tight uppercase">Welcome <span className="text-[#FBBF24]">Trader</span></h1>
