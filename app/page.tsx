@@ -19,14 +19,37 @@ const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as [number, number, number, number];
 export default function LandingPage() {
     const [isMobile, setIsMobile] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
     useEffect(() => {
         setMounted(true);
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
     }, []);
+
+    const handleDownloadClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+            }
+        } else {
+            alert("App is already installed or your browser doesn't support automatic installation.");
+        }
+    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -81,7 +104,7 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center gap-6">
                         <Link href="/login" className="text-xs font-black uppercase tracking-widest text-slate-400 md:hover:text-white transition-colors">Log In</Link>
-                        <Link href="/signup" className="px-6 py-2.5 bg-[#FBBF24] text-slate-950 text-xs font-black uppercase tracking-widest rounded-full md:hover:scale-105 transition-all">Join Game</Link>
+                        <button onClick={handleDownloadClick} className="px-6 py-2.5 bg-[#FBBF24] text-slate-950 text-xs font-black uppercase tracking-widest rounded-full md:hover:scale-105 transition-all">DOWNLOAD</button>
                     </div>
                 </div>
             </nav>
@@ -118,7 +141,7 @@ export default function LandingPage() {
                             href="/signup" 
                             className="w-full sm:w-auto px-10 py-5 bg-[#FBBF24] text-slate-950 text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_0_50px_rgba(251,191,36,0.3)] md:hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 group"
                         >
-                            Enter The Arena
+                            JOIN GAME
                             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </motion.div>
