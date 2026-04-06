@@ -7,6 +7,7 @@ import { getPusherClient } from '@/lib/pusher-client';
 import { LOGO_URL } from '@/lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
+import ArtifactCard from '@/components/ArtifactCard';
 
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -236,13 +237,16 @@ function getResourceStyle(name: string) {
 }
 
 // ─── Artifact Card ────────────────────────────────────────────────────────────
-function ArtifactTile({ artifact }: { artifact: any }) {
+function ArtifactTile({ artifact, onClick }: { artifact: any; onClick?: () => void }) {
     const tier = artifact.tier ?? 'E';
     const colors = TIER_COLORS[tier] ?? TIER_COLORS['E'];
     const imgUrl = compressArtifactUrl(artifact.imageUrl);
 
     return (
-        <div className="aspect-square bg-[#1e293b] rounded-xl overflow-hidden relative group cursor-pointer hover:scale-105 transition-transform border border-white/10 shadow-md">
+        <div 
+            onClick={onClick}
+            className="aspect-square bg-[#1e293b] rounded-xl overflow-hidden relative group cursor-pointer hover:scale-105 transition-transform border border-white/10 shadow-md"
+        >
             {imgUrl ? (
                 <img src={imgUrl} alt={artifact.name} className="w-full h-full object-cover" loading="lazy" />
             ) : (
@@ -345,6 +349,7 @@ export default function InventoryPage() {
     const [filterOpen, setFilterOpen] = useState(false);
     const [sortTier, setSortTier] = useState('ALL');
     const [visibleCount, setVisibleCount] = useState(12);
+    const [selectedArtifact, setSelectedArtifact] = useState<any>(null);
     const loadMoreRef = useRef<HTMLDivElement>(null);
 
     // Infinite scroll for artifacts
@@ -510,7 +515,11 @@ export default function InventoryPage() {
                         <>
                             <div className="grid grid-cols-4 gap-1.5">
                                 {visibleArtifacts.map(artifact => (
-                                    <ArtifactTile key={artifact.id} artifact={artifact} />
+                                    <ArtifactTile 
+                                        key={artifact.id} 
+                                        artifact={artifact} 
+                                        onClick={() => setSelectedArtifact(artifact)}
+                                    />
                                 ))}
                             </div>
                             {/* Load more trigger */}
@@ -551,6 +560,14 @@ export default function InventoryPage() {
                 setSortTier={setSortTier}
             />
 
+            {/* ── ARTIFACT CARD OVERLAY ── */}
+            {selectedArtifact && (
+                <ArtifactCard 
+                    artifact={selectedArtifact} 
+                    ownerUsername={user?.username}
+                    onClose={() => setSelectedArtifact(null)} 
+                />
+            )}
 
         </div>
     );
