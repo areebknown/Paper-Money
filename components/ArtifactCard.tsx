@@ -146,6 +146,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             style={{
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
+                                transform: 'translateZ(1px)',
                                 backgroundColor: cfg.bgColor,
                                 border: `1.5px solid ${cfg.borderColor}40`,
                                 display: 'flex',
@@ -227,7 +228,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             style={{
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
-                                transform: 'rotateY(180deg)',
+                                transform: 'rotateY(180deg) translateZ(1px)',
                                 backgroundColor: '#13234C', // Exact App Theme BG
                                 border: '2px solid rgba(255,255,255,0.05)',
                             }}
