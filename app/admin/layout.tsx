@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield, Wallet, Activity, Trophy } from 'lucide-react';
+import { LayoutDashboard, Gavel, Package, FileText, ArrowLeft, Shield, Wallet, Activity, Trophy, MessageSquare } from 'lucide-react';
 
 const ADMIN_NAV_ITEMS = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -13,6 +13,7 @@ const ADMIN_NAV_ITEMS = [
     { href: '/admin/contracts', icon: FileText, label: 'Contracts' },
     { href: '/admin/balance', icon: Wallet, label: 'Manage Balance' },
     { href: '/admin/rank', icon: Trophy, label: 'Manage Rank' },
+    { href: '/admin/queries', icon: MessageSquare, label: 'Player Queries' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

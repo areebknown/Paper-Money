@@ -55,6 +55,8 @@ model User {
   parentAccountId String?
   parentAccount   User?   @relation("FinanceToMain", fields: [parentAccountId], references: [id])
   financeAccounts User[]  @relation("FinanceToMain")
+
+  queries         PlayerQuery[]
 }
 
 enum AuctionStatus {
@@ -328,4 +330,20 @@ model Authenticator {
   transports           String? // Comma-separated: "internal,usb,nfc,ble"
 
   @@index([userId])
+}
+
+// ============================================
+// PLAYER QUERIES
+// ============================================
+
+model PlayerQuery {
+  id        String   @id @default(cuid())
+  userId    String?  // Optional, in case the user gets deleted
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  username  String
+  contact   String   // Phone or Telegram ID
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+  
+  @@index([createdAt])
 }

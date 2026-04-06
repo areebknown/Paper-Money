@@ -20,6 +20,9 @@ export async function GET(req: Request) {
                 isAdmin: true,
                 isSuspended: true,
                 email: true,
+                rankPoints: true,
+                rankTier: true,
+                profileImage: true,
                 sentTransactions: {
                     orderBy: { createdAt: 'desc' },
                     take: 50,
@@ -72,6 +75,9 @@ export async function GET(req: Request) {
                 isAdmin: user.isAdmin,
                 email: user.email,
                 isSuspended: user.isSuspended,
+                rankPoints: user.rankPoints,
+                rankTier: user.rankTier,
+                profileImage: user.profileImage,
                 totalInvested,
                 portfolios: user.portfolios
             },

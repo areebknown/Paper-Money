@@ -85,11 +85,84 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: true });
         }
 
-        // ── STEP 1: Handle /start command ─────────────────────────────────────────
+        // ── STEP 1: Handle Commands ───────────────────────────────────────────────
+        let existingUser: any = null;
+        if (text.startsWith('/mybalance') || text.startsWith('/myresource') || text.startsWith('/postquery')) {
+            existingUser = await prisma.user.findUnique({
+                where: { telegramId: String(chatId) },
+                include: { portfolios: { include: { asset: true } } }
+            });
+            if (!existingUser) {
+                await sendMessage(chatId, '⚠️ You must link your Telegram account to a Bid Wars Main Account first.');
+                return NextResponse.json({ ok: true });
+            }
+        }
+
+        if (text.startsWith('/mybalance')) {
+            const balance = Number(existingUser.balance);
+            const greenMoney = Number(existingUser.greenMoney);
+            const loanTokens = existingUser.loanTokens;
+            const investedMoney = existingUser.portfolios.reduce((sum: number, p: any) => sum + (Number(p.units) * Number(p.asset.currentPrice)), 0);
+            const netWorth = balance + investedMoney;
+
+            const fmt = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+            await sendMessage(chatId, 
+                `💰 <b>Your Balance Summary</b>\n\n` +
+                `🔹 <b>Available Balance:</b> ${fmt(balance)}\n` +
+                `🔹 <b>Invested Money:</b> ${fmt(investedMoney)}\n` +
+                `🔹 <b>Green Money:</b> ${fmt(greenMoney)}\n` +
+                `🔹 <b>Loan Tokens Available:</b> ${loanTokens}\n\n` +
+                `💎 <b>Total Net Worth:</b> ${fmt(netWorth)}`
+            );
+            return NextResponse.json({ ok: true });
+        }
+
+        if (text.startsWith('/myresource')) {
+            if (existingUser.portfolios.length === 0) {
+                await sendMessage(chatId, `📦 <b>Your Resources</b>\n\nYou do not own any resources yet.`);
+                return NextResponse.json({ ok: true });
+            }
+
+            let resText = `📦 <b>Your Resources</b>\n\n`;
+            existingUser.portfolios.forEach((p: any) => {
+                const units = Number(p.units);
+                const displayUnits = units >= 1000 ? `${(units/1000).toFixed(1)}k` : units.toFixed(units < 10 ? 2 : 0);
+                resText += `• <b>${p.asset.name}:</b> ${displayUnits} ${p.asset.unit}\n`;
+            });
+
+            await sendMessage(chatId, resText);
+            return NextResponse.json({ ok: true });
+        }
+
+        if (text.startsWith('/postquery')) {
+            const queryText = text.replace('/postquery', '').trim();
+            if (!queryText) {
+                await sendMessage(chatId, `📝 <b>Post a Query</b>\n\nPlease include your message after the command.\n\nExample:\n<code>/postquery How do I sell my artifacts?</code>`);
+                return NextResponse.json({ ok: true });
+            }
+
+            // Support formatting contact string
+            const contactString = existingUser.phoneNumber ? `Phone: +91${existingUser.phoneNumber}` : 
+                                 (existingUser.email ? `Email: ${existingUser.email}` : `TG: ${chatId}`);
+
+            await prisma.playerQuery.create({
+                data: {
+                    userId: existingUser.id,
+                    username: existingUser.username,
+                    contact: contactString,
+                    text: queryText
+                }
+            });
+
+            await sendMessage(chatId, `✅ <b>Query Submitted!</b>\n\nYour message has been sent directly to the admins. We will look into it shortly.`);
+            return NextResponse.json({ ok: true });
+        }
+
         if (!text.startsWith('/start')) {
             await sendMessage(
                 chatId,
-                '👾 <b>Bid Wars Login Bot</b>\n\nThis bot verifies your identity for <b>bidwars.xyz</b>.\n\nPlease start verification from the website by creating a Main Account.'
+                '👾 <b>Bid Wars Login Bot</b>\n\nCommands:\n/mybalance - Display your balances\n/myresource - View owned resources\n/postquery [text] - Send a message to admins\n\n<i>To start verification, use the link from the website.</i>'
             );
             return NextResponse.json({ ok: true });
         }
@@ -101,7 +174,7 @@ export async function POST(req: Request) {
         if (!sessionId) {
             await sendMessage(
                 chatId,
-                '👾 <b>Bid Wars Login Bot</b>\n\nThis bot verifies your identity for <b>bidwars.xyz</b>.\n\nPlease start verification from the website by creating a Main Account.'
+                '👾 <b>Bid Wars Login Bot</b>\n\nCommands:\n/mybalance - Display your balances\n/myresource - View owned resources\n/postquery [text] - Send a message to admins\n\n<i>To start verification, use the link from the website.</i>'
             );
             return NextResponse.json({ ok: true });
         }
@@ -130,15 +203,15 @@ export async function POST(req: Request) {
         }
 
         // ── DUPLICATE CHECK: reject if this Telegram account is already registered ──
-        const existingUser = await prisma.user.findUnique({
+        const existingLoginUser = await prisma.user.findUnique({
             where: { telegramId: String(chatId) },
             select: { username: true },
         });
 
-        if (existingUser) {
+        if (existingLoginUser) {
             await sendMessage(
                 chatId,
-                `⚠️ <b>Telegram Already Registered</b>\n\nThis Telegram account is already linked to the Bid Wars Main Account <b>@${existingUser.username}</b>.\n\nEach Telegram account can only be used for <b>one Main Account</b>.\n\n<i>If you believe this is an error, please contact support.</i>`
+                `⚠️ <b>Telegram Already Registered</b>\n\nThis Telegram account is already linked to the Bid Wars Main Account <b>@${existingLoginUser.username}</b>.\n\nEach Telegram account can only be used for <b>one Main Account</b>.\n\n<i>If you believe this is an error, please contact support.</i>`
             );
             return NextResponse.json({ ok: true });
         }
