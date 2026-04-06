@@ -88,7 +88,8 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
     const rotateY = useTransform(dragX, [-80, 80], [isFlipped ? 0 : 180, isFlipped ? -180 : 0]);
 
     function handleDragEnd(_: any, info: any) {
-        if (Math.abs(info.offset.x) > 60) {
+        // Require a deliberate swipe: either a long drag (> 100px) or a fast flick
+        if (Math.abs(info.offset.x) > 120 || Math.abs(info.velocity.x) > 600) {
             setIsFlipped(f => !f);
         }
         animate(dragX, 0, { type: 'spring', stiffness: 300, damping: 30 });
@@ -172,7 +173,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                                     <img
                                         src={artifact.imageUrl}
                                         alt={artifact.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain p-2"
                                         draggable={false}
                                     />
                                 ) : (
@@ -246,11 +247,6 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             />
                         </div>
                     </motion.div>
-
-                    {/* Swipe hint */}
-                    <p className="text-center text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mt-6 pointer-events-none select-none">
-                        ← Swipe to flip →
-                    </p>
                 </div>
 
                 {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
