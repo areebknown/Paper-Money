@@ -76,7 +76,7 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('bids')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'bids'
-                            ? 'bg-[#FBBF24] text-[#0D121B] z-30'
+                            ? 'bg-[#FBBF24] text-[#111621] z-30'
                             : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >
@@ -90,7 +90,7 @@ export default function HomePage() {
                     <button
                         onClick={() => setActiveTab('market')}
                         className={`relative flex-1 py-3 text-xl tracking-wider font-['Russo_One'] rounded-t-[1.25rem] transition-all duration-300 ${activeTab === 'market'
-                            ? 'bg-[#FBBF24] text-[#0D121B] z-30'
+                            ? 'bg-[#FBBF24] text-[#111621] z-30'
                             : 'bg-gray-900/40 text-gray-500 hover:text-gray-300 z-0 scale-y-95 origin-bottom backdrop-blur-sm'
                             }`}
                     >

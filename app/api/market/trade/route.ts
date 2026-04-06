@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { deductBalance } from '@/lib/deductBalance';
 
 export async function POST(req: Request) {
     const userId = await getUserIdFromRequest();
@@ -53,11 +54,8 @@ export async function POST(req: Request) {
                     throw new Error('Insufficient balance');
                 }
 
-                // Deduct balance
-                await tx.user.update({
-                    where: { id: userId },
-                    data: { balance: { decrement: totalPrice } }
-                });
+                // Deduct balance — drains greenMoney first, then real balance
+                await deductBalance(tx, userId, totalPrice);
 
                 // Update Portfolio - add units and increment totalCost
                 await tx.portfolio.upsert({

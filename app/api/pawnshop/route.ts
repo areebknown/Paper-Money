@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { deductBalance } from '@/lib/deductBalance';
 
 // GET /api/pawnshop - Get user's pawn shop status
 export async function GET() {
@@ -65,19 +66,17 @@ export async function POST(req: Request) {
                     return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
                 }
 
-                await prisma.$transaction([
-                    prisma.user.update({
-                        where: { id: userId },
-                        data: { balance: { decrement: activationCost } },
-                    }),
-                    prisma.pawnShop.update({
-                        where: { id: pawnShop.id },
+                await prisma.$transaction(async (tx) => {
+                    // Drains greenMoney first, then real balance
+                    await deductBalance(tx, userId, activationCost);
+                    await tx.pawnShop.update({
+                        where: { id: pawnShop!.id },
                         data: {
                             isActive: true,
                             activatedAt: new Date(),
                         },
-                    }),
-                ]);
+                    });
+                });
             }
 
             return NextResponse.json({ pawnShop });

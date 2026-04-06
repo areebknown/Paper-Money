@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { deductBalance } from '@/lib/deductBalance';
 
 // GET /api/user/rank - Get current user's rank info
 export async function GET() {
@@ -67,14 +68,9 @@ export async function POST(req: Request) {
         }
 
         const updatedUser = await prisma.$transaction(async (tx) => {
-            // Deduct balance if self-purchase
+            // Deduct balance if self-purchase — drains greenMoney first, then real balance
             if (!isAdmin) {
-                await tx.user.update({
-                    where: { id: userId },
-                    data: {
-                        balance: { decrement: totalCost },
-                    },
-                });
+                await deductBalance(tx, userId, totalCost);
             }
 
             // Add rank points

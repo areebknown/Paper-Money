@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserFromToken } from '@/lib/auth';
 import { pusherServer } from '@/lib/pusher-server';
+import { deductBalance } from '@/lib/deductBalance';
 
 /**
  * POST /api/auctions/[id]/claim
@@ -65,6 +66,8 @@ export async function POST(
             }, { status: 400 });
         }
 
+        // Note: balance check above is intentionally done outside the tx for a fast short-circuit.
+
         const artifactIds = auction.artifacts.map(a => a.artifactId);
 
         // ── Atomic transaction ───────────────────────────────────────────────────
@@ -72,11 +75,8 @@ export async function POST(
         // $executeRaw for isClaimed (which uses a raw column bypass to avoid
         // any stale Prisma client type issues on Vercel's bundled deployment).
         await prisma.$transaction(async (tx) => {
-            // 1. Deduct winning price from winner's balance
-            await tx.user.update({
-                where: { id: user.userId },
-                data: { balance: { decrement: finalPrice } },
-            });
+            // 1. Deduct winning price — drains greenMoney first, then real balance
+            await deductBalance(tx, user.userId, finalPrice);
 
             // 2. Mark auction as claimed (raw SQL — guaranteed to work regardless of Prisma type cache)
             await tx.$executeRaw`UPDATE "Auction" SET "isClaimed" = true WHERE id = ${auctionId}`;

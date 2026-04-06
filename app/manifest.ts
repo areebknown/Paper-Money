@@ -7,16 +7,16 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'The Ultimate Virtual Bidding Game',
     start_url: '/home',
     display: 'standalone',
-    background_color: '#13234C',
-    theme_color: '#13234C',
+    background_color: '#03081A',
+    theme_color: '#03081A',
     icons: [
       {
-        src: '/icon.png',
+        src: '/pwa-icon.png',
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: '/icon.png',
+        src: '/pwa-icon.png',
         sizes: '512x512',
         type: 'image/png',
       },
