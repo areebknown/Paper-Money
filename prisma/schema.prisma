@@ -21,9 +21,11 @@ model User {
   publicId    String?  @unique // PMUID (8-digit random)
   isMainAccount Boolean @default(false)
   realName    String?
+  about       String?  // Bio / about text shown on public profile
   profileImage String?
   phoneNumber  String?  @unique
   telegramId   String?  @unique // Telegram chat.id — one human = one Main Account
+  lastSeenAt   DateTime? // Updated on every authenticated request
 
   resetToken       String?
   resetTokenExpiry DateTime?
@@ -57,6 +59,28 @@ model User {
   financeAccounts User[]  @relation("FinanceToMain")
 
   queries         PlayerQuery[]
+
+  // Friends
+  sentFriendRequests     Friendship[] @relation("FriendshipSender")
+  receivedFriendRequests Friendship[] @relation("FriendshipReceiver")
+}
+
+// Friendship model — mutual friendship after accepted
+model Friendship {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("FriendshipSender",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
 }
 
 enum AuctionStatus {

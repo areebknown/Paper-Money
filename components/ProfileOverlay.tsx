@@ -13,10 +13,10 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     const router = useRouter();
 
     const menuOptions = [
-        { label: 'MY PROFILE', path: `/profile/${user?.id}` },
+        { label: 'MY PROFILE', path: `/profile/${user?.id ?? ''}` },
         { label: 'EDIT PROFILE', path: '/profile/edit' },
         { label: 'MY RANK', path: '/rank' },
-        { label: 'MY STATS', path: '/stats' }, // New stats page path assumed
+        { label: 'MY STATS', path: '/stats' },
         { label: 'FRIENDS', path: '/friends' },
         { label: 'SETTINGS', path: '/settings' },
     ];

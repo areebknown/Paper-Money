@@ -51,6 +51,9 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        // Update lastSeenAt in background (non-blocking) for online presence tracking
+        prisma.user.update({ where: { id: userId }, data: { lastSeenAt: new Date() } }).catch(() => {});
+
         // Combine and sort transactions for a unified history, limited to 10 for dashboard speed
         const history = [
             ...user.sentTransactions.map(t => ({
