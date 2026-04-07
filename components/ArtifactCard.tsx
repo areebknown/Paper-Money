@@ -79,20 +79,19 @@ interface ArtifactCardProps {
 }
 
 export default function ArtifactCard({ artifact, ownerUsername, onClose }: ArtifactCardProps) {
-    const [isFlipped, setIsFlipped] = useState(false);
+    const [rotation, setRotation] = useState(0);
     const tier = artifact.tier ?? 'E';
     const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG['E'];
 
-    // Drag-to-flip
-    const dragX = useMotionValue(0);
-    const rotateY = useTransform(dragX, [-80, 80], [isFlipped ? 0 : 180, isFlipped ? -180 : 0]);
-
     function handleDragEnd(_: any, info: any) {
-        // Require a deliberate swipe: either a long drag (> 100px) or a fast flick
-        if (Math.abs(info.offset.x) > 120 || Math.abs(info.velocity.x) > 600) {
-            setIsFlipped(f => !f);
+        // Require a deliberate swipe: either a long drag (> 80px) or a fast flick
+        if (Math.abs(info.offset.x) > 80 || Math.abs(info.velocity.x) > 400) {
+            if (info.offset.x > 0 || info.velocity.x > 0) {
+                setRotation(r => r + 180); // swiped right
+            } else {
+                setRotation(r => r - 180); // swiped left
+            }
         }
-        animate(dragX, 0, { type: 'spring', stiffness: 300, damping: 30 });
     }
 
     const composition = formatComposition(
@@ -133,11 +132,11 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                     <motion.div
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.2}
+                        dragElastic={0} // Disables physical dragging to purely capture gestures
                         onDragEnd={handleDragEnd}
-                        style={{ rotateY, x: dragX, transformStyle: 'preserve-3d', cursor: 'grab' }}
-                        animate={{ rotateY: isFlipped ? 180 : 0 }}
-                        transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+                        style={{ transformStyle: 'preserve-3d', cursor: 'grab' }}
+                        animate={{ rotateY: rotation }}
+                        transition={{ type: 'spring', stiffness: 220, damping: 24, mass: 1 }}
                         className="relative w-full h-full"
                     >
                         {/* ── FRONT ──────────────────────────────────────────── */}
