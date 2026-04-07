@@ -121,6 +121,11 @@ export async function GET(req: Request) {
                 name: a.name,
                 tier: a.tier,
                 imageUrl: a.imageUrl,
+                description: a.description,
+                materialComposition: a.materialComposition,
+                width: a.width,
+                height: a.height,
+                depth: a.depth,
             })),
             totalArtifactCount: user.ownedArtifacts.length,
             // Placeholder until estates/vehicles schema is added
