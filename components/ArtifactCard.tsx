@@ -10,15 +10,15 @@ const TIER_CONFIG: Record<string, {
     badgeClass: string;       // inline style for the tier badge text
     borderColor: string;
 }> = {
-    'E':    { bgColor: '#1a1f2e',      badgeClass: 'text-gray-400',                                                   borderColor: '#4b5563' },
-    'D':    { bgColor: '#162318',      badgeClass: 'text-emerald-400',                                                borderColor: '#10b981' },
-    'C':    { bgColor: '#111b2e',      badgeClass: 'text-blue-400',                                                   borderColor: '#3b82f6' },
-    'B':    { bgColor: '#1a1528',      badgeClass: 'bg-gradient-to-r from-slate-300 to-white bg-clip-text text-transparent', borderColor: '#94a3b8' },
-    'A':    { bgColor: '#1e1a10',      badgeClass: 'bg-gradient-to-r from-yellow-300 to-amber-500 bg-clip-text text-transparent', borderColor: '#f59e0b' },
-    'S':    { bgColor: '#20100a',      badgeClass: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent', borderColor: '#f97316' },
-    'SS':   { bgColor: '#200a12',      badgeClass: 'bg-gradient-to-r from-pink-400 via-red-500 to-rose-600 bg-clip-text text-transparent', borderColor: '#ef4444' },
-    'SSS':  { bgColor: '#14102a',      badgeClass: 'bg-gradient-to-r from-violet-400 via-purple-500 to-indigo-500 bg-clip-text text-transparent', borderColor: '#8b5cf6' },
-    'SSS+': { bgColor: '#1a1014',      badgeClass: 'bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-yellow-300 bg-clip-text text-transparent', borderColor: '#e879f9' },
+    'E':    { bgColor: 'radial-gradient(circle at top right, #242c41 0%, #1a1f2e 100%)',      badgeClass: 'text-gray-400',                                                   borderColor: '#4b5563' },
+    'D':    { bgColor: 'radial-gradient(circle at top right, #1d3321 0%, #162318 100%)',      badgeClass: 'text-emerald-400',                                                borderColor: '#10b981' },
+    'C':    { bgColor: 'radial-gradient(circle at top right, #1a2a47 0%, #111b2e 100%)',      badgeClass: 'text-blue-400',                                                   borderColor: '#3b82f6' },
+    'B':    { bgColor: 'radial-gradient(circle at top right, #2c2445 0%, #1a1528 100%)',      badgeClass: 'bg-gradient-to-r from-slate-300 to-white bg-clip-text text-transparent', borderColor: '#94a3b8' },
+    'A':    { bgColor: 'radial-gradient(circle at top right, #383018 0%, #1e1a10 100%)',      badgeClass: 'bg-gradient-to-r from-yellow-300 to-amber-500 bg-clip-text text-transparent', borderColor: '#f59e0b' },
+    'S':    { bgColor: 'radial-gradient(circle at top right, #451b0f 0%, #20100a 100%)',      badgeClass: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent', borderColor: '#f97316' },
+    'SS':   { bgColor: 'radial-gradient(circle at top right, #400d1e 0%, #200a12 100%)',      badgeClass: 'bg-gradient-to-r from-pink-400 via-red-500 to-rose-600 bg-clip-text text-transparent', borderColor: '#ef4444' },
+    'SSS':  { bgColor: 'radial-gradient(circle at top right, #271a54 0%, #14102a 100%)',      badgeClass: 'bg-gradient-to-r from-violet-400 via-purple-500 to-indigo-500 bg-clip-text text-transparent', borderColor: '#8b5cf6' },
+    'SSS+': { bgColor: 'radial-gradient(circle at top right, #34122d 0%, #1a1014 100%)',      badgeClass: 'bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-yellow-300 bg-clip-text text-transparent', borderColor: '#e879f9' },
 };
 
 function TierBadge({ tier }: { tier: string }) {
@@ -149,7 +149,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
                                 transform: 'translateZ(1px)',
-                                backgroundColor: cfg.bgColor,
+                                background: cfg.bgColor,
                                 border: `1.5px solid ${cfg.borderColor}40`,
                                 display: 'flex',
                                 flexDirection: 'column'
