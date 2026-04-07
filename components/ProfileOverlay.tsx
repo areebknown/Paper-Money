@@ -67,9 +67,8 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                 <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#FBBF24] to-transparent" />
 
                 <div className="p-5">
-                    {/* Identity Header */}
                     <div className="flex flex-col items-center text-center mb-6 pt-2">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-xl mb-3">
+                        <div className="w-14 h-14 rounded-full shadow-xl mb-3">
                             <div className="w-full h-full rounded-full border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
                                 {user?.profileImage ? (
                                     <img src={user.profileImage} alt="PFP" className="w-full h-full object-cover" />

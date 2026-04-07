@@ -55,12 +55,11 @@ export default function Header() {
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
                         </button>
                         
-                        {/* Profile Trigger */}
                         <button 
                             onClick={() => setIsProfileOpen(true)}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FBBF24] to-orange-500 p-0.5 shadow-lg cursor-pointer active:scale-90 transition-transform"
+                            className="w-10 h-10 rounded-full shadow-lg cursor-pointer active:scale-90 transition-transform"
                         >
-                            <div className="w-full h-full rounded-full border-2 border-white bg-gray-700 overflow-hidden flex items-center justify-center">
+                            <div className="w-full h-full rounded-full border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
                                 {user?.profileImage ? (
                                     <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
