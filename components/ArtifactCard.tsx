@@ -55,18 +55,21 @@ function formatComposition(materialComposition: any, width: any, height: any, de
     return parts.join(' · ') || 'No composition data';
 }
 
-// ─── 3D Action Button ─────────────────────────────────────────────────────────
-function ActionButton({ label, icon, color }: { label: string; icon: string; color: string }) {
+function ActionButton({ label, topColor, shadowColor }: { label: string; topColor: string; shadowColor: string }) {
     return (
-        <button
-            className="flex-1 relative flex flex-col items-center justify-center gap-1 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white active:translate-y-[2px] transition-transform select-none"
-            style={{
-                background: color,
-                boxShadow: `0 4px 0 0 rgba(0,0,0,0.4)`,
-            }}
-        >
-            <span className="material-icons-round text-lg">{icon}</span>
-            {label}
+        <button className="flex-1 relative rounded-[14px] cursor-pointer" style={{ height: '46px' }}>
+            {/* The shadowed base */}
+            <div 
+                className="absolute top-1.5 left-0 right-0 bottom-[-6px] rounded-[14px]"
+                style={{ backgroundColor: shadowColor }}
+            />
+            {/* The actual button face */}
+            <div 
+                className="absolute inset-0 rounded-[14px] flex items-center justify-center font-black text-[13px] uppercase tracking-widest text-white transition-transform duration-75 active:translate-y-1.5"
+                style={{ backgroundColor: topColor }}
+            >
+                {label}
+            </div>
         </button>
     );
 }
@@ -126,7 +129,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
             >
                 {/* Card flip area */}
                 <div
-                    className="pointer-events-auto w-full max-w-[320px] aspect-[5/7]"
+                    className="pointer-events-auto w-full max-w-[280px] aspect-[5/7]"
                     style={{ perspective: '1200px' }}
                 >
                     <motion.div
@@ -228,14 +231,14 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
                                 transform: 'rotateY(180deg) translateZ(1px)',
-                                backgroundColor: '#13234C', // Exact App Theme BG
+                                backgroundColor: '#03081A', // Darker theme BG matching login
                                 border: '2px solid rgba(255,255,255,0.05)',
                             }}
                         >
                             {/* Inner Yellow Border */}
                             <div
                                 className="absolute inset-4 rounded-xl pointer-events-none"
-                                style={{ border: '2px solid #FBBF24' }}
+                                style={{ border: '4px solid #FBBF24' }}
                             />
                             
                             {/* BidWars Logo */}
@@ -250,10 +253,10 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                 </div>
 
                 {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
-                <div className="pointer-events-auto w-full max-w-[320px] flex gap-3 mt-6">
-                    <ActionButton label="Pawn"    icon="store"          color="linear-gradient(to bottom, #1e3a8a, #172554)" />
-                    <ActionButton label="Sell"    icon="sell"           color="linear-gradient(to bottom, #b45309, #78350f)" />
-                    <ActionButton label="Private" icon="lock"           color="linear-gradient(to bottom, #111827, #030712)" />
+                <div className="pointer-events-auto w-full max-w-[280px] flex gap-3 mt-8">
+                    <ActionButton label="Pawn"    topColor="#dc2626" shadowColor="#991b1b" />
+                    <ActionButton label="Sell"    topColor="#16a34a" shadowColor="#14532d" />
+                    <ActionButton label="Private" topColor="#4b5563" shadowColor="#1f2937" />
                 </div>
             </motion.div>
         </AnimatePresence>
