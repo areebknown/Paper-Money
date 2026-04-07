@@ -160,7 +160,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                                 style={{
                                     background: `${cfg.bgColor}`,
                                     border: `1px solid ${cfg.borderColor}30`,
-                                    height: '45%' // Takes up upper half
+                                    height: '38%' // Takes up upper part
                                 }}
                             >
                                 {artifact.imageUrl ? (
@@ -178,57 +178,57 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             </div>
 
                             {/* Body Content */}
-                            <div className="px-4 pt-3 pb-2 z-10 flex-1 flex flex-col min-h-0">
-                                <h3 className="text-lg font-black text-white font-['Russo_One'] tracking-wide leading-tight mb-1 shrink-0">
+                            <div className="px-4 pt-2 pb-1.5 z-10 flex-1 flex flex-col min-h-0">
+                                <h3 className="text-[17px] font-black text-white font-['Russo_One'] tracking-wide leading-tight mb-1 shrink-0">
                                     {artifact.name}
                                 </h3>
-                                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+                                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0 pb-1">
                                     <p className="text-[11px] text-white/60 leading-relaxed font-sans">
-                                        {artifact.description || 'No description available for this artifact.'}
+                                        {artifact.description || 'No description available.'}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Secondary Information (Composition) */}
-                            <div className="mx-3 mb-3 shrink-0 flex gap-2">
+                            <div className="mx-3 mb-2 shrink-0 flex gap-2">
                                 {/* Dimensions */}
                                 <div
-                                    className="flex-1 rounded-xl px-3 py-2 flex flex-col justify-center"
+                                    className="flex-1 rounded-xl px-2 py-1.5 flex flex-col justify-center items-center text-center"
                                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                                 >
-                                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-1">
+                                    <p className="text-[7.5px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-0.5">
                                         Dimensions
                                     </p>
-                                    <p className="text-[9px] text-white/80 font-mono text-center mt-0.5">
-                                        L·{artifact.width ?? '-'} x W·{artifact.depth ?? '-'} x H·{artifact.height ?? '-'} cm
+                                    <p className="text-[8.5px] text-white/80 font-mono leading-tight">
+                                        L:{artifact.width ?? '-'} W:{artifact.depth ?? '-'} H:{artifact.height ?? '-'} cm
                                     </p>
                                 </div>
                                 {/* Materials */}
                                 <div
-                                    className="flex-1 rounded-xl px-3 py-2 flex flex-col justify-center"
+                                    className="flex-1 rounded-xl px-2 py-1.5 flex flex-col justify-center"
                                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                                 >
-                                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-1">
+                                    <p className="text-[7.5px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-0.5">
                                         Materials
                                     </p>
                                     {materials ? (
-                                        <div className="flex flex-col gap-0.5">
+                                        <div className="flex flex-col">
                                             {materials.slice(0, 2).map(([k, v]) => (
-                                                <p key={k} className="text-[9px] text-white/80 font-mono flex justify-between leading-none">
+                                                <p key={k} className="text-[8.5px] text-white/80 font-mono flex justify-between leading-snug">
                                                     <span className="capitalize truncate pr-1">{k}:</span>
                                                     <span>{String(v)}g</span>
                                                 </p>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-[9px] text-white/30 font-mono">—</p>
+                                        <p className="text-[8.5px] text-white/30 font-mono">—</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Footer Information */}
                             <div
-                                className="px-5 pb-4 shrink-0 flex flex-col gap-1"
+                                className="px-5 pb-3 shrink-0 flex flex-col gap-0.5"
                             >
                                 <p className="text-[9px] text-white/30 font-mono flex justify-between">
                                     <span>LAST SOLD:</span>
