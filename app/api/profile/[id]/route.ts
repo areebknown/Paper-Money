@@ -30,10 +30,10 @@ function getRankInfo(rankPoints: number) {
 }
 
 // GET /api/profile/[id]
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     // Viewer identity (optional — can be logged in or not)
     const viewerId = await getUserIdFromRequest();
-    const targetId = params.id;
+    const { id: targetId } = await params;
 
     try {
         const profile = await prisma.user.findUnique({
@@ -115,11 +115,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // POST /api/profile/[id] — send or accept friend request
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const viewerId = await getUserIdFromRequest();
     if (!viewerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const targetId = params.id;
+    const { id: targetId } = await params;
     if (viewerId === targetId) return NextResponse.json({ error: 'Cannot friend yourself' }, { status: 400 });
 
     try {
@@ -158,11 +158,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 }
 
 // DELETE /api/profile/[id] — remove friend / cancel request
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const viewerId = await getUserIdFromRequest();
     if (!viewerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const targetId = params.id;
+    const { id: targetId } = await params;
     try {
         await prisma.friendship.deleteMany({
             where: {
