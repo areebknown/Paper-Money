@@ -225,7 +225,7 @@ export default function PublicProfilePage() {
     const visibleArtifacts = (artifacts ?? []).slice(0, visibleCount);
 
     return (
-        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased pb-24 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+        <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased pb-24">
             <Header />
 
             <main className="px-4 pt-5 space-y-5 max-w-2xl mx-auto">
@@ -427,6 +427,7 @@ export default function PublicProfilePage() {
                 <ArtifactCard
                     artifact={selectedArtifact}
                     ownerUsername={profile?.username}
+                    isOwner={isSelf}
                     onClose={() => setSelectedArtifact(null)}
                 />
             )}

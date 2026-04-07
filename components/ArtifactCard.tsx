@@ -74,11 +74,12 @@ function ActionButton({ label, topColor, shadowColor }: { label: string; topColo
 // ─── Main Component ───────────────────────────────────────────────────────────
 interface ArtifactCardProps {
     artifact: any;
-    ownerUsername?: string;
     onClose: () => void;
+    ownerUsername?: string;
+    isOwner?: boolean;
 }
 
-export default function ArtifactCard({ artifact, ownerUsername, onClose }: ArtifactCardProps) {
+export default function ArtifactCard({ artifact, onClose, ownerUsername, isOwner = true }: ArtifactCardProps) {
     const [rotation, setRotation] = useState(0);
     const tier = artifact.tier ?? 'E';
     const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG['E'];
@@ -271,9 +272,18 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
 
                 {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
                 <div className="pointer-events-auto w-full max-w-[280px] flex gap-3 mt-8">
-                    <ActionButton label="Pawn"    topColor="#dc2626" shadowColor="#991b1b" />
-                    <ActionButton label="Sell"    topColor="#16a34a" shadowColor="#14532d" />
-                    <ActionButton label="Private" topColor="#4b5563" shadowColor="#1f2937" />
+                    {isOwner ? (
+                        <>
+                            <ActionButton label="Pawn"    topColor="#dc2626" shadowColor="#991b1b" />
+                            <ActionButton label="Sell"    topColor="#16a34a" shadowColor="#14532d" />
+                            <ActionButton label="Private" topColor="#4b5563" shadowColor="#1f2937" />
+                        </>
+                    ) : (
+                        <>
+                            <ActionButton label="Request Buy" topColor="#16a34a" shadowColor="#14532d" />
+                            <ActionButton label="Ask In Chat" topColor="#2563eb" shadowColor="#1d4ed8" />
+                        </>
+                    )}
                 </div>
             </motion.div>
         </AnimatePresence>
