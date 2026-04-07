@@ -34,25 +34,12 @@ function TierBadge({ tier }: { tier: string }) {
     );
 }
 
-// ─── Material Composition Formatter ──────────────────────────────────────────
-function formatComposition(materialComposition: any, width: any, height: any, depth: any): string {
-    const parts: string[] = [];
-
-    // Dimensions
-    if (width || height || depth) {
-        const dims = [width, height, depth].filter(Boolean).map(Number);
-        if (dims.length > 0) parts.push(`${dims.join(' × ')} units`);
-    }
-
-    // Materials
-    if (materialComposition && typeof materialComposition === 'object') {
-        const mats = Object.entries(materialComposition)
-            .map(([k, v]) => `${v}g ${k}`)
-            .join(', ');
-        if (mats) parts.push(mats);
-    }
-
-    return parts.join(' · ') || 'No composition data';
+// Helper to render materials
+function getMaterials(comp: any) {
+    if (!comp || typeof comp !== 'object') return null;
+    const entries = Object.entries(comp);
+    if (entries.length === 0) return null;
+    return entries;
 }
 
 function ActionButton({ label, topColor, shadowColor }: { label: string; topColor: string; shadowColor: string }) {
@@ -97,12 +84,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
         }
     }
 
-    const composition = formatComposition(
-        artifact.materialComposition,
-        artifact.width,
-        artifact.height,
-        artifact.depth,
-    );
+    const materials = getMaterials(artifact.materialComposition);
 
     return (
         <AnimatePresence>
@@ -186,11 +168,11 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             </div>
 
                             {/* Body Content */}
-                            <div className="px-4 pt-4 pb-2 z-10 flex-1 flex flex-col justify-start">
-                                <h3 className="text-lg font-black text-white font-['Russo_One'] tracking-wide leading-tight mb-2">
+                            <div className="px-4 pt-3 pb-2 z-10 flex-1 flex flex-col min-h-0">
+                                <h3 className="text-lg font-black text-white font-['Russo_One'] tracking-wide leading-tight mb-1 shrink-0">
                                     {artifact.name}
                                 </h3>
-                                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
                                     <p className="text-[11px] text-white/60 leading-relaxed font-sans">
                                         {artifact.description || 'No description available for this artifact.'}
                                     </p>
@@ -198,14 +180,40 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             </div>
 
                             {/* Secondary Information (Composition) */}
-                            <div
-                                className="mx-3 mb-3 shrink-0 rounded-xl px-3 py-2.5"
-                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                            >
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-1">
-                                    Composition
-                                </p>
-                                <p className="text-[11px] text-white/80 font-mono">{composition}</p>
+                            <div className="mx-3 mb-3 shrink-0 flex gap-2">
+                                {/* Dimensions */}
+                                <div
+                                    className="flex-1 rounded-xl px-3 py-2 flex flex-col justify-center"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                                >
+                                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-1">
+                                        Dimensions
+                                    </p>
+                                    <p className="text-[9px] text-white/80 font-mono text-center mt-0.5">
+                                        L·{artifact.width ?? '-'} x W·{artifact.depth ?? '-'} x H·{artifact.height ?? '-'} cm
+                                    </p>
+                                </div>
+                                {/* Materials */}
+                                <div
+                                    className="flex-1 rounded-xl px-3 py-2 flex flex-col justify-center"
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                                >
+                                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#FBBF24]/80 mb-1">
+                                        Materials
+                                    </p>
+                                    {materials ? (
+                                        <div className="flex flex-col gap-0.5">
+                                            {materials.slice(0, 2).map(([k, v]) => (
+                                                <p key={k} className="text-[9px] text-white/80 font-mono flex justify-between leading-none">
+                                                    <span className="capitalize truncate pr-1">{k}:</span>
+                                                    <span>{String(v)}g</span>
+                                                </p>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-[9px] text-white/30 font-mono">—</p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Footer Information */}
