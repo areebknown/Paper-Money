@@ -1,16 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-    User, 
-    Edit2, 
-    Award, 
-    Users, 
-    Settings, 
-    RefreshCcw, 
-    LogOut, 
-    X,
-    ShieldCheck
-} from 'lucide-react';
+import { User, X, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface ProfileOverlayProps {
@@ -23,12 +13,16 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     const router = useRouter();
 
     const menuOptions = [
-        { label: 'Public Profile', path: `/profile/${user?.id}`, color: 'text-blue-400' },
-        { label: 'Edit Profile', path: '/profile/edit', color: 'text-blue-400' },
-        { label: 'Rank Rewards', path: '/rank', color: 'text-[#FBBF24]' },
-        { label: 'Friends', path: '/friends', color: 'text-blue-400' },
-        { label: 'Settings', path: '/settings', color: 'text-slate-400' },
-        { label: 'Switch Account', path: '/api/auth/switch', color: 'text-emerald-400' },
+        { label: 'MY PROFILE', path: `/profile/${user?.id}` },
+        { label: 'EDIT PROFILE', path: '/profile/edit' },
+        { label: 'MY RANK', path: '/rank' },
+        { label: 'MY STATS', path: '/stats' }, // New stats page path assumed
+        { label: 'FRIENDS', path: '/friends' },
+        { label: 'SETTINGS', path: '/settings' },
+    ];
+
+    const bottomOptions = [
+        { label: 'SWITCH ACCOUNT', path: '/api/auth/switch', color: 'text-slate-300' },
     ];
 
     const handleLogout = async () => {
@@ -36,97 +30,112 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
         if (res.ok) router.push('/login');
     };
 
-    const TenLines = () => (
-        <div className="flex gap-0.5 justify-center py-1.5 opacity-20 group-hover:opacity-40 transition-opacity">
-            {[...Array(10)].map((_, i) => (
-                <div key={i} className="w-1.5 h-[1.5px] bg-slate-400 rounded-full" />
-            ))}
-        </div>
-    );
+    // Determine contact info based on account type
+    const isMain = user?.isMainAccount;
+    const contactInfo = isMain 
+        ? (user?.phoneNumber || user?.email || 'No Phone Linked')
+        : (user?.email || user?.phoneNumber || 'No Email Linked');
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-start justify-end p-4 pointer-events-none">
-            {/* Backdrop */}
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-                className="fixed inset-0 bg-black/60 pointer-events-auto"
+        // The outer div intercepts clicks without darkening the background
+        <div className="fixed inset-0 z-[200] flex justify-end" style={{ pointerEvents: 'none' }}>
+            {/* Click catcher (transparent) */}
+            <div 
+                className="absolute inset-0" 
+                style={{ pointerEvents: 'auto' }} 
+                onClick={onClose} 
             />
 
-            {/* Content Card */}
+            {/* Slide-in Panel */}
             <motion.div
-                initial={{ opacity: 0, scale: 0, originX: 1, originY: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-                className="relative w-full max-w-[260px] bg-[#0f172a] border border-white/10 shadow-2xl rounded-[2.5rem] overflow-hidden pointer-events-auto origin-top-right"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
+                style={{ pointerEvents: 'auto' }}
+                className="relative w-full max-w-[320px] h-full bg-gradient-to-b from-[#1a233a] to-[#0b1120] border-l border-white/10 shadow-2xl flex flex-col"
             >
                 {/* Header Context Line */}
-                <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#FBBF24] to-transparent" />
+                <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#FBBF24] to-transparent shrink-0" />
 
-                <div className="p-5">
-                    <div className="flex flex-col items-center text-center mb-6 pt-2">
-                        <div className="w-14 h-14 rounded-full shadow-xl mb-3">
-                            <div className="w-full h-full rounded-full border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
-                                {user?.profileImage ? (
-                                    <img src={user.profileImage} alt="PFP" className="w-full h-full object-cover" />
-                                ) : (
-                                    <User className="text-white w-6 h-6" />
-                                )}
-                            </div>
+                <div className="p-5 flex-1 overflow-y-auto">
+                    {/* Header: Profile picture and info side-by-side */}
+                    <div className="flex items-center gap-4 mb-5 relative">
+                        <div className="shrink-0 w-16 h-16 rounded-full shadow-lg border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
+                            {user?.profileImage ? (
+                                <img src={user?.profileImage} alt="PFP" className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="text-white w-7 h-7" />
+                            )}
                         </div>
-                        <div className="min-w-0">
-                            <h2 className="text-base font-bold text-white font-['Russo_One'] truncate tracking-tight uppercase leading-none mb-1">
-                                {user?.username || 'GUEST USER'}
+                        <div className="flex-1 min-w-0 pr-6">
+                            <h2 className="text-[18px] font-bold text-white font-['Russo_One'] truncate tracking-tight lowercase leading-none mb-1.5">
+                                {user?.username || 'guest user'}
                             </h2>
-                            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase truncate max-w-[180px]">
-                                {user?.email || user?.phoneNumber || 'Identity Not Linked'}
+                            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wide truncate">
+                                {contactInfo}
                             </p>
                         </div>
-                        <button onClick={onClose} className="absolute top-6 right-6 p-1 hover:bg-white/10 rounded-full text-slate-500">
+                        {/* Close button top right of header */}
+                        <button onClick={onClose} className="absolute -top-1 -right-1 p-2 bg-white/5 hover:bg-white/10 rounded-full text-slate-400 transition-colors">
                             <X size={16} />
                         </button>
                     </div>
 
-                    {/* Menu List */}
-                    <nav className="space-y-0.5">
-                        {menuOptions.map((option, idx) => (
-                            <React.Fragment key={option.label}>
-                                <button
-                                    onClick={() => {
-                                        router.push(option.path);
-                                        onClose();
-                                    }}
-                                    className="w-full text-center py-2.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-[0.96] group"
-                                >
-                                    <span className="text-[11px] font-black uppercase tracking-[0.15em]">{option.label}</span>
-                                </button>
-                                {idx < menuOptions.length - 1 && <TenLines />}
-                            </React.Fragment>
+                    {/* Thin horizontal line passing */}
+                    <div className="h-px bg-white/5 mb-4 w-full" />
+
+                    {/* Main Menu List */}
+                    <nav className="flex flex-col gap-1">
+                        {menuOptions.map((option) => (
+                            <button
+                                key={option.label}
+                                onClick={() => {
+                                    router.push(option.path);
+                                    onClose();
+                                }}
+                                className="w-full text-left px-3 py-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-colors active:scale-[0.98]"
+                            >
+                                <span className="text-[12px] font-bold uppercase tracking-[0.1em]">{option.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+
+                    {/* Thin horizontal line before footer controls */}
+                    <div className="h-px bg-white/10 my-4 w-full" />
+
+                    {/* Bottom Options */}
+                    <div className="flex flex-col gap-1">
+                        {bottomOptions.map((option) => (
+                            <button
+                                key={option.label}
+                                onClick={() => {
+                                    router.push(option.path);
+                                    onClose();
+                                }}
+                                className={`w-full text-left px-3 py-3 rounded-xl hover:bg-white/5 transition-colors active:scale-[0.98] ${option.color}`}
+                            >
+                                <span className="text-[12px] font-bold uppercase tracking-[0.1em]">{option.label}</span>
+                            </button>
                         ))}
 
-                        {/* Special Logout Option */}
-                        <div className="pt-2 mt-4 border-t border-white/5">
-                            <button
-                                onClick={handleLogout}
-                                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl hover:bg-red-500/10 text-red-500 transition-all active:scale-[0.98] group"
-                            >
-                                <LogOut size={14} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Logout System</span>
-                            </button>
-                        </div>
-                    </nav>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-500/10 text-red-500 transition-colors active:scale-[0.98] mt-2 group"
+                        >
+                            <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
+                            <span className="text-[12px] font-bold uppercase tracking-widest">LOGOUT</span>
+                        </button>
+                    </div>
                 </div>
                 
                 {/* Footer Status Bar */}
-                <div className="bg-black/40 px-6 py-2 flex justify-between items-center text-[9px] text-slate-600 font-mono font-bold uppercase tracking-widest">
-                    <span className="flex items-center gap-1.5 ">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        online
+                <div className="bg-black/40 px-6 py-3 shrink-0 flex justify-between items-center text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest border-t border-white/5">
+                    <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        SYSTEM ONLINE
                     </span>
-                    <span className="opacity-30">v2.4.0</span>
+                    <span className="opacity-40">v2.5.0</span>
                 </div>
             </motion.div>
         </div>
