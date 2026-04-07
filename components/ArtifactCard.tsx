@@ -34,12 +34,22 @@ function TierBadge({ tier }: { tier: string }) {
     );
 }
 
-// Helper to render materials
+// Helpers
 function getMaterials(comp: any) {
     if (!comp || typeof comp !== 'object') return null;
     const entries = Object.entries(comp);
     if (entries.length === 0) return null;
     return entries;
+}
+
+function compressExpandedUrl(url: string | null | undefined) {
+    if (!url) return null;
+    // Cap expanded images to 800px width with generic auto-compression
+    // Easily adequate for modern mobile screens while shredding download bandwidth constraints!
+    if (url.includes('res.cloudinary.com') && !url.includes('q_auto')) {
+        return url.replace('/upload/', '/upload/q_auto:good,f_auto,w_800/');
+    }
+    return url;
 }
 
 function ActionButton({ label, topColor, shadowColor }: { label: string; topColor: string; shadowColor: string }) {
@@ -155,7 +165,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                             >
                                 {artifact.imageUrl ? (
                                     <img
-                                        src={artifact.imageUrl}
+                                        src={compressExpandedUrl(artifact.imageUrl) || artifact.imageUrl}
                                         alt={artifact.name}
                                         className="w-full h-full object-contain p-2"
                                         draggable={false}
