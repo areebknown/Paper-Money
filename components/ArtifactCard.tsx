@@ -231,7 +231,7 @@ export default function ArtifactCard({ artifact, ownerUsername, onClose }: Artif
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
                                 transform: 'rotateY(180deg) translateZ(1px)',
-                                backgroundColor: '#03081A', // Darker theme BG matching login
+                                background: 'radial-gradient(circle at top right, #1e3a7a 0%, #13234C 100%)',
                                 border: '2px solid rgba(255,255,255,0.05)',
                             }}
                         >
