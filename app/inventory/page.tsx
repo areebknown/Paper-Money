@@ -179,13 +179,13 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
                 <span className="text-[9px] font-bold uppercase tracking-widest">Rank</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
                 {/* Rank icon */}
                 <Link href="/rank" onClick={e => e.stopPropagation()}>
                     <img
                         src={getRankIconPath(iconName)}
                         alt={tier.name}
-                        className="w-20 h-20 object-contain drop-shadow-xl flex-shrink-0 active:scale-90 transition-transform -ml-2"
+                        className="w-14 h-14 object-contain drop-shadow-xl flex-shrink-0 active:scale-90 transition-transform -ml-1"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                 </Link>

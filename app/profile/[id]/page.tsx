@@ -275,7 +275,7 @@ export default function PublicProfilePage() {
                 {/* ── PROFILE HEADER ── */}
                 <section>
                     {/* Avatar + Name row */}
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4 mb-2">
                         {/* Avatar with online dot */}
                         <div className="relative shrink-0">
                             <div className="w-[72px] h-[72px] rounded-full border-2 border-white/10 bg-gray-700 overflow-hidden shadow-xl">
@@ -312,7 +312,7 @@ export default function PublicProfilePage() {
 
                     {/* Interest Tag */}
                     {(profile.interestTag && profile.showInterest) && (
-                        <div className="mb-2 px-0.5">
+                        <div className="mb-1 px-0.5 mt-[-2px]">
                             <span className="text-[12px] font-black text-blue-400 uppercase tracking-tight">
                                 {profile.interestTag}
                             </span>
@@ -327,24 +327,24 @@ export default function PublicProfilePage() {
                     )}
 
                     {/* Rank + Leaderboard badges */}
-                    <div className="flex flex-row gap-3 mb-4">
+                    <div className="flex flex-row gap-2 mb-4">
                         {/* Rank badge */}
                         {profile.showRank && (
-                            <Link href="/rank" className={`flex-1 flex items-center justify-center gap-3 text-left border rounded-3xl p-3 transition-all active:scale-95 shadow-lg ${getRankCardStyles(rank?.tier?.name || '')}`}>
+                            <Link href="/rank" className={`flex-1 flex items-center justify-center gap-2 text-left border rounded-3xl p-3 transition-all active:scale-95 shadow-lg min-w-0 ${getRankCardStyles(rank?.tier?.name || '')}`}>
                                 <img
                                     src={`/rank-icons/${rank?.iconName}.svg`}
                                     alt={rank?.tier?.name}
-                                    className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0"
+                                    className="w-10 h-10 object-contain drop-shadow-xl flex-shrink-0"
                                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                 />
                                 <div className="space-y-0.5 min-w-0">
                                     <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.2em] leading-none mb-0.5 truncate">Rank Status</p>
-                                    <p className="text-[14px] font-black text-white font-['Russo_One'] tracking-wide leading-none truncate">
+                                    <p className="text-[11px] font-black text-white font-['Russo_One'] leading-none truncate">
                                         {rank?.tier?.name}
                                     </p>
                                     <div className="flex items-center gap-1 mt-1 px-2 py-0.5 bg-white/5 rounded-full border border-white/5 w-fit">
                                         <Trophy size={8} className="text-[#FBBF24]" />
-                                        <span className="text-[9px] font-black text-[#FBBF24] font-mono">
+                                        <span className="text-[8px] font-black text-[#FBBF24] font-mono">
                                             {profile.rankPoints.toLocaleString()} PTS
                                         </span>
                                     </div>
@@ -354,16 +354,16 @@ export default function PublicProfilePage() {
 
                         {/* Leaderboard position */}
                         {profile.showLeaderboard && (
-                            <div className="flex-1 flex items-center justify-center gap-3 text-left bg-[#1e293b] border border-white/10 rounded-3xl p-3 shadow-lg">
-                                <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
-                                    <span className="material-icons-round text-[#FBBF24] text-2xl">emoji_events</span>
+                            <div className="flex-1 flex items-center justify-center gap-2 text-left bg-[#1e293b] border border-white/10 rounded-3xl p-3 shadow-lg min-w-0">
+                                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-icons-round text-[#FBBF24] text-xl">emoji_events</span>
                                 </div>
                                 <div className="space-y-0.5 min-w-0">
                                     <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.1em] leading-none mb-0.5 truncate">Leaderboard</p>
-                                    <p className="text-[14px] font-black text-white font-['Russo_One'] tracking-tight truncate">
+                                    <p className="text-[12px] font-black text-white font-['Russo_One'] tracking-tight truncate">
                                         Top 10%
                                     </p>
-                                    <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider truncate">Master League</p>
+                                    <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-wider truncate">Master League</p>
                                 </div>
                             </div>
                         )}
