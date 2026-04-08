@@ -17,6 +17,7 @@ export default function EditProfilePage() {
 
     const [username, setUsername] = useState('');
     const [realName, setRealName] = useState('');
+    const [initialRealName, setInitialRealName] = useState('');
     const [about, setAbout] = useState('');
     const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -41,6 +42,7 @@ export default function EditProfilePage() {
                     if (d.profile) {
                         setAbout(d.profile.about || '');
                         setRealName(d.profile.realName || ''); // Catching realName if not in /api/user
+                        setInitialRealName(d.profile.realName || '');
                     }
                 });
             setProfileImage(data.user.profileImage || null);
@@ -119,7 +121,7 @@ export default function EditProfilePage() {
             }
             
             // Should we show confirm modal?
-            if (realName !== (user.realName || '') && !showConfirmModal) {
+            if (realName !== initialRealName && !showConfirmModal) {
                 setShowConfirmModal(true);
                 return;
             }
