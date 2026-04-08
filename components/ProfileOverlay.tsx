@@ -32,9 +32,20 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
 
     // Determine contact info based on account type
     const isMain = user?.isMainAccount;
-    const contactInfo = isMain 
-        ? (user?.phoneNumber || user?.email || 'No Phone Linked')
-        : (user?.email || user?.phoneNumber || 'No Email Linked');
+    
+    const formatContact = (type: 'main' | 'side') => {
+        if (type === 'main') {
+            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91${user.phoneNumber}`;
+            if (user?.email) return user.email;
+            return 'No Phone Linked';
+        } else {
+            if (user?.email) return user.email;
+            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91${user.phoneNumber}`;
+            return 'No Email Linked';
+        }
+    };
+    
+    const contactInfo = formatContact(isMain ? 'main' : 'side');
 
     return (
         // The outer div intercepts clicks without darkening the background
@@ -69,7 +80,7 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                             <h2 className="text-[17px] font-bold text-white font-['Russo_One'] truncate tracking-tight lowercase leading-none mb-1">
                                 {user?.username || 'guest user'}
                             </h2>
-                            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wide truncate">
+                            <p className="text-[10px] text-slate-400 font-bold lowercase tracking-wide truncate">
                                 {contactInfo}
                             </p>
                         </div>

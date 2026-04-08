@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOGO_URL } from '@/lib/cloudinary';
+import ImageCropper from '@/components/ImageCropper';
 
 type SignupStep = 'choice' | 'username' | 'verification' | 'details' | 'profile-pic' | 'link-account';
 type AccountType = 'main' | 'side' | null;
@@ -72,6 +73,7 @@ export default function SignupPage() {
     // Profile Pic
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
     // Link account (Finance → Main)
     const [linkUsername, setLinkUsername] = useState('');
@@ -216,13 +218,20 @@ export default function SignupPage() {
     };
 
     // ─── File upload ────────────────────────────────────────────────────────────
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const url = URL.createObjectURL(file);
+        setCropImageSrc(url);
+        e.target.value = ''; // Reset input
+    };
+
+    const handleCropDone = async (croppedFile: File) => {
+        setCropImageSrc(null);
         setUploadState('uploading');
         try {
             const fd = new FormData();
-            fd.append('file', file);
+            fd.append('file', croppedFile);
             fd.append('folder', 'user_pfps');
             fd.append('public_id', pmuid);
             const res = await fetch('/api/upload', { method: 'POST', body: fd });
@@ -443,7 +452,7 @@ export default function SignupPage() {
                                     <input
                                         type="text"
                                         value={username}
-                                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
                                         className="w-full bg-slate-900 border border-slate-800 px-12 py-4 rounded-2xl text-white font-mono text-lg focus:border-[#FBBF24] outline-none transition-all placeholder:text-slate-700"
                                         placeholder="trader_name"
                                     />
@@ -452,7 +461,7 @@ export default function SignupPage() {
                                     </div>
                                 </div>
                             </div>
-                            <button disabled={!isUsernameValid || checkingUsername} onClick={nextStep} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs">
+                            <button disabled={!isUsernameValid || checkingUsername || username.endsWith('.')} onClick={nextStep} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest text-xs">
                                 CONTINUE
                             </button>
                         </motion.div>
@@ -607,8 +616,19 @@ export default function SignupPage() {
                             <div className="space-y-4">
                                 {accountType === 'main' && (
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Full Name</label>
-                                        <input type="text" value={realName} onChange={(e) => setRealName(e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white focus:border-[#FBBF24] outline-none" placeholder="John Doe" />
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2 mb-1 block">Real Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={realName} 
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^A-Za-z\s]/g, '').replace(/\s+/g, ' ');
+                                                const formatted = val.split(' ').map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '').join(' ');
+                                                setRealName(formatted);
+                                            }} 
+                                            className="w-full bg-slate-900 border border-slate-800 px-5 py-4 rounded-xl text-white focus:border-[#FBBF24] outline-none" 
+                                            placeholder="Areeb Ghous" 
+                                        />
+                                        <p className="text-[9px] text-slate-500 mt-1 pl-2">Must contain at least two words (e.g. First Last)</p>
                                     </div>
                                 )}
                                 <div>
@@ -621,7 +641,11 @@ export default function SignupPage() {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={nextStep} disabled={!password} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40">
+                            <button 
+                                onClick={nextStep} 
+                                disabled={!password || (accountType === 'main' && realName.trim().split(' ').filter(Boolean).length < 2)} 
+                                className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40"
+                            >
                                 NEXT
                             </button>
                         </motion.div>
@@ -780,6 +804,17 @@ export default function SignupPage() {
                     <p className="text-rose-400 text-[11px] font-mono leading-tight">{error}</p>
                 </motion.div>
             )}
+
+            {/* Cropper Overlay */}
+            <AnimatePresence>
+                {cropImageSrc && (
+                    <ImageCropper
+                        imageSrc={cropImageSrc}
+                        onCropDone={handleCropDone}
+                        onCropCancel={() => setCropImageSrc(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
