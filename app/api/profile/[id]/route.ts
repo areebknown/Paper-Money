@@ -46,6 +46,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 profileImage: true,
                 rankPoints: true,
                 lastSeenAt: true,
+                balance: true,
+                interestTag: true,
+                showInterest: true,
+                showNetworth: true,
+                showRank: true,
+                showLeaderboard: true,
+                showPawnBadge: true,
+                portfolios: {
+                    include: { asset: true }
+                },
+                ownedEstates: true,
+                ownedVehicles: true,
                 // Public artifacts only
                 ownedArtifacts: {
                     where: { ownerId: targetId, pawnShopId: null },
@@ -65,6 +77,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const isOnline = lastSeenAt ? (now.getTime() - lastSeenAt.getTime()) < 5 * 60 * 1000 : false; // 5 min window
 
         const rank = getRankInfo(profile.rankPoints);
+
+        // Calculate Networth: balance + invested money + estates + vehicles
+        const balance = Number(profile.balance);
+        const totalInvested = profile.portfolios.reduce((sum, p) => sum + (Number(p.units) * Number(p.asset.currentPrice)), 0);
+        const estateValue = profile.ownedEstates.reduce((sum, e) => sum + Number(e.value), 0);
+        const vehicleValue = profile.ownedVehicles.reduce((sum, v) => sum + Number(v.value), 0);
+        
+        const netWorth = Math.round(balance + totalInvested + estateValue + vehicleValue);
 
         // Friendship status (only fetchable if viewer is logged in and not self)
         let friendshipStatus: 'SELF' | 'NONE' | 'PENDING_SENT' | 'PENDING_RECEIVED' | 'FRIENDS' = 'NONE';
@@ -102,6 +122,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 rankPoints: profile.rankPoints,
                 lastSeenAt: lastSeenAt?.toISOString() ?? null,
                 isOnline,
+                interestTag: profile.interestTag,
+                showInterest: profile.showInterest,
+                showNetworth: profile.showNetworth,
+                showRank: profile.showRank,
+                showLeaderboard: profile.showLeaderboard,
+                showPawnBadge: profile.showPawnBadge,
+                netWorth: profile.showNetworth ? netWorth : null,
             },
             rank,
             artifacts: profile.ownedArtifacts,

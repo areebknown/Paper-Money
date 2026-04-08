@@ -77,6 +77,8 @@ export async function GET(req: Request) {
                     },
                     orderBy: { createdAt: 'desc' },
                 },
+                ownedEstates: true,
+                ownedVehicles: true,
             },
         });
 
@@ -88,9 +90,11 @@ export async function GET(req: Request) {
         const totalInvested = user.portfolios.reduce(
             (sum, p) => sum + Number(p.units) * Number(p.asset.currentPrice), 0
         );
+        const estateValue = user.ownedEstates.reduce((sum, e) => sum + Number(e.value), 0);
+        const vehicleValue = user.ownedVehicles.reduce((sum, v) => sum + Number(v.value), 0);
 
-        // Net worth: balance + invested (estates/vehicles not in schema yet)
-        const netWorth = balance + totalInvested;
+        // Net worth: balance + invested + estates + vehicles
+        const netWorth = Math.round(balance + totalInvested + estateValue + vehicleValue);
 
         const rankInfo = getRankInfo(user.rankPoints);
 
@@ -128,9 +132,8 @@ export async function GET(req: Request) {
                 depth: a.depth,
             })),
             totalArtifactCount: user.ownedArtifacts.length,
-            // Placeholder until estates/vehicles schema is added
-            ownedEstates: [],
-            ownedVehicles: [],
+            ownedEstates: user.ownedEstates,
+            ownedVehicles: user.ownedVehicles,
             coupons: user.coupons,
         });
     } catch (error) {

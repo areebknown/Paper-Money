@@ -58,6 +58,9 @@ export default function FriendsPage() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     
+    // Unfriend confirmation
+    const [friendToRemove, setFriendToRemove] = useState<any>(null);
+    
     const { data, isLoading } = useSWR('/api/friends', fetcher, { revalidateOnFocus: true });
     
     const friends = data?.friends ?? [];
@@ -76,10 +79,17 @@ export default function FriendsPage() {
         }
     };
 
-    const handleRemoveOrReject = async (id: string) => {
+    const handleRemoveOrReject = async (id: string, isUnfriend: boolean = false) => {
+        if (isUnfriend && !friendToRemove) {
+            const friend = friends.find((f: any) => f.id === id);
+            setFriendToRemove(friend);
+            return;
+        }
+
         try {
             await fetch(`/api/profile/${id}`, { method: 'DELETE' });
             mutate('/api/friends'); // Refresh SWR
+            setFriendToRemove(null);
             if (showSearch) performSearch(searchQuery); // Update search results if open
         } catch (e) {
             console.error('Failed to remove/reject:', e);
@@ -202,15 +212,15 @@ export default function FriendsPage() {
                                                     </div>
 
                                                     {/* Actions */}
-                                                    <div className="flex gap-1.5 shrink-0">
-                                                        <Link href={`/messages/${friend.id}`} className="w-8 h-8 rounded text-blue-400 bg-blue-500/20 hover:bg-blue-500/30 flex items-center justify-center transition-colors">
-                                                            <MessageCircle size={15} className="fill-blue-500/10" />
+                                                    <div className="flex gap-3 shrink-0">
+                                                        <Link href={`/messages/${friend.id}`} className="w-9 h-9 rounded-xl text-blue-400 bg-blue-500/10 border border-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-blue-500/5">
+                                                            <MessageCircle size={16} className="fill-blue-500/10" />
                                                         </Link>
-                                                        <Link href={`/pay/${friend.id}`} className="w-8 h-8 rounded text-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center transition-colors">
-                                                            <Send size={15} />
+                                                        <Link href={`/pay/${friend.id}`} className="w-9 h-9 rounded-xl text-emerald-400 bg-emerald-500/10 border border-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-emerald-500/5">
+                                                            <Send size={16} />
                                                         </Link>
-                                                        <button onClick={() => handleRemoveOrReject(friend.id)} className="w-8 h-8 rounded text-rose-400 bg-rose-500/20 hover:bg-rose-500/30 flex items-center justify-center transition-colors">
-                                                            <UserMinus size={15} />
+                                                        <button onClick={() => handleRemoveOrReject(friend.id, true)} className="w-9 h-9 rounded-xl text-rose-400 bg-rose-500/10 border border-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-rose-500/5">
+                                                            <UserMinus size={16} />
                                                         </button>
                                                     </div>
 
@@ -436,6 +446,30 @@ export default function FriendsPage() {
                                 </div>
                             )}
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {friendToRemove && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-[#1e293b] border border-white/10 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl">
+                            <div className="w-16 h-16 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-400 mx-auto mb-4">
+                                <UserMinus size={32} />
+                            </div>
+                            <h3 className="text-white font-black text-lg uppercase tracking-widest mb-2">Remove Friend?</h3>
+                            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                                Are you sure you want to remove <strong className="text-white">@{friendToRemove.username}</strong> from your friends list? 
+                                You will need to send a new request to connect again.
+                            </p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setFriendToRemove(null)} className="flex-1 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-colors">
+                                    Cancel
+                                </button>
+                                <button onClick={() => handleRemoveOrReject(friendToRemove.id)} className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-black text-xs uppercase hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">
+                                    Remove
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

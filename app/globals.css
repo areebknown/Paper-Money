@@ -155,3 +155,41 @@
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease forwards;
 }
+
+@keyframes rank-shimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  100% { transform: translateX(150%) skewX(-20deg); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: rank-shimmer 3s infinite;
+}
+
+.animate-shimmer-sparkly::after {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(251, 191, 36, 0.4),
+    rgba(255, 255, 255, 0.6),
+    rgba(251, 191, 36, 0.4),
+    transparent
+  );
+  animation: rank-shimmer 2s infinite;
+}

@@ -34,6 +34,16 @@ export default function EditProfilePage() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [daysLocked, setDaysLocked] = useState(0);
 
+    // New Identity & Visibility fields
+    const [interestTag, setInterestTag] = useState('');
+    const [showInterest, setShowInterest] = useState(true);
+    const [showNetworth, setShowNetworth] = useState(true);
+    const [showRank, setShowRank] = useState(true);
+    const [showLeaderboard, setShowLeaderboard] = useState(true);
+    const [showPawnBadge, setShowPawnBadge] = useState(true);
+
+    const INTEREST_OPTIONS = ['Bidder', 'Investor', 'Lender', 'Collector', 'Digger', 'Pawnbroker'];
+
     useEffect(() => {
         if (data?.user) {
             setUsername(data.user.username || '');
@@ -51,6 +61,13 @@ export default function EditProfilePage() {
                     }
                 });
             setProfileImage(data.user.profileImage || null);
+            setInterestTag(data.user.interestTag || '');
+            setShowInterest(data.user.showInterest ?? true);
+            setShowNetworth(data.user.showNetworth ?? true);
+            setShowRank(data.user.showRank ?? true);
+            setShowLeaderboard(data.user.showLeaderboard ?? true);
+            setShowPawnBadge(data.user.showPawnBadge ?? true);
+
             if (data.user.realNameUpdatedAt) {
                 const updatedTime = new Date(data.user.realNameUpdatedAt).getTime();
                 const daysDiff = (Date.now() - updatedTime) / (1000 * 60 * 60 * 24);
@@ -171,6 +188,12 @@ export default function EditProfilePage() {
                     username,
                     about,
                     profileImage,
+                    interestTag,
+                    showInterest,
+                    showNetworth,
+                    showRank,
+                    showLeaderboard,
+                    showPawnBadge,
                     ...(user.isMainAccount && { realName })
                 })
             });
@@ -294,6 +317,57 @@ export default function EditProfilePage() {
                             placeholder="Tell everyone a bit about yourself..."
                         />
                         <p className="text-[9px] text-slate-500 mt-1 pl-1 text-right">{about.length}/160</p>
+                    </div>
+
+                    {/* Interest Tag */}
+                    <div className="space-y-3 pt-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1 block">Identity Interest</label>
+                        <div className="flex flex-wrap gap-2">
+                            {INTEREST_OPTIONS.map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => setInterestTag(interestTag === opt ? '' : opt)}
+                                    className={`px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all border ${
+                                        interestTag === opt 
+                                        ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
+                                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:border-slate-700'
+                                    }`}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center justify-between px-1 pt-1">
+                            <span className="text-[11px] text-slate-400 font-medium">Show Interest Tag on Profile</span>
+                            <button 
+                                onClick={() => setShowInterest(!showInterest)}
+                                className={`w-10 h-5 rounded-full transition-colors relative ${showInterest ? 'bg-blue-500' : 'bg-slate-800'}`}
+                            >
+                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform ${showInterest ? 'left-6' : 'left-1'}`} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Visibility Toggles */}
+                    <div className="space-y-4 pt-4 border-t border-slate-800/50">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 block">Profile Visibility</label>
+                        
+                        {[
+                            { label: 'Show Networth', value: showNetworth, setter: setShowNetworth },
+                            { label: 'Show Rank Status', value: showRank, setter: setShowRank },
+                            { label: 'Show Leaderboard Position', value: showLeaderboard, setter: setShowLeaderboard },
+                            { label: 'Show Pawn Badge', value: showPawnBadge, setter: setShowPawnBadge },
+                        ].map(toggle => (
+                            <div key={toggle.label} className="flex items-center justify-between px-1">
+                                <span className="text-[12px] text-slate-300 font-medium">{toggle.label}</span>
+                                <button 
+                                    onClick={() => toggle.setter(!toggle.value)}
+                                    className={`w-10 h-5 rounded-full transition-colors relative ${toggle.value ? 'bg-emerald-500' : 'bg-slate-800'}`}
+                                >
+                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform ${toggle.value ? 'left-6' : 'left-1'}`} />
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                 </div>

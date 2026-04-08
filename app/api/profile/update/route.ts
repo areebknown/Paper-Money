@@ -11,7 +11,7 @@ export async function PUT(req: Request) {
 
     try {
         const body = await req.json();
-        const { username, realName, about, profileImage } = body;
+        const { username, realName, about, profileImage, interestTag, showInterest, showNetworth, showRank, showLeaderboard, showPawnBadge } = body;
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: { isMainAccount: true, username: true, realNameUpdatedAt: true, realName: true }
@@ -76,6 +76,13 @@ export async function PUT(req: Request) {
             updateData.realNameUpdatedAt = new Date();
         }
 
+        if (interestTag !== undefined) updateData.interestTag = interestTag;
+        if (showInterest !== undefined) updateData.showInterest = showInterest;
+        if (showNetworth !== undefined) updateData.showNetworth = showNetworth;
+        if (showRank !== undefined) updateData.showRank = showRank;
+        if (showLeaderboard !== undefined) updateData.showLeaderboard = showLeaderboard;
+        if (showPawnBadge !== undefined) updateData.showPawnBadge = showPawnBadge;
+
         const updatedUser = await prisma.$transaction(async (tx) => {
             if (updateData.username && updateData.username !== user.username) {
                 // Delete previous reservation if it exists so we can reuse the record or create a new one
@@ -98,6 +105,12 @@ export async function PUT(req: Request) {
                     about: true,
                     profileImage: true,
                     isMainAccount: true,
+                    interestTag: true,
+                    showInterest: true,
+                    showNetworth: true,
+                    showRank: true,
+                    showLeaderboard: true,
+                    showPawnBadge: true,
                 }
             });
         });

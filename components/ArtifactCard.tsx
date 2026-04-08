@@ -136,7 +136,7 @@ export default function ArtifactCard({ artifact, onClose, ownerUsername, isOwner
                     >
                         {/* ── FRONT ──────────────────────────────────────────── */}
                         <div
-                            className="absolute inset-0 rounded-3xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
+                            className="absolute inset-0 rounded-3xl overflow-hidden"
                             style={{
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',
@@ -244,7 +244,7 @@ export default function ArtifactCard({ artifact, onClose, ownerUsername, isOwner
 
                         {/* ── BACK ───────────────────────────────────────────── */}
                         <div
-                            className="absolute inset-0 rounded-3xl flex items-center justify-center overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
+                            className="absolute inset-0 rounded-3xl flex items-center justify-center overflow-hidden"
                             style={{
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden',

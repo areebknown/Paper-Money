@@ -64,12 +64,12 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
                 style={{ pointerEvents: 'auto' }}
-                className="relative w-full max-w-[255px] bg-gradient-to-b from-[#1a233a] to-[#0b1120] border border-white/10 shadow-2xl flex flex-col rounded-[1.5rem] overflow-hidden"
+                className="relative w-full max-w-[255px] bg-gradient-to-b from-[#1a233a] to-[#0b1120] border border-white/10 flex flex-col rounded-[1.5rem] overflow-hidden"
             >
                 <div className="p-4">
                     {/* Header: Profile picture and info side-by-side */}
                     <div className="flex items-center gap-4 mb-3 relative">
-                        <div className="shrink-0 w-12 h-12 rounded-full shadow-lg border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
+                        <div className="shrink-0 w-12 h-12 rounded-full border border-white/20 bg-gray-700 overflow-hidden flex items-center justify-center">
                             {user?.profileImage ? (
                                 <img src={user?.profileImage} alt="PFP" className="w-full h-full object-cover" />
                             ) : (
@@ -136,7 +136,7 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                 {/* Footer Status Bar */}
                 <div className="bg-black/40 px-5 py-2.5 shrink-0 flex justify-between items-center text-[9px] text-slate-500 font-mono font-bold uppercase tracking-widest border-t border-white/5">
                     <span className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                         SYSTEM ONLINE
                     </span>
                     <span className="opacity-40">v2.5.0</span>

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import ArtifactCard from '@/components/ArtifactCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, MoreVertical, UserPlus, MessageCircle, Edit2, Send } from 'lucide-react';
+import { Share2, MoreVertical, UserPlus, MessageCircle, Edit2, Send, Trophy, Wallet, Landmark, ChevronDown, CheckCircle2 } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -52,6 +52,29 @@ function relativeTime(dateStr: string | null) {
     const days = Math.floor(hrs / 24);
     if (days < 7) return `${days}d ago`;
     return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+// ─── Rank Card Styles ────────────────────────────────────────────────────────
+function getRankCardStyles(rankName: string) {
+    if (rankName.includes('Rookie')) {
+        return 'bg-gradient-to-br from-[#3d2b1f] to-[#2a1d15] border-[#5c4033]/30 shadow-[#3d2b1f]/20';
+    }
+    if (rankName.includes('Dealer')) {
+        return 'bg-gradient-to-br from-[#334155] to-[#1e293b] border-[#475569]/30 shadow-[#334155]/20';
+    }
+    if (rankName.includes('Financier')) {
+        return 'bg-gradient-to-br from-[#45371c] via-[#2d2412] to-[#1a150a] border-[#b45309]/30 shadow-[#fbbf24]/5';
+    }
+    if (rankName.includes('Tycoon')) {
+        return 'bg-gradient-to-br from-[#064e3b] via-[#022c22] to-[#011c15] border-[#059669]/30 shadow-[#059669]/10';
+    }
+    if (rankName.includes('Crown')) {
+        return 'bg-gradient-to-br from-[#422006] via-[#2d1a0a] to-[#000000] border-[#f59e0b]/40 shadow-[#f59e0b]/20 animate-shimmer';
+    }
+    if (rankName.includes('Monarch')) {
+        return 'bg-gradient-to-br from-[#1e1b4b] via-[#0f172a] to-[#000000] border-[#818cf8]/40 shadow-[#818cf8]/20 animate-shimmer-sparkly';
+    }
+    return 'bg-[#1e293b] border-white/10';
 }
 
 // ─── Artifact tile ────────────────────────────────────────────────────────────
@@ -268,6 +291,15 @@ export default function PublicProfilePage() {
                         </div>
                     </div>
 
+                    {/* Interest Tag */}
+                    {(profile.interestTag && profile.showInterest) && (
+                        <div className="mb-2 px-0.5">
+                            <span className="text-[12px] font-black text-blue-400 uppercase tracking-tight">
+                                {profile.interestTag}
+                            </span>
+                        </div>
+                    )}
+
                     {/* About text */}
                     {profile.about && (
                         <p className="text-[13px] text-slate-300 leading-relaxed mb-4 px-0.5 whitespace-pre-wrap break-words">
@@ -278,30 +310,86 @@ export default function PublicProfilePage() {
                     {/* Rank + Leaderboard badges */}
                     <div className="flex gap-3 mb-4">
                         {/* Rank badge */}
-                        <Link href="/rank" className="flex-1 flex items-center gap-2.5 bg-[#1e293b] border border-white/10 rounded-2xl px-3 py-2.5 hover:border-[#FBBF24]/30 transition active:scale-95">
-                            <img
-                                src={`/rank-icons/${rank?.iconName}.svg`}
-                                alt={rank?.tier?.name}
-                                className="w-14 h-14 object-contain drop-shadow -ml-1"
-                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                            <div className="min-w-0 -ml-1">
-                                <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest leading-none mb-0.5">Rank</p>
-                                <p className="text-[12px] font-black text-white font-['Russo_One'] truncate leading-none">{rank?.tier?.name}</p>
-                            </div>
-                        </Link>
+                        {profile.showRank && (
+                            <Link href="/rank" className={`flex-1 flex flex-col items-center justify-center text-center border rounded-3xl p-4 transition-all active:scale-95 shadow-lg ${getRankCardStyles(rank?.tier?.name || '')}`}>
+                                <img
+                                    src={`/rank-icons/${rank?.iconName}.svg`}
+                                    alt={rank?.tier?.name}
+                                    className="w-20 h-20 object-contain drop-shadow-2xl mb-2"
+                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] text-white/50 font-black uppercase tracking-[0.2em] leading-none mb-1">Rank Status</p>
+                                    <p className="text-[16px] font-black text-white font-['Russo_One'] leading-none">
+                                        {rank?.tier?.name}
+                                    </p>
+                                    <div className="flex items-center justify-center gap-1.5 mt-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                                        <Trophy size={10} className="text-[#FBBF24]" />
+                                        <span className="text-[10px] font-black text-[#FBBF24] font-mono">
+                                            {profile.rankPoints.toLocaleString()} PTS
+                                        </span>
+                                    </div>
+                                </div>
+                            </Link>
+                        )}
 
-                        {/* Leaderboard position — placeholder */}
-                        <div className="flex-1 flex items-center gap-2.5 bg-[#1e293b] border border-white/10 rounded-2xl px-3 py-2.5">
-                            <div className="w-9 h-9 rounded-full bg-yellow-500/10 flex items-center justify-center shrink-0">
-                                <span className="material-icons-round text-[#FBBF24] text-xl">emoji_events</span>
+                        {/* Leaderboard position */}
+                        {profile.showLeaderboard && (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center bg-[#1e293b] border border-white/10 rounded-3xl p-4 shadow-lg">
+                                <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-3">
+                                    <span className="material-icons-round text-[#FBBF24] text-4xl">emoji_events</span>
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.1em] leading-none mb-1">Leaderboard</p>
+                                    <p className="text-[16px] font-black text-white font-['Russo_One'] tracking-tight">
+                                        Top 10%
+                                    </p>
+                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Master League</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Leaderboard</p>
-                                <p className="text-[13px] font-black text-slate-400 font-['Russo_One']">Coming Soon</p>
+                        )}
+                    </div>
+
+                    {/* Networth card */}
+                    {(profile.showNetworth && profile.netWorth !== null) && (
+                        <div className="mb-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 rounded-3xl p-5 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors" />
+                            <div className="relative flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                                        <Wallet className="text-blue-400" size={28} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-1">Estimated Networth</p>
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-2xl font-black text-white font-mono">
+                                                ₹{(profile.netWorth / 100000).toFixed(1)}L
+                                            </span>
+                                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">+2.4% THIS MONTH</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-10 w-px bg-white/5 mx-2" />
+                                <div className="text-right">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1">Pawn Level</p>
+                                    <p className="text-[13px] font-black text-slate-300 uppercase">Pro Trader</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Pawn Badge placeholder */}
+                    {profile.showPawnBadge && (
+                         <div className="mb-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400">
+                                <Landmark size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-black text-[12px] uppercase">Pawn Master Badge</h4>
+                                <p className="text-slate-500 text-[10px]">Pawn features coming soon</p>
+                            </div>
+                         </div>
+                    )}
 
                     {/* Separator */}
                     <div className="h-px bg-white/5 mb-4" />

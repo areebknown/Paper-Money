@@ -37,6 +37,13 @@ model User {
   greenMoney Decimal  @default(0) @db.Decimal(10, 2)
   rankTier   String   @default("BRONZE") // BRONZE, SILVER, GOLD, DIAMOND
   lastWeeklyClaim DateTime? // Tracks when the user last received weekly rank perks
+  
+  interestTag String?    // Bidder, Investor, Lender, Collector, Digger, Pawnbroker
+  showInterest Boolean   @default(true)
+  showNetworth Boolean   @default(false)
+  showRank     Boolean   @default(true)
+  showLeaderboard Boolean @default(true)
+  showPawnBadge   Boolean @default(false)
 
   
   sentTransactions     Transaction[] @relation("SentTransactions")
@@ -66,6 +73,29 @@ model User {
   // Friends
   sentFriendRequests     Friendship[] @relation("FriendshipSender")
   receivedFriendRequests Friendship[] @relation("FriendshipReceiver")
+
+  ownedEstates    Estate[]
+  ownedVehicles   Vehicle[]
+}
+
+model Estate {
+  id          String   @id @default(cuid())
+  name        String
+  value       Decimal  @db.Decimal(12, 2)
+  imageUrl    String?
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  name        String
+  value       Decimal  @db.Decimal(12, 2)
+  imageUrl    String?
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
 }
 
 // Friendship model — mutual friendship after accepted

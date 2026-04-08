@@ -147,10 +147,32 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
     };
     const perks = RANK_PERKS[tier.name] ?? [];
 
+    const getRankCardStyles = (rankName: string) => {
+        if (rankName.includes('Rookie')) {
+            return 'bg-gradient-to-br from-[#3d2b1f] to-[#2a1d15] border-[#5c4033]/30 shadow-[#3d2b1f]/20';
+        }
+        if (rankName.includes('Dealer')) {
+            return 'bg-gradient-to-br from-[#334155] to-[#1e293b] border-[#475569]/30 shadow-[#334155]/20';
+        }
+        if (rankName.includes('Financier')) {
+            return 'bg-gradient-to-br from-[#45371c] via-[#2d2412] to-[#1a150a] border-[#b45309]/30 shadow-[#fbbf24]/5';
+        }
+        if (rankName.includes('Tycoon')) {
+            return 'bg-gradient-to-br from-[#064e3b] via-[#022c22] to-[#011c15] border-[#059669]/30 shadow-[#059669]/10';
+        }
+        if (rankName.includes('Crown')) {
+            return 'bg-gradient-to-br from-[#422006] via-[#2d1a0a] to-[#000000] border-[#f59e0b]/40 shadow-[#f59e0b]/20 animate-shimmer';
+        }
+        if (rankName.includes('Monarch')) {
+            return 'bg-gradient-to-br from-[#1e1b4b] via-[#0f172a] to-[#000000] border-[#818cf8]/40 shadow-[#818cf8]/20 animate-shimmer-sparkly';
+        }
+        return 'bg-[#1e293b] border-white/10';
+    };
+
     return (
         <div
             onClick={() => setExpanded(e => !e)}
-            className="bg-[#1e293b] border border-white/10 hover:border-[#FBBF24]/40 rounded-2xl p-3 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden"
+            className={`border rounded-3xl p-3 cursor-pointer active:scale-95 transition-all duration-200 select-none overflow-hidden ${getRankCardStyles(tier.name)}`}
         >
             <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
                 <span className="material-icons-round text-blue-400" style={{ fontSize: '14px' }}>military_tech</span>
@@ -163,18 +185,18 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
                     <img
                         src={getRankIconPath(iconName)}
                         alt={tier.name}
-                        className="w-16 h-16 object-contain drop-shadow-lg flex-shrink-0 active:scale-90 transition-transform -ml-1.5"
+                        className="w-20 h-20 object-contain drop-shadow-xl flex-shrink-0 active:scale-90 transition-transform -ml-2"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                 </Link>
                 <div className="min-w-0 -ml-1">
-                    <p className="text-[12px] font-black text-white font-['Russo_One'] tracking-wider truncate leading-tight">{tier.name}</p>
-                    <p className="text-[9px] text-blue-400 font-bold font-mono leading-tight mb-1">{user?.rankPoints ?? 0} RP</p>
-                    <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <p className="text-[10px] font-black text-white font-['Russo_One'] tracking-wider truncate leading-tight mb-0.5">{tier.name}</p>
+                    <p className="text-[8px] text-white/60 font-bold font-mono leading-tight mb-1.5">{user?.rankPoints ?? 0} RP</p>
+                    <div className="w-14 h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#FBBF24] to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                     </div>
                     {nextThreshold && (
-                        <p className="text-[8px] text-gray-600 mt-0.5 leading-tight">{nextThreshold - (user?.rankPoints ?? 0)} RP to next</p>
+                        <p className="text-[7px] text-gray-500 mt-1 leading-tight">{nextThreshold - (user?.rankPoints ?? 0)} RP to next</p>
                     )}
                 </div>
             </div>
