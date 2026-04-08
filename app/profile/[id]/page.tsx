@@ -312,7 +312,7 @@ export default function PublicProfilePage() {
 
                     {/* Interest Tag */}
                     {(profile.interestTag && profile.showInterest) && (
-                        <div className="mb-1 px-0.5 mt-[-2px]">
+                        <div className="mb-0 px-0.5 mt-[-2px]">
                             <span className="text-[12px] font-black text-blue-400 uppercase tracking-tight">
                                 {profile.interestTag}
                             </span>
