@@ -270,7 +270,7 @@ export default function PublicProfilePage() {
 
                     {/* About text */}
                     {profile.about && (
-                        <p className="text-[13px] text-slate-300 leading-relaxed mb-4 px-0.5">
+                        <p className="text-[13px] text-slate-300 leading-relaxed mb-4 px-0.5 whitespace-pre-wrap break-words">
                             {profile.about}
                         </p>
                     )}
@@ -282,12 +282,12 @@ export default function PublicProfilePage() {
                             <img
                                 src={`/rank-icons/${rank?.iconName}.svg`}
                                 alt={rank?.tier?.name}
-                                className="w-9 h-9 object-contain drop-shadow"
+                                className="w-14 h-14 object-contain drop-shadow -ml-1"
                                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
-                            <div className="min-w-0">
-                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Rank</p>
-                                <p className="text-[13px] font-black text-white font-['Russo_One'] truncate">{rank?.tier?.name}</p>
+                            <div className="min-w-0 -ml-1">
+                                <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest leading-none mb-0.5">Rank</p>
+                                <p className="text-[12px] font-black text-white font-['Russo_One'] truncate leading-none">{rank?.tier?.name}</p>
                             </div>
                         </Link>
 

@@ -21,6 +21,7 @@ model User {
   publicId    String?  @unique // PMUID (8-digit random)
   isMainAccount Boolean @default(false)
   realName    String?
+  realNameUpdatedAt DateTime?
   about       String?  // Bio / about text shown on public profile
   profileImage String?
   phoneNumber  String?  @unique
@@ -58,6 +59,8 @@ model User {
   parentAccount   User?   @relation("FinanceToMain", fields: [parentAccountId], references: [id])
   financeAccounts User[]  @relation("FinanceToMain")
 
+  reservedUsernames ReservedUsername[] @relation("UserReservedUsernames")
+
   queries         PlayerQuery[]
 
   // Friends
@@ -81,6 +84,14 @@ model Friendship {
   @@index([senderId])
   @@index([receiverId])
   @@index([status])
+}
+
+model ReservedUsername {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  expiresAt DateTime
+  userId    String
+  user      User     @relation("UserReservedUsernames", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum AuctionStatus {

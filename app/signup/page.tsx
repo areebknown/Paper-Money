@@ -642,7 +642,14 @@ export default function SignupPage() {
                                 </div>
                             </div>
                             <button 
-                                onClick={nextStep} 
+                                onClick={() => {
+                                    if (accountType === 'main') {
+                                        if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(realName)) return setError('Real Name appears invalid (too many consecutive consonants)');
+                                        if (/([a-z])\1{2,}/i.test(realName)) return setError('Real Name appears invalid (too many repeating characters)');
+                                    }
+                                    setError('');
+                                    nextStep();
+                                }} 
                                 disabled={!password || (accountType === 'main' && realName.trim().split(' ').filter(Boolean).length < 2)} 
                                 className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40"
                             >

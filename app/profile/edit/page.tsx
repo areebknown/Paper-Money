@@ -26,6 +26,8 @@ export default function EditProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [daysLocked, setDaysLocked] = useState(0);
 
     useEffect(() => {
         if (data?.user) {
@@ -42,6 +44,13 @@ export default function EditProfilePage() {
                     }
                 });
             setProfileImage(data.user.profileImage || null);
+            if (data.user.realNameUpdatedAt) {
+                const updatedTime = new Date(data.user.realNameUpdatedAt).getTime();
+                const daysDiff = (Date.now() - updatedTime) / (1000 * 60 * 60 * 24);
+                if (daysDiff < 30) {
+                    setDaysLocked(Math.ceil(30 - daysDiff));
+                }
+            }
         }
     }, [data?.user]);
 
@@ -102,8 +111,25 @@ export default function EditProfilePage() {
             if (realName.trim().split(' ').filter(Boolean).length < 2) {
                 return setError('Real Name must contain at least two separate words');
             }
+            if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(realName)) {
+                return setError('Real Name appears invalid (too many consecutive consonants)');
+            }
+            if (/([a-z])\1{2,}/i.test(realName)) {
+                return setError('Real Name appears invalid (too many repeating characters)');
+            }
+            
+            // Should we show confirm modal?
+            if (realName !== (user.realName || '') && !showConfirmModal) {
+                setShowConfirmModal(true);
+                return;
+            }
         }
 
+        performSave();
+    };
+
+    const performSave = async () => {
+        setShowConfirmModal(false);
         setIsSaving(true);
         try {
             const res = await fetch('/api/profile/update', {
@@ -190,20 +216,25 @@ export default function EditProfilePage() {
 
                     {/* Real Name (Main Account Only) */}
                     {user.isMainAccount && (
-                        <div>
+                        <div className="relative">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1.5 block">Real Name</label>
                             <input
                                 type="text"
                                 value={realName}
+                                disabled={daysLocked > 0}
                                 onChange={(e) => {
                                     const val = e.target.value.replace(/[^A-Za-z\s]/g, '').replace(/\s+/g, ' ');
                                     const formatted = val.split(' ').map(word => Math.max(word.length, 0) ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '').join(' ');
                                     setRealName(formatted);
                                 }}
-                                className="w-full bg-slate-900/80 border border-slate-800 px-4 py-3.5 rounded-xl text-white outline-none focus:border-[#FBBF24] transition-colors"
+                                className="w-full bg-slate-900/80 border border-slate-800 px-4 py-3.5 rounded-xl text-white outline-none focus:border-[#FBBF24] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 placeholder="Areeb Ghous"
                             />
-                            <p className="text-[9px] text-slate-500 mt-1 pl-1">Must contain at least two separate words.</p>
+                            {daysLocked > 0 ? (
+                                <p className="text-[9px] text-[#FBBF24] font-bold mt-1.5 pl-1 uppercase tracking-wider">Locked for {daysLocked} more days</p>
+                            ) : (
+                                <p className="text-[9px] text-slate-500 mt-1 pl-1">Must contain at least two separate words. Changes are locked for 30 days.</p>
+                            )}
                         </div>
                     )}
 
@@ -256,6 +287,29 @@ export default function EditProfilePage() {
                         onCropDone={handleCropDone}
                         onCropCancel={() => setCropImageSrc(null)}
                     />
+                )}
+            </AnimatePresence>
+
+            {/* Confirm Modal for Real Name */}
+            <AnimatePresence>
+                {showConfirmModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full max-w-sm text-center">
+                            <h3 className="text-[#FBBF24] font-black text-lg uppercase tracking-widest mb-2">Are you sure?</h3>
+                            <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+                                You are about to update your Real Name to <strong className="text-white">{realName}</strong>. 
+                                Once saved, you will NOT be able to change it again for <strong className="text-rose-400">30 days</strong>.
+                            </p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-colors">
+                                    Cancel
+                                </button>
+                                <button onClick={performSave} className="flex-1 py-3 bg-[#FBBF24] text-slate-950 rounded-xl font-black text-xs uppercase hover:bg-[#FBBF24]/90 transition-colors">
+                                    Yes, I'm Sure
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

@@ -35,12 +35,12 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     
     const formatContact = (type: 'main' | 'side') => {
         if (type === 'main') {
-            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91${user.phoneNumber}`;
+            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91 ${user.phoneNumber}`;
             if (user?.email) return user.email;
             return 'No Phone Linked';
         } else {
             if (user?.email) return user.email;
-            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91${user.phoneNumber}`;
+            if (user?.phoneNumber) return user.phoneNumber.startsWith('+') ? user.phoneNumber : `+91 ${user.phoneNumber}`;
             return 'No Email Linked';
         }
     };

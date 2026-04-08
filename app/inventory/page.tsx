@@ -163,18 +163,18 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
                     <img
                         src={getRankIconPath(iconName)}
                         alt={tier.name}
-                        className="w-12 h-12 object-contain drop-shadow-lg flex-shrink-0 active:scale-90 transition-transform"
+                        className="w-16 h-16 object-contain drop-shadow-lg flex-shrink-0 active:scale-90 transition-transform -ml-1.5"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                 </Link>
-                <div className="min-w-0">
-                    <p className="text-sm font-black text-white font-['Russo_One'] tracking-wider truncate">{tier.name}</p>
-                    <p className="text-[10px] text-blue-400 font-bold font-mono">{user?.rankPoints ?? 0} RP</p>
-                    <div className="mt-1 w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="min-w-0 -ml-1">
+                    <p className="text-[12px] font-black text-white font-['Russo_One'] tracking-wider truncate leading-tight">{tier.name}</p>
+                    <p className="text-[9px] text-blue-400 font-bold font-mono leading-tight mb-1">{user?.rankPoints ?? 0} RP</p>
+                    <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#FBBF24] to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                     </div>
                     {nextThreshold && (
-                        <p className="text-[9px] text-gray-600 mt-0.5">{nextThreshold - (user?.rankPoints ?? 0)} RP to next</p>
+                        <p className="text-[8px] text-gray-600 mt-0.5 leading-tight">{nextThreshold - (user?.rankPoints ?? 0)} RP to next</p>
                     )}
                 </div>
             </div>

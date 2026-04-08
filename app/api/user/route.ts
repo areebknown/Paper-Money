@@ -25,6 +25,7 @@ export async function GET(req: Request) {
                 rankPoints: true,
                 rankTier: true,
                 profileImage: true,
+                realNameUpdatedAt: true,
                 sentTransactions: {
                     orderBy: { createdAt: 'desc' },
                     take: 50,
@@ -85,6 +86,7 @@ export async function GET(req: Request) {
                 rankPoints: user.rankPoints,
                 rankTier: user.rankTier,
                 profileImage: user.profileImage,
+                realNameUpdatedAt: user.realNameUpdatedAt,
                 totalInvested,
                 portfolios: user.portfolios
             },

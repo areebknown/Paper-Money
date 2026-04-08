@@ -10,14 +10,23 @@ export async function GET(req: Request) {
             return NextResponse.json({ available: false, error: 'Invalid username' });
         }
 
+        const checkUsername = username.toLowerCase();
+
         const existingUser = await prisma.user.findUnique({
-            where: { username: username.toLowerCase() },
+            where: { username: checkUsername },
             select: { id: true }
         });
 
+        const reservedUser = await prisma.reservedUsername.findFirst({
+            where: {
+                username: checkUsername,
+                expiresAt: { gt: new Date() }
+            }
+        });
+
         return NextResponse.json({ 
-            available: !existingUser,
-            username: username.toLowerCase()
+            available: !existingUser && !reservedUser,
+            username: checkUsername
         });
 
     } catch (error) {
