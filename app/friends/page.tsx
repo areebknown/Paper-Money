@@ -346,7 +346,7 @@ export default function FriendsPage() {
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed inset-0 z-50 bg-[#0b1120] flex flex-col"
+                        className="fixed inset-0 z-[200] bg-[#0b1120] flex flex-col"
                     >
                         <div className="px-4 pt-6 pb-4 bg-[#111827] border-b border-white/10 flex items-center gap-3">
                             <button 

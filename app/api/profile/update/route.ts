@@ -12,10 +12,9 @@ export async function PUT(req: Request) {
     try {
         const body = await req.json();
         const { username, realName, about, profileImage } = body;
-        // Fetch user first to check if they are main account
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { isMainAccount: true, username: true, realNameUpdatedAt: true }
+            select: { isMainAccount: true, username: true, realNameUpdatedAt: true, realName: true }
         });
 
         if (!user) {
@@ -52,8 +51,8 @@ export async function PUT(req: Request) {
             updateData.profileImage = profileImage;
         }
 
-        // Only allow changing realName if main account
-        if (realName !== undefined && user.isMainAccount) {
+        // Only allow changing realName if main account AND the name actually changed
+        if (realName !== undefined && user.isMainAccount && realName !== user.realName) {
             if (realName.trim().split(' ').filter(Boolean).length < 2) {
                 return NextResponse.json({ error: 'Real Name must contain at least two words' }, { status: 400 });
             }

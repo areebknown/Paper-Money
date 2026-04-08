@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR, { useSWRConfig } from 'swr';
 import Header from '@/components/Header';
-import { Camera, ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Camera, ArrowLeft, Loader2, Save, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageCropper from '@/components/ImageCropper';
 
@@ -20,6 +20,10 @@ export default function EditProfilePage() {
     const [initialRealName, setInitialRealName] = useState('');
     const [about, setAbout] = useState('');
     const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [initialUsername, setInitialUsername] = useState('');
+
+    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+    const [checkingUsername, setCheckingUsername] = useState(false);
 
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
@@ -33,6 +37,7 @@ export default function EditProfilePage() {
     useEffect(() => {
         if (data?.user) {
             setUsername(data.user.username || '');
+            setInitialUsername(data.user.username || '');
             setRealName(data.user.realName || '');
             // NOTE: the standard /api/user might not return about text currently, let's fetch from profile endpoint if missing
             // Wait, we need the `about` field. Let's trigger a fetch to `/api/profile/[id]`
@@ -55,6 +60,31 @@ export default function EditProfilePage() {
             }
         }
     }, [data?.user]);
+
+    useEffect(() => {
+        if (!username || username === initialUsername) {
+            setIsUsernameAvailable(null); // idle state or no change
+            return;
+        }
+        if (username.length < 3 || username.endsWith('.')) {
+            setIsUsernameAvailable(null);
+            return;
+        }
+        
+        setCheckingUsername(true);
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/user/check-username?username=${username}`);
+                const resData = await res.json();
+                setIsUsernameAvailable(resData.available);
+            } catch {
+                setIsUsernameAvailable(false);
+            } finally {
+                setCheckingUsername(false);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [username, initialUsername]);
 
     if (isLoading) {
         return (
@@ -162,6 +192,14 @@ export default function EditProfilePage() {
         }
     };
 
+    const AvailabilityIndicator = ({ checking, available }: { checking: boolean; available: boolean | null }) => {
+        if (!username || username === initialUsername) return null;
+        if (checking) return <Loader2 size={16} className="animate-spin text-slate-500" />;
+        if (available === true) return <CheckCircle2 size={18} className="text-emerald-500" />;
+        if (available === false) return <div className="px-2 py-0.5 bg-rose-500/20 text-rose-500 text-[8px] font-black rounded uppercase">Taken</div>;
+        return null;
+    };
+
     return (
         <div className="min-h-screen bg-[#111827] text-[#F9FAFB] font-['Inter'] antialiased pb-24">
             <Header />
@@ -206,13 +244,18 @@ export default function EditProfilePage() {
                     {/* Username */}
                     <div>
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1.5 block">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
-                            className="w-full bg-slate-900/80 border border-slate-800 px-4 py-3.5 rounded-xl text-white font-mono text-sm outline-none focus:border-[#FBBF24] transition-colors"
-                            placeholder="username"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
+                                className="w-full bg-slate-900/80 border border-slate-800 px-4 py-3.5 pr-14 rounded-xl text-white font-mono text-sm outline-none focus:border-[#FBBF24] transition-colors"
+                                placeholder="username"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                                <AvailabilityIndicator checking={checkingUsername} available={isUsernameAvailable} />
+                            </div>
+                        </div>
                         <p className="text-[9px] text-slate-500 mt-1 pl-1">Lowercase letters, numbers, underscores, and periods.</p>
                     </div>
 
@@ -257,7 +300,7 @@ export default function EditProfilePage() {
 
                 <button
                     onClick={handleSave}
-                    disabled={isSaving || uploadState === 'uploading' || username.endsWith('.')}
+                    disabled={isSaving || uploadState === 'uploading' || username.length < 3 || username.endsWith('.') || isUsernameAvailable === false || checkingUsername}
                     className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20 disabled:opacity-50"
                 >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={16} /> Save Changes</>}

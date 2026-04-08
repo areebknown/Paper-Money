@@ -740,7 +740,7 @@ export default function SignupPage() {
                                             <input
                                                 type="text"
                                                 value={linkUsername}
-                                                onChange={(e) => { setLinkUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); }}
+                                                onChange={(e) => { setLinkUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '')); }}
                                                 className={`w-full bg-slate-900 border px-4 py-3.5 rounded-xl text-white font-mono text-sm outline-none transition-all pr-24 ${
                                                     linkUsernameCheck === 'valid' ? 'border-emerald-500/50 focus:border-emerald-500' :
                                                     linkUsernameCheck === 'invalid' ? 'border-rose-500/30 focus:border-rose-500/50' :
@@ -756,7 +756,7 @@ export default function SignupPage() {
                                         </div>
                                     </div>
                                     {error && <p className="text-rose-400 text-[11px] font-medium">{error}</p>}
-                                    <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading || linkUsernameCheck !== 'valid'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+                                    <button onClick={sendLinkOtp} disabled={!linkUsername.trim() || linkLoading || linkUsernameCheck !== 'valid' || linkUsername.endsWith('.')} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
                                         {linkLoading ? <Loader2 size={16} className="animate-spin" /> : 'Send Verification OTP'}
                                     </button>
                                 </div>
