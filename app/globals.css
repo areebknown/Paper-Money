@@ -156,32 +156,113 @@
   animation: fade-in-up 0.4s ease forwards;
 }
 
+/* ── Rank shimmer keyframes ── */
 @keyframes rank-shimmer {
-  0% { transform: translateX(-150%) skewX(-20deg); }
-  100% { transform: translateX(150%) skewX(-20deg); }
+  0%   { transform: translateX(-200%) skewX(-18deg); }
+  100% { transform: translateX(200%) skewX(-18deg); }
 }
 
+@keyframes rank-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.6) rotate(0deg); }
+  50%       { opacity: 1; transform: scale(1.2) rotate(180deg); }
+}
+
+/* ── Tycoon: green swipe every 4s ── */
+.animate-shimmer-tycoon {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer-tycoon::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(52, 211, 153, 0.15),
+    rgba(16, 185, 129, 0.25),
+    rgba(52, 211, 153, 0.15),
+    transparent
+  );
+  animation: rank-shimmer 4s ease-in-out infinite;
+}
+
+/* ── Crown: cyan swipe + subtle sparkle every 3s ── */
+.animate-shimmer-crown {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer-crown::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(34, 211, 238, 0.2),
+    rgba(6, 182, 212, 0.35),
+    rgba(34, 211, 238, 0.2),
+    transparent
+  );
+  animation: rank-shimmer 3s ease-in-out infinite;
+}
+.animate-shimmer-crown::before {
+  content: "✦ ✦ ✦";
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 6px;
+  letter-spacing: 4px;
+  color: rgba(103, 232, 249, 0.6);
+  animation: rank-sparkle 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Monarch: purple-gold swipe + sparkle every 2.5s ── */
+.animate-shimmer-monarch {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer-monarch::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(167, 139, 250, 0.2),
+    rgba(251, 191, 36, 0.35),
+    rgba(167, 139, 250, 0.2),
+    transparent
+  );
+  animation: rank-shimmer 2.5s ease-in-out infinite;
+}
+.animate-shimmer-monarch::before {
+  content: "✦ ✧ ✦";
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 7px;
+  letter-spacing: 4px;
+  color: rgba(251, 191, 36, 0.8);
+  animation: rank-sparkle 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Legacy aliases (kept for safety) ── */
 .animate-shimmer {
   position: relative;
   overflow: hidden;
 }
-
 .animate-shimmer::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
   animation: rank-shimmer 3s infinite;
 }
-
 .animate-shimmer-sparkly::after {
   background: linear-gradient(
     to right,

@@ -148,23 +148,29 @@ function RankCard({ user, rank, couponsCount = 0 }: { user: any; rank: any; coup
     const perks = RANK_PERKS[tier.name] ?? [];
 
     const getRankCardStyles = (rankName: string) => {
+        // Rookie — bronze/brown
         if (rankName.includes('Rookie')) {
-            return 'bg-gradient-to-br from-[#3d2b1f] to-[#2a1d15] border-[#5c4033]/30 shadow-[#3d2b1f]/20';
+            return 'bg-gradient-to-br from-[#4a2f1a] via-[#3b2213] to-[#241509] border-[#92400e]/40 shadow-[#92400e]/10';
         }
+        // Dealer — silver/grey
         if (rankName.includes('Dealer')) {
-            return 'bg-gradient-to-br from-[#334155] to-[#1e293b] border-[#475569]/30 shadow-[#334155]/20';
+            return 'bg-gradient-to-br from-[#374151] via-[#1f2937] to-[#111827] border-[#6b7280]/40 shadow-[#6b7280]/10';
         }
+        // Financier — gold/yellow
         if (rankName.includes('Financier')) {
-            return 'bg-gradient-to-br from-[#45371c] via-[#2d2412] to-[#1a150a] border-[#b45309]/30 shadow-[#fbbf24]/5';
+            return 'bg-gradient-to-br from-[#78350f] via-[#451a03] to-[#1c1000] border-[#d97706]/40 shadow-[#fbbf24]/10';
         }
+        // Tycoon — green with swipe shine
         if (rankName.includes('Tycoon')) {
-            return 'bg-gradient-to-br from-[#064e3b] via-[#022c22] to-[#011c15] border-[#059669]/30 shadow-[#059669]/10';
+            return 'bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#022c22] border-[#10b981]/40 shadow-[#10b981]/15 animate-shimmer-tycoon';
         }
+        // Crown — cyan/blue with sparkle
         if (rankName.includes('Crown')) {
-            return 'bg-gradient-to-br from-[#422006] via-[#2d1a0a] to-[#000000] border-[#f59e0b]/40 shadow-[#f59e0b]/20 animate-shimmer';
+            return 'bg-gradient-to-br from-[#0c4a6e] via-[#083344] to-[#020617] border-[#22d3ee]/40 shadow-[#06b6d4]/20 animate-shimmer-crown';
         }
+        // Monarch — purple/gold with sparkle
         if (rankName.includes('Monarch')) {
-            return 'bg-gradient-to-br from-[#1e1b4b] via-[#0f172a] to-[#000000] border-[#818cf8]/40 shadow-[#818cf8]/20 animate-shimmer-sparkly';
+            return 'bg-gradient-to-br from-[#3b0764] via-[#4a044e] to-[#1c0a3a] border-[#a78bfa]/50 shadow-[#7c3aed]/25 animate-shimmer-monarch';
         }
         return 'bg-[#1e293b] border-white/10';
     };
