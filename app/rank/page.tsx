@@ -259,16 +259,17 @@ export default function RankPage() {
         return 'empty';
     }
 
-    // Reverse so Monarch is at top, Rookie at bottom
-    const rankList = [...RANKS].reverse();
+    // Keep original order: Rookie at idx 0, Monarch at last idx
+    const rankList = [...RANKS];
     const currentRankIdx = rankList.findIndex(r => r.id === currentRank.id);
 
     function getRankStatus(rank: RankEntry): 'achieved' | 'current' | 'future' {
         const idx = rankList.findIndex(r => r.id === rank.id);
-        if (idx > currentRankIdx) return 'achieved';
+        if (idx < currentRankIdx) return 'achieved';
         if (idx === currentRankIdx) return 'current';
         return 'future';
     }
+
 
     return (
         <div className="h-screen flex flex-col bg-[#080d16] text-white overflow-hidden font-['Inter']">
@@ -294,7 +295,7 @@ export default function RankPage() {
                 className="flex-1 overflow-y-auto px-4 pb-4"
                 style={{ display: 'flex', flexDirection: 'column-reverse' }}
             >
-                <div className="flex flex-col-reverse gap-0">
+                <div className="flex flex-col-reverse relative z-0">
                     {rankList.map((rank, idx) => {
                         const status = getRankStatus(rank);
                         const isAchieved = status === 'achieved';
@@ -308,70 +309,67 @@ export default function RankPage() {
                             <div
                                 key={rank.id}
                                 data-rank-id={rank.id}
-                                className="flex items-start gap-0 relative"
+                                className="flex items-center relative h-[104px]"
                             >
                                 {/* Left: rank name */}
-                                <div className="w-[90px] flex flex-col items-end justify-center pt-4 pr-3 flex-shrink-0">
-                                    <p className={`text-[10px] font-black leading-tight text-right ${isFuture ? 'text-white/20' : isAchieved ? 'text-white/40' : 'text-white'}`}>
+                                <div className="w-[85px] flex justify-end pr-4 flex-shrink-0 relative z-10">
+                                    <p className={`text-[12px] font-black leading-tight text-right ${isFuture ? 'text-white/20' : isAchieved ? 'text-white/40' : 'text-white'}`}>
                                         {rank.name}
                                     </p>
                                 </div>
 
-                                {/* Center: bar + circle */}
-                                <div className="flex flex-col items-center flex-shrink-0 w-[44px]">
-                                    {/* Top bar segment */}
-                                    {!isLast && (
-                                        <div className="w-[3px] h-6 rounded-full overflow-hidden bg-white/5">
-                                            <div
-                                                className={`w-full transition-all ${segFill === 'full' ? `bg-gradient-to-b ${getBarFillColor(rank.name)} h-full` : 'h-0'}`}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Icon circle */}
+                                {/* Center: circle */}
+                                <div className="flex flex-col items-center flex-shrink-0 w-[56px] relative z-20">
                                     <button
                                         onClick={() => setSelectedRank(rank)}
                                         className={`
-                                            w-11 h-11 rounded-full border-2 flex items-center justify-center
-                                            transition-all active:scale-90 flex-shrink-0 my-1
+                                            w-[56px] h-[56px] rounded-full border-2 flex items-center justify-center
+                                            transition-all active:scale-90 flex-shrink-0 bg-[#0f172a] relative z-20
                                             ${isCurrent
-                                                ? `${ringColor} shadow-[0_0_16px_4px] bg-[#1e293b]`
+                                                ? `${ringColor} shadow-[0_0_24px_4px] bg-[#1e293b]`
                                                 : isAchieved
                                                     ? 'border-white/15 bg-[#1e293b]/60'
-                                                    : 'border-white/5 bg-[#0f172a]'
+                                                    : 'border-white/5'
                                             }
                                         `}
                                     >
                                         <img
                                             src={`/rank-icons/${rank.iconName}.svg`}
                                             alt={rank.name}
-                                            className={`w-7 h-7 object-contain transition-all ${isFuture ? 'opacity-20 grayscale' : isAchieved ? 'opacity-50 grayscale-[40%]' : 'opacity-100'}`}
+                                            className={`w-[36px] h-[36px] object-contain transition-all ${isFuture ? 'opacity-20 grayscale' : isAchieved ? 'opacity-60 grayscale-[30%]' : 'opacity-100'}`}
                                         />
                                     </button>
-
-                                    {/* Bottom bar segment toward the next lower rank */}
-                                    <div className="w-[3px] h-6 rounded-full overflow-hidden bg-white/5">
-                                        <div
-                                            className={`w-full transition-all ${segFill === 'full' ? `bg-gradient-to-b ${getBarFillColor(rank.name)} h-full` : 'h-0'}`}
-                                        />
-                                    </div>
                                 </div>
 
                                 {/* Right: points + perks + tick */}
-                                <div className="flex-1 flex items-start gap-2 pt-4 pl-3 min-w-0">
-                                    <div className="min-w-0 flex-1">
-                                        <p className={`text-[11px] font-black font-mono ${isFuture ? 'text-white/20' : isAchieved ? 'text-white/40' : 'text-amber-400'}`}>
+                                <div className="flex-1 flex flex-col justify-center pl-4 min-w-0 relative z-10">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className={`text-[14px] font-black font-mono ${isFuture ? 'text-white/20' : isAchieved ? 'text-white/40' : 'text-amber-400'}`}>
                                             {rank.maxPoints ? `${rank.minPoints}–${rank.maxPoints}` : `${rank.minPoints}+`}
                                         </p>
-                                        <p className={`text-[9px] leading-relaxed mt-0.5 line-clamp-3 ${isFuture ? 'text-white/15' : 'text-white/40'}`}>
-                                            {rank.perks.join(' · ')}
-                                        </p>
+                                        {isAchieved && (
+                                            <CheckCircle2 size={16} className="text-emerald-500/60 flex-shrink-0" />
+                                        )}
                                     </div>
-                                    {/* Tick for achieved */}
-                                    {isAchieved && (
-                                        <CheckCircle2 size={13} className="text-emerald-500/60 flex-shrink-0 mt-0.5" />
-                                    )}
+                                    <p className={`text-[10px] leading-relaxed line-clamp-2 ${isFuture ? 'text-white/20' : 'text-white/50'}`}>
+                                        {rank.perks.join(' · ')}
+                                    </p>
                                 </div>
+
+                                {/* Vertical line TO THE NEXT RANK (visuall ABOVE this one) */}
+                                {!isLast && (
+                                    <div className="absolute bottom-1/2 left-[85px] w-[56px] h-[104px] flex justify-center z-0 pointer-events-none">
+                                        <div className="w-[4px] h-full bg-white/5 overflow-hidden">
+                                            <div
+                                                className={`w-full transition-all ${
+                                                    segFill === 'full' 
+                                                        ? `bg-gradient-to-t ${getBarFillColor(rank.name)} h-full` 
+                                                        : 'h-0'
+                                                }`}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
