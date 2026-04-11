@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
