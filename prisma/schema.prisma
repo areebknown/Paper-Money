@@ -33,11 +33,19 @@ model User {
   
   // Bid Wars: Rank & Progression
   rankPoints Int      @default(0)
-  loanTokens Int      @default(1)
+  loanTokens Int      @default(1)  // Available parallel loan slots (not a weekly drip)
+  loanTokenCap Int    @default(1)  // Maximum allowed parallel loans for this rank
   greenMoney Decimal  @default(0) @db.Decimal(10, 2)
-  rankTier   String   @default("BRONZE") // BRONZE, SILVER, GOLD, DIAMOND
-  lastWeeklyClaim DateTime? // Tracks when the user last received weekly rank perks
-  
+  rankTier   String   @default("BRONZE") // Legacy field kept for compat
+  lastWeeklyClaim DateTime?
+
+  // Buy Points monthly cap
+  pointsPurchasedThisMonth Int       @default(0)
+  pointsMonthResetAt       DateTime? // When the current month window started
+
+  // Milestones
+  completedMilestones String[] @default([]) // milestone IDs e.g. ["NETWORTH_2L", "FIRST_SHUTTER"]
+
   interestTag String?    // Bidder, Investor, Lender, Collector, Digger, Pawnbroker
   showInterest Boolean   @default(true)
   showNetworth Boolean   @default(false)
@@ -76,6 +84,8 @@ model User {
 
   ownedEstates    Estate[]
   ownedVehicles   Vehicle[]
+
+  @@index([rankPoints])
 }
 
 model Estate {
