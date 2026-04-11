@@ -99,14 +99,18 @@ export async function POST(req: Request) {
         if (!currentUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         const isAdmin = currentUser.isAdmin;
-        const userToUpdateId = (targetUserId && isAdmin) ? targetUserId : userId;
+        const isSelf = !targetUserId || targetUserId === userId;
+        const userToUpdateId = (!isSelf && isAdmin) ? targetUserId : userId;
 
-        if (!isAdmin && targetUserId && targetUserId !== userId) {
+        // Skip payment and caps ONLY if an admin is giving points to *someone else*
+        const bypassChecks = isAdmin && !isSelf;
+
+        if (!isAdmin && !isSelf) {
             return NextResponse.json({ error: 'Cannot update other users' }, { status: 403 });
         }
 
-        // ── Monthly cap check (non-admins only) ──────────────────────────────
-        if (!isAdmin) {
+        // ── Monthly cap check ──────────────────────────────
+        if (!bypassChecks) {
             const now = new Date();
             let purchased = currentUser.pointsPurchasedThisMonth;
             const needsReset =
@@ -132,7 +136,7 @@ export async function POST(req: Request) {
         const pricePerPoint = currentRank.pricePerPoint;
         const totalCost = points * pricePerPoint;
 
-        if (!isAdmin && Number(currentUser.balance) < totalCost) {
+        if (!bypassChecks && Number(currentUser.balance) < totalCost) {
             return NextResponse.json({
                 error: `Insufficient balance. Need ₹${totalCost.toLocaleString('en-IN')}, have ₹${Number(currentUser.balance).toLocaleString('en-IN')}.`,
             }, { status: 400 });
@@ -140,7 +144,7 @@ export async function POST(req: Request) {
 
         // ── Transaction ───────────────────────────────────────────────────────
         const updated = await prisma.$transaction(async (tx) => {
-            if (!isAdmin) {
+            if (!bypassChecks) {
                 await deductBalance(tx, userId, totalCost);
             }
 
@@ -168,7 +172,7 @@ export async function POST(req: Request) {
             }
 
             // Update monthly counter
-            if (!isAdmin) {
+            if (!bypassChecks) {
                 const now = new Date();
                 const needsReset =
                     !currentUser.pointsMonthResetAt ||

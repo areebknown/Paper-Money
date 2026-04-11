@@ -17,7 +17,7 @@ export default function MilestonesPage() {
     const totalPoints = MILESTONES.filter(m => completed.includes(m.id)).reduce((s, m) => s + m.points, 0);
 
     return (
-        <div className="min-h-screen bg-[#080d16] text-white font-['Inter'] pb-12">
+        <div className="min-h-screen bg-[#080d16] text-white font-['Inter'] pb-40">
             <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
             <Header />

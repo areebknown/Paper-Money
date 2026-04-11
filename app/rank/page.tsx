@@ -61,7 +61,7 @@ function RankCardModal({ rank, onClose }: { rank: RankEntry; onClose: () => void
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                     onClick={e => e.stopPropagation()}
-                    className={`w-full max-w-lg rounded-t-3xl border p-6 pb-10 relative overflow-hidden ${getRankCardStyles(rank.name)}`}
+                    className={`w-full max-w-lg rounded-t-3xl border p-6 pb-[104px] relative overflow-hidden ${getRankCardStyles(rank.name)}`}
                 >
                     {/* Close button */}
                     <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -166,7 +166,7 @@ function BuyPointsSheet({ rankInfo, onClose, onSuccess }: {
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                     onClick={e => e.stopPropagation()}
-                    className="w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-t-3xl p-6 pb-10"
+                    className="w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-t-3xl p-6 pb-[104px]"
                 >
                     <div className="flex items-center justify-between mb-5">
                         <h3 className="text-[16px] font-black text-white font-['Russo_One']">Buy Rank Points</h3>
@@ -377,22 +377,19 @@ export default function RankPage() {
             </div>
 
             {/* ── Bottom action bar ── */}
-            <div className="flex-shrink-0 px-4 pt-3 pb-24 border-t border-white/5 bg-[#080d16]">
+            <div className="flex-shrink-0 px-4 pt-3 pb-[96px] border-t border-white/5 bg-[#080d16]">
                 <div className="flex gap-2">
-                    <Link href="/rank/leaderboard" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all">
-                        <span className="material-icons-round text-[#FBBF24] text-xl">emoji_events</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Leaderboard</span>
+                    <Link href="/rank/leaderboard" className="flex-1 flex justify-center py-3.5 bg-red-600/90 border-[#b91c1c] border-b-[4px] active:border-b-0 active:translate-y-[4px] rounded-xl transition-all">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">Leaderboard</span>
                     </Link>
-                    <Link href="/rank/milestones" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all">
-                        <span className="material-icons-round text-emerald-400 text-xl">verified</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Milestones</span>
+                    <Link href="/rank/milestones" className="flex-1 flex justify-center py-3.5 bg-yellow-500/90 border-[#ca8a04] border-b-[4px] active:border-b-0 active:translate-y-[4px] rounded-xl transition-all">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-yellow-950 drop-shadow-sm">Milestones</span>
                     </Link>
                     <button
                         onClick={() => setShowBuy(true)}
-                        className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-[#FBBF24]/10 border border-[#FBBF24]/30 rounded-2xl hover:bg-[#FBBF24]/20 active:scale-95 transition-all"
+                        className="flex-1 flex justify-center py-3.5 bg-blue-600/90 border-[#1d4ed8] border-b-[4px] active:border-b-0 active:translate-y-[4px] rounded-xl transition-all"
                     >
-                        <span className="material-icons-round text-[#FBBF24] text-xl">add_circle</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-[#FBBF24]/80">Buy Points</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">Buy Points</span>
                     </button>
                 </div>
             </div>

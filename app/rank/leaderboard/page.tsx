@@ -24,7 +24,7 @@ function getPositionBadge(position: number) {
 
 function UserTile({ entry, isMe = false }: { entry: any; isMe?: boolean }) {
     return (
-        <div className={`flex items-center gap-3 px-4 py-3 border rounded-2xl ${getTileGradient(entry.position)} ${isMe ? 'ring-1 ring-[#FBBF24]/40' : ''}`}>
+        <Link href={`/profile/${entry.id}`} className={`flex items-center gap-3 px-4 py-3 border rounded-2xl transition-all active:scale-[0.98] ${getTileGradient(entry.position)} ${isMe ? 'ring-1 ring-[#FBBF24]/40' : ''}`}>
             {/* Position */}
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black flex-shrink-0 ${getPositionBadge(entry.position)}`}>
                 {entry.position}
@@ -53,7 +53,7 @@ function UserTile({ entry, isMe = false }: { entry: any; isMe?: boolean }) {
 
             {/* RP */}
             <p className="text-[12px] font-black text-[#FBBF24] font-mono flex-shrink-0 w-16 text-right">{entry.rankPoints.toLocaleString()} RP</p>
-        </div>
+        </Link>
     );
 }
 
@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
     const totalPages = data?.totalPages ?? 1;
 
     return (
-        <div className="min-h-screen bg-[#080d16] text-white font-['Inter'] pb-40">
+        <div className="min-h-screen bg-[#080d16] text-white font-['Inter'] pb-48">
             <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
             <Header />
@@ -120,11 +120,11 @@ export default function LeaderboardPage() {
 
             {/* ── Sticky own-tile at bottom with fade vignette ── */}
             {myEntry && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
+                <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none pb-[80px]">
                     {/* Upward fade vignette */}
-                    <div className="h-16 bg-gradient-to-t from-[#080d16] to-transparent" />
+                    <div className="h-12 bg-gradient-to-t from-[#080d16] to-transparent" />
                     {/* Tile */}
-                    <div className="bg-[#080d16] px-4 pb-5 pt-2 pointer-events-auto max-w-2xl mx-auto">
+                    <div className="bg-[#080d16] px-4 pb-4 pt-2 pointer-events-auto max-w-2xl mx-auto">
                         <p className="text-[8px] font-black uppercase tracking-widest text-white/30 mb-1.5 text-center">Your Position</p>
                         <UserTile entry={myEntry} isMe={true} />
                     </div>
