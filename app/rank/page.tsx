@@ -379,7 +379,7 @@ export default function RankPage() {
             </div>
 
             {/* ── Bottom action bar ── */}
-            <div className="flex-shrink-0 px-4 py-3 border-t border-white/5 bg-[#080d16]">
+            <div className="flex-shrink-0 px-4 pt-3 pb-24 border-t border-white/5 bg-[#080d16]">
                 <div className="flex gap-2">
                     <Link href="/rank/leaderboard" className="flex-1 flex flex-col items-center gap-1 py-2.5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all">
                         <span className="material-icons-round text-[#FBBF24] text-xl">emoji_events</span>
