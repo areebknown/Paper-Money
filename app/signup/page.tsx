@@ -297,7 +297,24 @@ export default function SignupPage() {
                 }),
             });
             const data = await res.json();
-            if (res.ok) { router.push('/home'); }
+            if (res.ok) { 
+                try {
+                    const accounts = JSON.parse(localStorage.getItem('pm_accounts') || '[]');
+                    accounts.push({
+                        id: data.user.id,
+                        username: data.user.username,
+                        isMainAccount: data.user.isMainAccount,
+                        parentAccountId: accountType === 'side' && linkMainUserId ? linkMainUserId : null,
+                        profileImage: profileImage,
+                        switchToken: data.switchToken,
+                        lastActive: Date.now()
+                    });
+                    localStorage.setItem('pm_accounts', JSON.stringify(accounts));
+                } catch (e) {
+                    console.error('Failed to save account to device');
+                }
+                router.push('/home'); 
+            }
             else { setError(data.error || 'Signup failed'); }
         } catch { setError('Connection failed'); }
         finally { setLoading(false); }

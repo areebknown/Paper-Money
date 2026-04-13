@@ -38,6 +38,29 @@ export default function LoginPage() {
             const data = await res.json();
 
             if (res.ok) {
+                // Set Up Multi-account cache
+                try {
+                    const accounts = JSON.parse(localStorage.getItem('pm_accounts') || '[]');
+                    const existingIdx = accounts.findIndex((a: any) => a.id === data.user.id);
+                    const acctData = {
+                        id: data.user.id,
+                        username: data.user.username,
+                        isMainAccount: data.user.isMainAccount,
+                        parentAccountId: data.user.parentAccountId,
+                        profileImage: data.user.profileImage,
+                        switchToken: data.switchToken,
+                        lastActive: Date.now()
+                    };
+                    if (existingIdx > -1) {
+                        accounts[existingIdx] = { ...accounts[existingIdx], ...acctData };
+                    } else {
+                        accounts.push(acctData);
+                    }
+                    localStorage.setItem('pm_accounts', JSON.stringify(accounts));
+                } catch (e) {
+                    console.error('Failed to save account to device');
+                }
+
                 if (data.user.isAdmin) {
                     router.push('/admin');
                 } else {

@@ -39,14 +39,32 @@ export async function POST(req: Request) {
         // Trigger weekly perk allocation if eligible (runs in background to not block login)
         processWeeklyPerks(user.id).catch(err => console.error("Weekly perk allocation failed:", err));
 
-        // Create JWT
+        // Create HTTP-only session JWT
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
         const token = await new SignJWT({ userId: user.id, username: user.username, isAdmin: user.isAdmin })
             .setProtectedHeader({ alg: 'HS256' })
             .setExpirationTime('30d')
             .sign(secret);
+            
+        // Create Switch Token containing exact password representation
+        const switchToken = await new SignJWT({ userId: user.id, passwordHash: user.password })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('365d') // Lasts up to a year, but manually limited locally to 30 days
+            .sign(secret);
 
-        const response = NextResponse.json({ success: true, user: { id: user.id, username: user.username, balance: user.balance, isAdmin: user.isAdmin } });
+        const response = NextResponse.json({ 
+            success: true, 
+            user: { 
+                id: user.id, 
+                username: user.username, 
+                balance: user.balance, 
+                isAdmin: user.isAdmin,
+                isMainAccount: user.isMainAccount,
+                parentAccountId: user.parentAccountId,
+                profileImage: user.profileImage
+            },
+            switchToken
+        });
 
         // Set cookie
         response.cookies.set('token', token, {

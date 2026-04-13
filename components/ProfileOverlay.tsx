@@ -1,7 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { User, X, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import SwitchAccountModal from './SwitchAccountModal';
 
 interface ProfileOverlayProps {
     isOpen: boolean;
@@ -11,6 +13,7 @@ interface ProfileOverlayProps {
 
 export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlayProps) {
     const router = useRouter();
+    const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
 
     const menuOptions = [
         { label: 'MY PROFILE', path: `/profile/${user?.id ?? ''}` },
@@ -22,7 +25,7 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
     ];
 
     const bottomOptions = [
-        { label: 'SWITCH ACCOUNT', path: '/api/auth/switch', color: 'text-slate-300' },
+        { label: 'SWITCH ACCOUNT', action: () => setIsSwitchModalOpen(true), color: 'text-slate-300' },
     ];
 
     const handleLogout = async () => {
@@ -113,10 +116,7 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                         {bottomOptions.map((option) => (
                             <button
                                 key={option.label}
-                                onClick={() => {
-                                    router.push(option.path);
-                                    onClose();
-                                }}
+                                onClick={option.action}
                                 className={`w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 transition-colors active:scale-[0.98] ${option.color}`}
                             >
                                 <span className="text-[12px] font-bold uppercase tracking-[0.1em]">{option.label}</span>
@@ -142,6 +142,13 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
                     <span className="opacity-40">v2.5.0</span>
                 </div>
             </motion.div>
+
+            {/* Switch Account Modal rendering cleanly over the overlay */}
+            <SwitchAccountModal 
+                isOpen={isSwitchModalOpen} 
+                onClose={() => setIsSwitchModalOpen(false)} 
+                currentUserPublicId={user?.publicId}
+            />
         </div>
     );
 }

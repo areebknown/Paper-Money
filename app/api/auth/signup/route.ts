@@ -74,6 +74,12 @@ export async function POST(req: Request) {
             .setExpirationTime('30d')
             .sign(secret);
 
+        // Issue Switch Token
+        const switchToken = await new SignJWT({ userId: user.id, passwordHash: user.password })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('365d')
+            .sign(secret);
+
         const response = NextResponse.json({
             success: true,
             user: {
@@ -83,6 +89,7 @@ export async function POST(req: Request) {
                 isMainAccount: user.isMainAccount,
                 balance: user.balance,
             },
+            switchToken
         });
 
         response.cookies.set('token', token, {
