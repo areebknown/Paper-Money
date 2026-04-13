@@ -53,7 +53,7 @@ function UserTile({ entry, isMe = false }: { entry: any; isMe?: boolean }) {
             />
 
             {/* RP */}
-            <p className="text-[12px] font-black text-[#FBBF24] font-mono flex-shrink-0 w-16 text-right">{entry.rankPoints.toLocaleString()} RP</p>
+            <p className="text-[12px] font-black text-white font-mono flex-shrink-0 w-16 text-right">{entry.rankPoints.toLocaleString()} RP</p>
         </Link>
     );
 }
@@ -91,37 +91,37 @@ function WinnerPodium({ entries }: { entries: any[] }) {
     }
 
     return (
-        <div className="flex items-end justify-center gap-3 mt-8 mb-10 h-48 px-2 max-w-md mx-auto">
+        <div className="flex items-end justify-center gap-3 mt-8 mb-10 h-64 px-2 max-w-lg mx-auto">
             {/* 2nd place */}
-            <div className={`flex flex-col items-center w-1/3 max-w-[80px] ${!second ? 'opacity-0' : ''}`}>
+            <div className={`flex flex-col items-center w-1/3 max-w-[90px] ${!second ? 'opacity-0' : ''}`}>
                 {getPfp(second)}
-                <div className="w-full bg-gradient-to-t from-gray-700 to-gray-400 h-24 rounded-t-xl mt-3 flex justify-center text-gray-900 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(156,163,175,0.2)]">
+                <div className="w-full bg-gradient-to-t from-gray-700 to-gray-400 h-32 rounded-t-xl mt-3 flex justify-center text-gray-900 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(156,163,175,0.2)]">
                     2
                 </div>
                 {second && (
-                    <img src={`/rank-icons/${second.rank?.iconName}.svg`} className="w-8 h-8 mt-3" alt="rank" />
+                    <img src={`/rank-icons/${second.rank?.iconName}.svg`} className="w-10 h-10 mt-3" alt="rank" />
                 )}
             </div>
 
             {/* 1st place */}
-            <div className={`flex flex-col items-center w-1/3 max-w-[90px] ${!first ? 'opacity-0' : ''}`}>
+            <div className={`flex flex-col items-center w-1/3 max-w-[100px] ${!first ? 'opacity-0' : ''}`}>
                 {getPfp(first)}
-                <div className="w-full bg-gradient-to-t from-yellow-600 to-yellow-300 h-32 rounded-t-xl mt-3 flex justify-center text-yellow-900 font-black text-3xl pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.3)]">
+                <div className="w-full bg-gradient-to-t from-yellow-600 to-yellow-300 h-40 rounded-t-xl mt-3 flex justify-center text-yellow-900 font-black text-3xl pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.3)]">
                     1
                 </div>
                 {first && (
-                    <img src={`/rank-icons/${first.rank?.iconName}.svg`} className="w-10 h-10 mt-3" alt="rank" />
+                    <img src={`/rank-icons/${first.rank?.iconName}.svg`} className="w-12 h-12 mt-3" alt="rank" />
                 )}
             </div>
 
             {/* 3rd place */}
-            <div className={`flex flex-col items-center w-1/3 max-w-[80px] ${!third ? 'opacity-0' : ''}`}>
+            <div className={`flex flex-col items-center w-1/3 max-w-[90px] ${!third ? 'opacity-0' : ''}`}>
                 {getPfp(third)}
-                <div className="w-full bg-gradient-to-t from-amber-800 to-amber-600 h-16 rounded-t-xl mt-3 flex justify-center text-amber-950 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(180,83,9,0.2)]">
+                <div className="w-full bg-gradient-to-t from-amber-800 to-amber-600 h-24 rounded-t-xl mt-3 flex justify-center text-amber-950 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(180,83,9,0.2)]">
                     3
                 </div>
                 {third && (
-                    <img src={`/rank-icons/${third.rank?.iconName}.svg`} className="w-8 h-8 mt-3" alt="rank" />
+                    <img src={`/rank-icons/${third.rank?.iconName}.svg`} className="w-10 h-10 mt-3" alt="rank" />
                 )}
             </div>
         </div>
@@ -150,7 +150,6 @@ export default function LeaderboardPage() {
                         </Link>
                         <div>
                             <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                                <span className="material-icons-round text-[#FBBF24]">emoji_events</span>
                                 Leaderboard
                             </h1>
                         </div>

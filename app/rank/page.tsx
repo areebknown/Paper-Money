@@ -299,7 +299,7 @@ export default function RankPage() {
                 className="flex-1 overflow-y-auto px-4 pb-4"
                 style={{ display: 'flex', flexDirection: 'column-reverse' }}
             >
-                <div className="flex flex-col-reverse relative z-0">
+                <div className="flex flex-col-reverse relative z-0 w-full max-w-[360px] mx-auto">
                     {rankList.map((rank, idx) => {
                         const status = getRankStatus(rank);
                         const isAchieved = status === 'achieved';
@@ -317,7 +317,7 @@ export default function RankPage() {
                             >
                                 {/* Left: rank name */}
                                 <div className="w-[85px] flex justify-end pr-4 flex-shrink-0 relative z-10">
-                                    <p className={`text-[12px] font-black leading-tight text-right ${isFuture ? 'text-white/20' : isAchieved ? 'text-white/40' : 'text-white'}`}>
+                                    <p className={`text-[13px] font-black leading-tight text-right ${isCurrent ? 'text-yellow-400' : isFuture ? 'text-white/20' : 'text-white/40'}`}>
                                         {rank.name}
                                     </p>
                                 </div>
@@ -352,7 +352,7 @@ export default function RankPage() {
                                             {rank.maxPoints ? `${rank.minPoints}–${rank.maxPoints}` : `${rank.minPoints}+`}
                                         </p>
                                         {isAchieved && (
-                                            <CheckCircle2 size={16} className="text-emerald-500/60 flex-shrink-0" />
+                                            <CheckCircle2 size={16} className="text-yellow-500/80 flex-shrink-0" />
                                         )}
                                     </div>
                                     <p className={`text-[10px] leading-relaxed line-clamp-2 ${isFuture ? 'text-white/20' : 'text-white/50'}`}>

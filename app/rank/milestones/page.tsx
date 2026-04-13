@@ -24,7 +24,6 @@ export default function MilestonesPage() {
 
             <main className="px-4 pt-4 max-w-2xl mx-auto">
                 <h1 className="text-[18px] font-black text-white font-['Russo_One'] mb-1 flex items-center gap-2">
-                    <span className="material-icons-round text-emerald-400">verified</span>
                     Milestones
                 </h1>
                 <p className="text-[11px] text-white/30 mb-5">Each milestone can only be earned once.</p>
