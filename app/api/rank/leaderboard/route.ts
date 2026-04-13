@@ -16,6 +16,7 @@ export async function GET(req: Request) {
 
         // Paginated leaderboard
         const users = await prisma.user.findMany({
+            where: { isAdmin: false },
             orderBy: { rankPoints: 'desc' },
             skip,
             take: PAGE_SIZE,
@@ -36,15 +37,15 @@ export async function GET(req: Request) {
         // Current user's position (indexed — O(log n))
         const me = await prisma.user.findUnique({
             where: { id: userId },
-            select: { rankPoints: true, username: true, profileImage: true },
+            select: { rankPoints: true, username: true, profileImage: true, isAdmin: true },
         });
 
-        const usersAbove = me
-            ? await prisma.user.count({ where: { rankPoints: { gt: me.rankPoints } } })
+        const usersAbove = (me && !me.isAdmin)
+            ? await prisma.user.count({ where: { isAdmin: false, rankPoints: { gt: me.rankPoints } } })
             : 0;
 
         const myPosition = usersAbove + 1;
-        const myEntry = me
+        const myEntry = (me && !me.isAdmin)
             ? {
                   id: userId,
                   username: me.username,
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
               }
             : null;
 
-        const total = await prisma.user.count();
+        const total = await prisma.user.count({ where: { isAdmin: false } });
 
         return NextResponse.json({
             entries,

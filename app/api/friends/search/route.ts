@@ -24,7 +24,8 @@ export async function GET(req: Request) {
                 ],
                 NOT: {
                     id: userId // don't return self
-                }
+                },
+                isAdmin: false
             },
             select: {
                 id: true,
