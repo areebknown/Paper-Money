@@ -4,8 +4,9 @@ import React from 'react';
 import useSWR from 'swr';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Lock } from 'lucide-react';
+import { CheckCircle2, Lock, ChevronLeft } from 'lucide-react';
 import { MILESTONES } from '@/lib/rankData';
+import Link from 'next/link';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -23,10 +24,19 @@ export default function MilestonesPage() {
             <Header />
 
             <main className="px-4 pt-4 max-w-2xl mx-auto">
-                <h1 className="text-[18px] font-black text-white font-['Russo_One'] mb-1 flex items-center gap-2">
-                    Milestones
-                </h1>
-                <p className="text-[11px] text-white/30 mb-5">Each milestone can only be earned once.</p>
+                <div className="flex items-center justify-between bg-[#1e293b] border border-white/10 p-4 rounded-2xl shadow-xl shadow-black/40 mb-4">
+                    <div className="flex items-center gap-3">
+                        <Link href="/rank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all outline-none border border-white/5">
+                            <ChevronLeft size={20} />
+                        </Link>
+                        <div>
+                            <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                                Milestones
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+                <p className="text-[11px] text-white/30 mb-5 px-1">Each milestone can only be earned once.</p>
 
                 {/* Summary */}
                 <div className="flex gap-3 mb-5">

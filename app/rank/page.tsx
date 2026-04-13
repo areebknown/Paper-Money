@@ -276,7 +276,7 @@ export default function RankPage() {
 
 
     return (
-        <div className="h-[100dvh] flex flex-col bg-[#080d16] text-white overflow-hidden font-['Inter']">
+        <div className="fixed inset-0 z-0 flex flex-col bg-[#080d16] text-white overflow-hidden font-['Inter']">
             <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
             <Header />
