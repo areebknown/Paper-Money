@@ -64,6 +64,22 @@ export default function LoginPage() {
                     } else {
                         accounts.push(acctData);
                     }
+
+                    // Discover Finance Accounts from backend
+                    if (data.user.financeAccounts && Array.isArray(data.user.financeAccounts)) {
+                        data.user.financeAccounts.forEach((financeNode: any) => {
+                            const fIdx = accounts.findIndex((a: any) => a.id === financeNode.id);
+                            if (fIdx === -1) {
+                                accounts.push({
+                                    id: financeNode.id,
+                                    username: financeNode.username,
+                                    profileImage: financeNode.profileImage,
+                                    isMainAccount: false,
+                                    parentAccountId: data.user.id,
+                                });
+                            }
+                        });
+                    }
                     localStorage.setItem('pm_accounts', JSON.stringify(accounts));
                 } catch (e) {
                     console.error('Failed to save account to device');

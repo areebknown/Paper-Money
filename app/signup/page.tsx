@@ -278,7 +278,7 @@ export default function SignupPage() {
     };
 
     // ─── Final signup ───────────────────────────────────────────────────────────
-    const handleSignup = async () => {
+    const handleSignup = async (isLinking = false) => {
         setLoading(true); setError('');
         try {
             const res = await fetch('/api/auth/signup', {
@@ -313,10 +313,17 @@ export default function SignupPage() {
                 } catch (e) {
                     console.error('Failed to save account to device');
                 }
-                router.push('/home'); 
+                if (!isLinking) router.push('/home'); 
+                return true;
             }
-            else { setError(data.error || 'Signup failed'); }
-        } catch { setError('Connection failed'); }
+            else { 
+                setError(data.error || 'Signup failed'); 
+                return false;
+            }
+        } catch { 
+            setError('Connection failed'); 
+            return false;
+        }
         finally { setLoading(false); }
     };
 
@@ -341,14 +348,20 @@ export default function SignupPage() {
         if (linkOtp.length < 6) return;
         setLinkLoading(true); setError('');
         try {
-            await handleSignup();
+            const signupSuccess = await handleSignup(true);
+            if (!signupSuccess) return; // Error already set by handleSignup
+
             const res = await fetch('/api/auth/link-account/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ mainUserId: linkMainUserId, otp: linkOtp }),
             });
             const data = await res.json();
-            if (!res.ok) { setError(data.error || 'Link failed — account created but not linked'); }
+            if (!res.ok) { 
+                setError(data.error || 'Link failed — account created but not linked'); 
+            } else {
+                router.push('/home'); // Link successful, navigate
+            }
         } catch { setError('Link verification failed'); }
         finally { setLinkLoading(false); }
     };
@@ -714,16 +727,16 @@ export default function SignupPage() {
                                         <Link2 size={16} /> Link Main Account
                                     </button>
                                     <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">You can also do this later from settings.</p>
-                                    <button onClick={handleSignup} disabled={loading} className="w-full py-3 border border-slate-800 rounded-2xl text-slate-400 font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
+                                    <button onClick={() => handleSignup()} disabled={loading} className="w-full py-3 border border-slate-800 rounded-2xl text-slate-400 font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
                                         {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Create Account Now'}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    <button onClick={handleSignup} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest">
+                                    <button onClick={() => handleSignup()} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest">
                                         {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'CREATE ACCOUNT'}
                                     </button>
-                                    <button onClick={handleSignup} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">Skip for now</button>
+                                    <button onClick={() => handleSignup()} className="text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors">Skip for now</button>
                                 </div>
                             )}
                         </motion.div>
@@ -799,7 +812,7 @@ export default function SignupPage() {
                                 </div>
                             )}
 
-                            <button onClick={handleSignup} disabled={loading} className="w-full text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors py-1">
+                            <button onClick={() => handleSignup()} disabled={loading} className="w-full text-slate-600 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors py-1">
                                 {loading ? <Loader2 size={14} className="animate-spin mx-auto" /> : 'Skip — Create Account Without Linking'}
                             </button>
                         </motion.div>
