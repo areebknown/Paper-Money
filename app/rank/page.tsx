@@ -123,12 +123,12 @@ function BuyPointsSheet({ rankInfo, onClose, onSuccess }: {
     onClose: () => void;
     onSuccess: () => void;
 }) {
-    const [pts, setPts] = useState(1);
+    const [pts, setPts] = useState<number | ''>(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const cap = rankInfo?.remainingCap ?? 0;
     const pricePerPoint = rankInfo?.currentRank?.pricePerPoint ?? 1000;
-    const total = pts * pricePerPoint;
+    const total = (typeof pts === 'number' ? pts : 0) * pricePerPoint;
     const balance = Number(rankInfo?.balance ?? 0);
 
     const handleBuy = useCallback(async () => {
@@ -199,7 +199,11 @@ function BuyPointsSheet({ rankInfo, onClose, onSuccess }: {
                             min={1}
                             max={cap}
                             value={pts}
-                            onChange={e => setPts(Math.min(cap, Math.max(1, parseInt(e.target.value) || 1)))}
+                            onChange={e => {
+                                const v = e.target.value;
+                                if (v === '') setPts('');
+                                else setPts(Math.min(cap, Math.max(1, parseInt(v) || 1)));
+                            }}
                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-[15px] font-black font-mono focus:outline-none focus:border-amber-400/50"
                         />
                     </div>
@@ -220,10 +224,10 @@ function BuyPointsSheet({ rankInfo, onClose, onSuccess }: {
 
                     <button
                         onClick={handleBuy}
-                        disabled={loading || cap === 0 || balance < total}
+                        disabled={loading || cap === 0 || balance < total || pts === ''}
                         className="w-full py-3.5 bg-[#FBBF24] text-gray-900 font-black text-[13px] uppercase tracking-widest rounded-2xl active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Processing…' : `Buy ${pts} RP`}
+                        {loading ? 'Processing…' : `Buy ${pts === '' ? 0 : pts} RP`}
                     </button>
                 </motion.div>
             </motion.div>
