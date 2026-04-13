@@ -383,7 +383,7 @@ export default function RankPage() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">Leaderboard</span>
                     </Link>
                     <Link href="/rank/milestones" className="flex-1 flex justify-center py-3.5 bg-yellow-500/90 border-[#ca8a04] border-b-[4px] active:border-b-0 active:translate-y-[4px] rounded-xl transition-all">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-yellow-950 drop-shadow-sm">Milestones</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">Milestones</span>
                     </Link>
                     <button
                         onClick={() => setShowBuy(true)}

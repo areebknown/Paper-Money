@@ -58,6 +58,76 @@ function UserTile({ entry, isMe = false }: { entry: any; isMe?: boolean }) {
     );
 }
 
+function WinnerPodium({ entries }: { entries: any[] }) {
+    if (!entries || entries.length < 1) return null;
+
+    const first = entries[0];
+    const second = entries.length > 1 ? entries[1] : null;
+    const third = entries.length > 2 ? entries[2] : null;
+
+    const getRingColorStyle = (pos: number) => {
+        if (pos === 1) return '#facc15';
+        if (pos === 2) return '#9ca3af';
+        if (pos === 3) return '#b45309';
+        return '#ffffff';
+    };
+
+    const getPfp = (entry: any) => {
+        if (!entry) return null;
+        return (
+            <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: entry.position * 0.4 }}
+                className="w-14 h-14 rounded-full border-[3px] bg-[#0f172a] shadow-lg flex-shrink-0 flex items-center justify-center relative z-10 overflow-hidden"
+                style={{ borderColor: getRingColorStyle(entry.position) }}
+            >
+                {entry.profileImage ? (
+                    <img src={entry.profileImage} className="w-full h-full object-cover" alt={entry.username} />
+                ) : (
+                    <span className="material-icons-round text-white/40 text-[28px]">person</span>
+                )}
+            </motion.div>
+        );
+    }
+
+    return (
+        <div className="flex items-end justify-center gap-3 mt-8 mb-10 h-48 px-2 max-w-md mx-auto">
+            {/* 2nd place */}
+            <div className={`flex flex-col items-center w-1/3 max-w-[80px] ${!second ? 'opacity-0' : ''}`}>
+                {getPfp(second)}
+                <div className="w-full bg-gradient-to-t from-gray-700 to-gray-400 h-24 rounded-t-xl mt-3 flex justify-center text-gray-900 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(156,163,175,0.2)]">
+                    2
+                </div>
+                {second && (
+                    <img src={`/rank-icons/${second.rank?.iconName}.svg`} className="w-8 h-8 mt-3" alt="rank" />
+                )}
+            </div>
+
+            {/* 1st place */}
+            <div className={`flex flex-col items-center w-1/3 max-w-[90px] ${!first ? 'opacity-0' : ''}`}>
+                {getPfp(first)}
+                <div className="w-full bg-gradient-to-t from-yellow-600 to-yellow-300 h-32 rounded-t-xl mt-3 flex justify-center text-yellow-900 font-black text-3xl pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.3)]">
+                    1
+                </div>
+                {first && (
+                    <img src={`/rank-icons/${first.rank?.iconName}.svg`} className="w-10 h-10 mt-3" alt="rank" />
+                )}
+            </div>
+
+            {/* 3rd place */}
+            <div className={`flex flex-col items-center w-1/3 max-w-[80px] ${!third ? 'opacity-0' : ''}`}>
+                {getPfp(third)}
+                <div className="w-full bg-gradient-to-t from-amber-800 to-amber-600 h-16 rounded-t-xl mt-3 flex justify-center text-amber-950 font-black text-2xl pt-2 shadow-[0_-5px_15px_rgba(180,83,9,0.2)]">
+                    3
+                </div>
+                {third && (
+                    <img src={`/rank-icons/${third.rank?.iconName}.svg`} className="w-8 h-8 mt-3" alt="rank" />
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function LeaderboardPage() {
     const [page, setPage] = useState(1);
     const { data, isLoading } = useSWR(`/api/rank/leaderboard?page=${page}`, fetcher);
@@ -82,6 +152,10 @@ export default function LeaderboardPage() {
                     <div className="flex justify-center py-16">
                         <div className="w-8 h-8 border-2 border-[#FBBF24] border-t-transparent rounded-full animate-spin" />
                     </div>
+                )}
+
+                {!isLoading && page === 1 && entries.length > 0 && (
+                    <WinnerPodium entries={entries.slice(0, 3)} />
                 )}
 
                 <div className="space-y-2">
@@ -121,7 +195,7 @@ export default function LeaderboardPage() {
 
             {/* ── Sticky own-tile at bottom with fade vignette ── */}
             {myEntry && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none pb-[80px]">
+                <div className="fixed bottom-[70px] left-0 right-0 z-40 pointer-events-none">
                     {/* Upward fade vignette */}
                     <div className="h-12 bg-gradient-to-t from-[#080d16] to-transparent" />
                     {/* Tile */}
