@@ -34,6 +34,12 @@ export default function SwitchAccountModal({ isOpen, onClose }: SwitchAccountMod
     }, [isOpen]);
 
     const handleSwitch = async (account: any, explicitPassword?: string) => {
+        if (!account.switchToken && !explicitPassword) {
+            onClose();
+            router.push(`/login?preset_username=${encodeURIComponent(account.username)}`);
+            return;
+        }
+
         setLoadingId(account.id);
         setError('');
 
@@ -72,10 +78,14 @@ export default function SwitchAccountModal({ isOpen, onClose }: SwitchAccountMod
                     // Switch token failed (likely password changed)
                     setPasswordPromptId(account.id);
                 } else {
+                    if (!explicitPassword) {
+                        setPasswordPromptId(account.id); // Open prompt so user actually sees the error UI
+                    }
                     setError(data.error || 'Failed to switch account');
                 }
             }
         } catch (err) {
+            if (!explicitPassword) setPasswordPromptId(account.id);
             setError('Network error. Try again.');
         } finally {
             setLoadingId(null);
@@ -199,10 +209,11 @@ export default function SwitchAccountModal({ isOpen, onClose }: SwitchAccountMod
 }
 
 function AccountRow({ account, onSwitch, isLoading, isChild = false }: { account: any, onSwitch: () => void, isLoading: boolean, isChild?: boolean }) {
+    const isShadow = !account.switchToken;
     return (
         <div 
             onClick={isLoading ? undefined : onSwitch}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isChild ? 'hover:bg-white/10' : 'hover:bg-white/5 active:scale-[0.98]'}`}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isChild ? 'hover:bg-white/10' : 'hover:bg-white/5 active:scale-[0.98]'} ${isShadow ? 'opacity-40 grayscale hover:opacity-70' : ''}`}
         >
             <div className={`${isChild ? 'w-8 h-8' : 'w-10 h-10'} shrink-0 rounded-full bg-gray-800 border border-white/20 overflow-hidden flex items-center justify-center relative`}>
                 {account.profileImage ? (

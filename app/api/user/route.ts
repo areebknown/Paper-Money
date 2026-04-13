@@ -50,6 +50,9 @@ export async function GET(req: Request) {
                 },
                 portfolios: {
                     include: { asset: true }
+                },
+                financeAccounts: {
+                    select: { id: true, username: true, profileImage: true, isMainAccount: true, parentAccountId: true }
                 }
             }
         });

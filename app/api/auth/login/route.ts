@@ -23,6 +23,11 @@ export async function POST(req: Request) {
                     { phoneNumber: identifier }
                 ]
             },
+            include: {
+                financeAccounts: {
+                    select: { id: true, username: true, profileImage: true, isMainAccount: true, parentAccountId: true }
+                }
+            }
         });
 
         if (!user) {
@@ -61,7 +66,8 @@ export async function POST(req: Request) {
                 isAdmin: user.isAdmin,
                 isMainAccount: user.isMainAccount,
                 parentAccountId: user.parentAccountId,
-                profileImage: user.profileImage
+                profileImage: user.profileImage,
+                financeAccounts: user.financeAccounts || []
             },
             switchToken
         });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { LOGO_URL } from '@/lib/cloudinary';
@@ -14,6 +14,40 @@ export default function Header() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     
     const user = userData?.user;
+
+    useEffect(() => {
+        if (!user) return;
+        try {
+            const accounts = JSON.parse(localStorage.getItem('pm_accounts') || '[]');
+            
+            // Update active user
+            const activeIdx = accounts.findIndex((a: any) => a.id === user.id);
+            if (activeIdx > -1) {
+                accounts[activeIdx].profileImage = user.profileImage;
+                accounts[activeIdx].username = user.username;
+                accounts[activeIdx].isMainAccount = user.isMainAccount;
+                accounts[activeIdx].lastActive = Date.now();
+            }
+
+            // Inject shadow finance accounts (discovered via the active session)
+            if (user.financeAccounts && Array.isArray(user.financeAccounts)) {
+                user.financeAccounts.forEach((financeNode: any) => {
+                    const existingNode = accounts.find((a: any) => a.id === financeNode.id);
+                    if (!existingNode) {
+                        accounts.push({
+                            id: financeNode.id,
+                            username: financeNode.username,
+                            profileImage: financeNode.profileImage,
+                            isMainAccount: false,
+                            parentAccountId: user.id, // implicitly linked to us
+                            // purposefully omitting switchToken/lastActive to keep it in shadow mode
+                        });
+                    }
+                });
+            }
+            localStorage.setItem('pm_accounts', JSON.stringify(accounts));
+        } catch(e) {}
+    }, [user]);
 
     return (
         <>
