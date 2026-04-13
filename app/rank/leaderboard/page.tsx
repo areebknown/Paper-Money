@@ -10,9 +10,9 @@ import Link from 'next/link';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 function getTileGradient(position: number) {
-    if (position === 1) return 'bg-gradient-to-r from-[#78350f] via-[#92400e] to-[#78350f] border-[#fbbf24]/60';
-    if (position === 2) return 'bg-gradient-to-r from-[#374151] via-[#4b5563] to-[#374151] border-[#9ca3af]/60';
-    if (position === 3) return 'bg-gradient-to-r from-[#3b1f0a] via-[#4a2708] to-[#3b1f0a] border-[#b45309]/50';
+    if (position === 1) return 'bg-gradient-to-r from-yellow-600 to-yellow-400 border-[#facc15]/60';
+    if (position === 2) return 'bg-gradient-to-r from-gray-700 to-gray-400 border-[#9ca3af]/60';
+    if (position === 3) return 'bg-gradient-to-r from-amber-800 to-amber-600 border-[#b45309]/50';
     return 'bg-[#1e293b] border-white/5';
 }
 
@@ -142,11 +142,20 @@ export default function LeaderboardPage() {
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
             <Header />
 
-            <main className="px-4 pt-4 max-w-2xl mx-auto">
-                <h1 className="text-[18px] font-black text-white font-['Russo_One'] mb-4 flex items-center gap-2">
-                    <span className="material-icons-round text-[#FBBF24]">emoji_events</span>
-                    Leaderboard
-                </h1>
+            <main className="px-4 pt-4 max-w-2xl mx-auto flex-1 flex flex-col">
+                <div className="flex items-center justify-between bg-[#1e293b] border border-white/10 p-4 rounded-2xl shadow-xl shadow-black/40 mb-6">
+                    <div className="flex items-center gap-3">
+                        <Link href="/rank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all outline-none border border-white/5">
+                            <ChevronLeft size={20} />
+                        </Link>
+                        <div>
+                            <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                                <span className="material-icons-round text-[#FBBF24]">emoji_events</span>
+                                Leaderboard
+                            </h1>
+                        </div>
+                    </div>
+                </div>
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
