@@ -138,7 +138,7 @@ export default function FriendsPage() {
                 <div className="flex p-1 bg-[#1e293b] rounded-2xl border border-white/5 shadow-inner">
                     <button
                         onClick={() => setActiveTab('friends')}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                        className={`flex-1 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all ${
                             activeTab === 'friends' ? 'bg-[#FBBF24] text-gray-900 shadow-md' : 'text-slate-400 hover:text-white'
                         }`}
                     >
@@ -146,7 +146,7 @@ export default function FriendsPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab('requests')}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest relative transition-all ${
+                        className={`flex-1 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-widest relative transition-all ${
                             activeTab === 'requests' ? 'bg-[#FBBF24] text-gray-900 shadow-md' : 'text-slate-400 hover:text-white'
                         }`}
                     >
