@@ -14,14 +14,17 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/profile')
     ) {
         if (!token) {
+            console.log(`[middleware] NO TOKEN on ${request.nextUrl.pathname} — redirecting to /login`);
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
         try {
             const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
             await jwtVerify(token, secret);
+            console.log(`[middleware] VALID TOKEN on ${request.nextUrl.pathname}`);
             return NextResponse.next();
-        } catch (error) {
+        } catch (error: any) {
+            console.log(`[middleware] INVALID TOKEN on ${request.nextUrl.pathname}: ${error?.message}`);
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
