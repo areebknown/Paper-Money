@@ -27,7 +27,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect to dashboard if already logged in and visiting login/signup
+    // EXCEPTION: ?bypass=1 allows reaching login even with a valid session (used by switch-account shadow flow)
+    const isBypass = request.nextUrl.searchParams.get('bypass') === '1';
     if (
+        !isBypass &&
         (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') &&
         token
     ) {

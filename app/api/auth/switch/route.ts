@@ -59,7 +59,8 @@ export async function POST(req: Request) {
                 id: user.id, 
                 username: user.username, 
                 balance: user.balance, 
-                isAdmin: user.isAdmin 
+                isAdmin: user.isAdmin,
+                isMainAccount: user.isMainAccount,
             },
             switchToken: newSwitchToken
         });

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bid Wars | The Ultimate Virtual Bidding Game",
+  title: "Bid Wars",
   description: "Join the virtual bidding challenge, collect legendary artifacts, and climb the SSS+ ranks using 100% Paper Money.",
   manifest: "/manifest.json?v=3",
   appleWebApp: {

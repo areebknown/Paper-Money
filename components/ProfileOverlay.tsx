@@ -147,7 +147,6 @@ export default function ProfileOverlay({ isOpen, onClose, user }: ProfileOverlay
             <SwitchAccountModal 
                 isOpen={isSwitchModalOpen} 
                 onClose={() => setIsSwitchModalOpen(false)} 
-                currentUserPublicId={user?.publicId}
             />
         </div>
     );
