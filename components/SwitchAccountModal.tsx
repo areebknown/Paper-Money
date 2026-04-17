@@ -76,24 +76,22 @@ export default function SwitchAccountModal({ isOpen, onClose }: SwitchAccountMod
     const handleAccountTap = (account: any) => {
         if (loadingId) return;
 
-        // Shadow account — no switchToken, redirect to login with pre-filled username
         if (!account.switchToken) {
-            onClose();
-            // Use replace so middleware doesn't bounce back based on stale cookie
-            // We blank the cookie by navigating to a logout-like URL first isn't needed
-            // Instead we post to the login page with preset_username
-            // Middleware bounces /login when user already has a valid session cookie.
-            // Solution: use /login with a special flag to bypass redirect.
-            // Actually we redirect to login with ?preset_username AND ?bypass=1 so middleware allows it
-            window.location.href = `/login?preset_username=${encodeURIComponent(account.username)}&bypass=1`;
+            // True shadow account — discovered via Main Account but NEVER logged in on this device
+            // (no lastActive = never authenticated here) → redirect to login page
+            if (!account.lastActive) {
+                onClose();
+                window.location.href = `/login?preset_username=${encodeURIComponent(account.username)}&bypass=1`;
+                return;
+            }
+            // Previously logged in but missing switchToken (e.g. logged in before tokens were implemented)
+            // → show inline password prompt so they stay in the modal
+            setPasswordPromptAccount(account);
             return;
         }
 
         // Check 30-day inactivity
-        const isInactive = account.lastActive
-            ? (Date.now() - account.lastActive) > 30 * 24 * 60 * 60 * 1000
-            : false;
-
+        const isInactive = (Date.now() - (account.lastActive || 0)) > 30 * 24 * 60 * 60 * 1000;
         if (isInactive) {
             setPasswordPromptAccount(account);
             return;
