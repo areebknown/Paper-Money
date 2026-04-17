@@ -29,6 +29,10 @@ export default function LoginPage() {
         if (preset) {
             setIdentifier(preset);
         }
+        const urlError = params.get('error');
+        if (urlError) {
+            setError(urlError);
+        }
     }, []);
 
     const handleLogin = async (e: React.FormEvent) => {

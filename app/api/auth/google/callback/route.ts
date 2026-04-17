@@ -2,25 +2,44 @@ import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 import { prisma } from '@/lib/db';
 import { generatePMUID } from '@/lib/pmuid';
+import { getOrigin } from '@/lib/auth';
 
+/**
+ * Google OAuth callback handler.
+ *
+ * KEY DESIGN: we do NOT set any cookies here. Browsers may silently discard
+ * Set-Cookie headers on responses to cross-site redirects (the request arrives
+ * from accounts.google.com, a different origin). Instead we:
+ *
+ *  1. Exchange the code for a Google access token
+ *  2. Resolve / create the local user
+ *  3. Mint a short-lived "relay" JWT containing the user info
+ *  4. Redirect to /api/auth/google/set-cookie?relay=<token>&next=<path>
+ *     — that route is same-origin, so its Set-Cookie is always honoured.
+ */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code');
     const rawState = searchParams.get('state') || '{}';
-    const error = searchParams.get('error');
+    const googleError = searchParams.get('error');
 
-    const host = req.headers.get('host') || 'localhost:3000';
-    const rootDomain = host.includes('localhost') ? `http://${host}` : 'https://bidwars.xyz';
+    const { rootDomain } = getOrigin(req);
 
-    if (error) {
-        return NextResponse.redirect(`${rootDomain}/login?error=Google auth failed: ${error}`);
+    // Helper — redirect to login with a visible error message
+    const loginError = (msg: string) =>
+        NextResponse.redirect(
+            `${rootDomain}/login?error=${encodeURIComponent(msg)}`
+        );
+
+    if (googleError) {
+        return loginError('Google sign-in was cancelled or denied.');
     }
     if (!code) {
-        return NextResponse.redirect(`${rootDomain}/login?error=No code provided`);
+        return loginError('No authorisation code received from Google. Please try again.');
     }
 
     try {
-        // Parse state — backwards compatible with old plain-string username state
+        // ── Parse state (backwards-compatible with old plain-string format) ──────
         let username = '';
         let mode = 'login';
         try {
@@ -31,9 +50,9 @@ export async function GET(req: Request) {
             username = rawState; // old format fallback
         }
 
-        // Exchange code for token — MUST use form-encoded (not JSON)
+        // ── Exchange code → access token ─────────────────────────────────────────
         const tokenParams = new URLSearchParams({
-            code: code!,
+            code,
             client_id: process.env.GOOGLE_CLIENT_ID!,
             client_secret: process.env.GOOGLE_CLIENT_SECRET!,
             redirect_uri: `${rootDomain}/api/auth/google/callback`,
@@ -46,28 +65,47 @@ export async function GET(req: Request) {
             body: tokenParams.toString(),
         });
         const tokenData = await tokenRes.json();
-        if (!tokenRes.ok) throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
+        if (!tokenRes.ok) {
+            throw new Error(
+                tokenData.error_description || tokenData.error || 'Token exchange with Google failed'
+            );
+        }
 
-        const { access_token } = tokenData;
-
-        // Fetch Google user info
+        // ── Fetch Google profile ─────────────────────────────────────────────────
         const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: { Authorization: `Bearer ${access_token}` },
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });
+        if (!userRes.ok) throw new Error('Failed to fetch Google profile');
         const googleUser = await userRes.json();
 
-        // Try to find existing user by email first
-        let user = await prisma.user.findUnique({ where: { email: googleUser.email } });
-        const isNewUser = !user;
+        if (!googleUser.email) throw new Error('Google account has no email address');
 
-        if (!user) {
-            // New user — create with chosen username (or derive from email)
-            const targetUsername = username || googleUser.email.split('@')[0];
-            let finalUsername = targetUsername;
-            const taken = await prisma.user.findUnique({ where: { username: targetUsername } });
-            if (taken) finalUsername = `${googleUser.email.split('@')[0]}_${Math.floor(Math.random() * 9000) + 1000}`;
+        // ── Look up existing user ────────────────────────────────────────────────
+        const existingUser = await prisma.user.findUnique({
+            where: { email: googleUser.email },
+        });
 
-            user = await prisma.user.create({
+        // ── Guard: login mode requires an existing account ───────────────────────
+        // We must not silently create an account when the user expected to log in.
+        if (!existingUser && mode === 'login') {
+            return loginError(
+                'No account found for this Google address. Please sign up first.'
+            );
+        }
+
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
+
+        // ── New user — signup path ───────────────────────────────────────────────
+        if (!existingUser) {
+            // Derive a username from the chosen name or the email prefix
+            const base = username || googleUser.email.split('@')[0];
+            let finalUsername = base;
+            const taken = await prisma.user.findUnique({ where: { username: base } });
+            if (taken) {
+                finalUsername = `${googleUser.email.split('@')[0]}_${Math.floor(Math.random() * 9000) + 1000}`;
+            }
+
+            const newUser = await prisma.user.create({
                 data: {
                     email: googleUser.email,
                     username: finalUsername,
@@ -78,63 +116,53 @@ export async function GET(req: Request) {
                     balance: 0,
                 },
             });
-        } else {
-            // Existing user — backfill email / picture if missing
-            if (!user.email || !user.profileImage) {
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: {
-                        email: user.email ?? googleUser.email,
-                        profileImage: user.profileImage ?? googleUser.picture,
-                    },
-                });
-            }
-        }
 
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
-
-        // --- ROUTING LOGIC ---
-        // New user coming from signup flow → take them to google-complete (PFP + parent link)
-        if (isNewUser && mode === 'signup') {
-            // Issue a short-lived pending JWT (no full session yet)
-            const pendingToken = await new SignJWT({ pendingUserId: user.id, isPending: true })
+            // Issue a short-lived pending relay token (no full session yet)
+            const pendingRelay = await new SignJWT({
+                pendingUserId: newUser.id,
+                isPending: true,
+            })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setExpirationTime('30m')
                 .sign(secret);
 
-            const res = NextResponse.redirect(`${rootDomain}/signup/google-complete`);
-            res.cookies.set('pending_google_token', pendingToken, {
-                httpOnly: true,
-                secure: !host.includes('localhost'),
-                sameSite: 'lax',
-                path: '/',
-                maxAge: 30 * 60,
-            });
-            return res;
+            const relayUrl = new URL(`${rootDomain}/api/auth/google/set-cookie`);
+            relayUrl.searchParams.set('relay', pendingRelay);
+            relayUrl.searchParams.set('next', '/signup/google-complete');
+            return NextResponse.redirect(relayUrl.toString());
         }
 
-        // Existing user or login mode → issue full JWT and go home
-        const token = await new SignJWT({
-            userId: user.id,
-            username: user.username,
-            isAdmin: user.isAdmin,
+        // ── Existing user — backfill any missing fields ──────────────────────────
+        if (!existingUser.email || !existingUser.profileImage) {
+            await prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    email: existingUser.email ?? googleUser.email,
+                    profileImage: existingUser.profileImage ?? googleUser.picture,
+                },
+            });
+        }
+
+        // ── Existing user — issue login relay token ──────────────────────────────
+        // Short-lived (2 min) — only used to carry user info to the set-cookie route
+        const loginRelay = await new SignJWT({
+            userId: existingUser.id,
+            username: existingUser.username,
+            isAdmin: existingUser.isAdmin,
         })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('30d')
+            .setExpirationTime('2m')
             .sign(secret);
 
-        const res = NextResponse.redirect(`${rootDomain}/home`);
-        res.cookies.set('token', token, {
-            httpOnly: true,
-            secure: !host.includes('localhost'),
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 30 * 24 * 60 * 60,
-        });
-        return res;
+        const relayUrl = new URL(`${rootDomain}/api/auth/google/set-cookie`);
+        relayUrl.searchParams.set('relay', loginRelay);
+        relayUrl.searchParams.set('next', existingUser.isAdmin ? '/admin' : '/home');
+        return NextResponse.redirect(relayUrl.toString());
 
     } catch (err) {
         console.error('[Google Callback Error]', err);
-        return NextResponse.redirect(`${rootDomain}/login?error=Google integration error: ${(err as Error).message}`);
+        return loginError(
+            `Google sign-in failed: ${(err as Error).message}`
+        );
     }
 }

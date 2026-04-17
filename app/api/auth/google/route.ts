@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
+import { getOrigin } from '@/lib/auth';
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const username = searchParams.get('username') || '';
     const mode = searchParams.get('mode') || 'login'; // 'login' | 'signup'
 
-    const host = req.headers.get('host') || 'localhost:3000';
-    const rootDomain = host.includes('localhost') 
-        ? `http://${host}` 
-        : 'https://bidwars.xyz';
-    
+    const { rootDomain } = getOrigin(req);
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
     const REDIRECT_URI = `${rootDomain}/api/auth/google/callback`;
-    
+
     if (!GOOGLE_CLIENT_ID) {
         return NextResponse.json({ error: 'Google Client ID not configured' }, { status: 500 });
     }
