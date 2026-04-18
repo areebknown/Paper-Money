@@ -25,6 +25,16 @@ export async function GET(req: Request) {
 
     const { rootDomain } = getOrigin(req);
 
+    // ── Diagnostic log — visible in Vercel Functions logs ────────────────────
+    console.log('[Google OAuth] callback hit', {
+        rootDomain,
+        redirectUri: `${rootDomain}/api/auth/google/callback`,
+        hasClientId:     !!process.env.GOOGLE_CLIENT_ID,
+        hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+        clientIdTail:     process.env.GOOGLE_CLIENT_ID?.slice(-8) ?? 'MISSING',
+        clientSecretHead: process.env.GOOGLE_CLIENT_SECRET?.slice(0, 10) ?? 'MISSING',
+    });
+
     // Helper — redirect to login with a visible error message
     const loginError = (msg: string) =>
         NextResponse.redirect(
@@ -66,6 +76,11 @@ export async function GET(req: Request) {
         });
         const tokenData = await tokenRes.json();
         if (!tokenRes.ok) {
+            console.error('[Google OAuth] token exchange failed', {
+                status: tokenRes.status,
+                error: tokenData.error,
+                error_description: tokenData.error_description,
+            });
             throw new Error(
                 tokenData.error_description || tokenData.error || 'Token exchange with Google failed'
             );
