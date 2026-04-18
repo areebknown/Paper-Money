@@ -193,15 +193,12 @@ export default function GoogleCompletePage() {
                             </div>
 
                             <div className="space-y-3">
-                                <button
-                                    onClick={() => setStep('link')}
-                                    className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
-                                >
-                                    Next
-                                    <ArrowRight size={16} />
+                                <button onClick={() => setStep('link')} disabled={loading || uploadState === 'uploading'} className="w-full bg-[#FBBF24] text-slate-950 font-black py-4 rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <Link2 size={16} /> Link Main Account
                                 </button>
-                                <button onClick={() => setStep('link')} className="w-full text-slate-600 text-[10px] font-black uppercase tracking-widest py-1">
-                                    Skip for now
+                                <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">You can also do this later from settings.</p>
+                                <button onClick={completeSignup} disabled={loading} className="w-full py-3 border border-slate-800 rounded-2xl text-slate-400 font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
+                                    {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Create Account Now'}
                                 </button>
                             </div>
                         </motion.div>

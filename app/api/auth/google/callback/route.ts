@@ -124,7 +124,6 @@ export async function GET(req: Request) {
                 data: {
                     email: googleUser.email,
                     username: finalUsername,
-                    realName: googleUser.name,
                     profileImage: googleUser.picture,
                     isMainAccount: false,
                     publicId: await generatePMUID(),
