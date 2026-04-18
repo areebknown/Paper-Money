@@ -18,13 +18,21 @@ export async function POST(req: Request) {
         // Get the current user from JWT cookie
         const cookieHeader = req.headers.get('cookie') || '';
         const tokenMatch = cookieHeader.match(/token=([^;]+)/);
-        if (!tokenMatch) {
+        const pendingTokenMatch = cookieHeader.match(/pending_google_token=([^;]+)/);
+        
+        const activeToken = tokenMatch?.[1] || pendingTokenMatch?.[1];
+
+        if (!activeToken) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
-        const { payload } = await jwtVerify(tokenMatch[1], secret);
-        const financeUserId = payload.userId as string;
+        const { payload } = await jwtVerify(activeToken, secret);
+        const financeUserId = payload.userId || payload.pendingUserId;
+        
+        if (!financeUserId || typeof financeUserId !== 'string') {
+             return NextResponse.json({ error: 'Invalid token payload' }, { status: 400 });
+        }
 
         // Verify OTP
         const verification = verifyOTP(`link:${mainUserId}`, otp);

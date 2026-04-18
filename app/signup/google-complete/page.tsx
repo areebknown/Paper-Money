@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, CheckCircle2, Loader2, Plus, ArrowRight, ArrowLeft, Link2, ShieldCheck, Smartphone } from 'lucide-react';
 import { LOGO_URL } from '@/lib/cloudinary';
+import ImageCropper from '@/components/ImageCropper';
 
 type Step = 'pfp' | 'link';
 type LinkStep = 'username' | 'otp';
@@ -19,6 +20,7 @@ export default function GoogleCompletePage() {
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done'>('idle');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
     // Link account states
     const [linkStep, setLinkStep] = useState<LinkStep>('username');
@@ -30,21 +32,29 @@ export default function GoogleCompletePage() {
     const [linkError, setLinkError] = useState('');
     const [linked, setLinked] = useState(false);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const url = URL.createObjectURL(file);
+        setCropImageSrc(url);
+        e.target.value = ''; // Reset input
+    };
+
+    const handleCropDone = async (croppedFile: File) => {
+        setCropImageSrc(null);
         setUploadState('uploading');
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('folder', 'user_pfps');
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        if (res.ok) {
+        try {
+            const fd = new FormData();
+            fd.append('file', croppedFile);
+            fd.append('folder', 'user_pfps');
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error();
             const data = await res.json();
             setProfileImage(data.url);
             setUploadState('done');
-        } else {
+        } catch {
             setUploadState('idle');
-            setError('Upload failed, try again');
+            setError('Image upload failed. Try again.');
         }
     };
 
@@ -327,6 +337,17 @@ export default function GoogleCompletePage() {
                     </motion.div>
                 )}
             </div>
+
+            {/* Cropper Overlay */}
+            <AnimatePresence>
+                {cropImageSrc && (
+                    <ImageCropper
+                        imageSrc={cropImageSrc}
+                        onCropDone={handleCropDone}
+                        onCropCancel={() => setCropImageSrc(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
