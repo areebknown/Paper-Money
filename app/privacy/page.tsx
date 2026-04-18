@@ -18,18 +18,15 @@ const stagger = {
 };
 
 function Section({ icon, color, title, children }: {
-    icon: React.ReactNode;
-    color: string;
+    icon?: React.ReactNode;
+    color?: string;
     title: string;
     children: React.ReactNode;
 }) {
     return (
-        <motion.section variants={fadeUp} className="space-y-5">
-            <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${color}`}>{icon}</div>
-                <h2 className="text-lg font-black text-white uppercase tracking-widest">{title}</h2>
-            </div>
-            <div className="pl-14 space-y-4 text-slate-400 leading-relaxed text-sm">
+        <motion.section variants={fadeUp} className="space-y-4">
+            <h2 className="text-lg font-black text-white uppercase tracking-widest">{title}</h2>
+            <div className="space-y-4 text-slate-400 leading-relaxed text-sm">
                 {children}
             </div>
         </motion.section>
