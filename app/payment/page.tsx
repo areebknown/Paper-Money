@@ -236,31 +236,55 @@ function PayModal({ initialUsername, onClose }: { initialUsername: string; onClo
 
 // ─── Scan Modal ───────────────────────────────────────────────────────────────
 function ScanModal({ onResult, onClose }: { onResult: (username: string) => void; onClose: () => void }) {
+    const [err, setErr] = useState<string | null>(null);
+    const [ready, setReady] = useState(false);
     const scannerRef = useRef<any>(null);
-    const divId = 'qr-reader-div';
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        let scanner: any;
-        import('html5-qrcode').then(({ Html5Qrcode }) => {
-            scanner = new Html5Qrcode(divId);
+    // Start scanner only after the container div is mounted in the DOM
+    const initScanner = useCallback(async (node: HTMLDivElement) => {
+        if (!node || scannerRef.current) return;
+        try {
+            const { Html5Qrcode } = await import('html5-qrcode');
+            const scanner = new Html5Qrcode(node.id);
             scannerRef.current = scanner;
-            scanner.start(
+            await scanner.start(
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 (text: string) => {
-                    // Parse username from full URL or plain text
                     try {
                         const url = new URL(text);
                         const pay = url.searchParams.get('pay');
                         if (pay) { scanner.stop().catch(() => {}); onResult(pay); return; }
                     } catch {}
-                    // Plain username fallback
                     scanner.stop().catch(() => {});
                     onResult(text.trim().replace('@', ''));
                 },
                 () => {}
-            ).catch(() => {});
-        });
+            );
+            setReady(true);
+        } catch (e: any) {
+            const msg = e?.message || '';
+            if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
+                setErr('Camera permission denied. Please allow camera access and try again.');
+            } else if (msg.toLowerCase().includes('https')) {
+                setErr('Camera requires a secure (HTTPS) connection.');
+            } else {
+                setErr('Could not start camera. Make sure no other app is using it.');
+            }
+        }
+    }, [onResult]);
+
+    // ref callback — fires when the div is inserted into the DOM
+    const divRefCallback = useCallback((node: HTMLDivElement | null) => {
+        if (node) {
+            containerRef.current = node;
+            // Small delay to let Framer Motion finish the mount animation
+            setTimeout(() => initScanner(node), 150);
+        }
+    }, [initScanner]);
+
+    useEffect(() => {
         return () => { scannerRef.current?.stop().catch(() => {}); };
     }, []);
 
@@ -274,11 +298,34 @@ function ScanModal({ onResult, onClose }: { onResult: (username: string) => void
                 </button>
             </div>
             <div className="flex-1 flex items-center justify-center px-6">
-                <div className="w-full max-w-sm">
-                    <div id={divId} className="rounded-2xl overflow-hidden" />
-                    <p className="text-center text-slate-400 text-[12px] mt-6 font-medium">
-                        Point at a Bid Wars QR code
-                    </p>
+                <div className="w-full max-w-sm flex flex-col items-center">
+                    {err ? (
+                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl px-5 py-6 text-center">
+                            <AlertCircle size={32} className="text-rose-400 mx-auto mb-3" />
+                            <p className="text-rose-400 font-bold text-sm">{err}</p>
+                            <button onClick={onClose}
+                                className="mt-5 px-6 py-2.5 bg-white/10 rounded-xl text-white text-sm font-bold active:scale-95 transition-all">
+                                Close
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            {!ready && (
+                                <div className="mb-4">
+                                    <Loader2 size={28} className="animate-spin text-[#FBBF24] mx-auto" />
+                                    <p className="text-slate-400 text-xs text-center mt-2">Starting camera…</p>
+                                </div>
+                            )}
+                            <div
+                                id="qr-reader-div"
+                                ref={divRefCallback}
+                                className="rounded-2xl overflow-hidden w-full"
+                            />
+                            <p className="text-slate-400 text-[12px] mt-6 font-medium text-center">
+                                Point at a Bid Wars QR code
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         </motion.div>
