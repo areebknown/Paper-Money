@@ -88,6 +88,19 @@ export async function POST(
                     data: { ownerId: user.userId },
                 });
             }
+
+            // 4. Record in transaction history as AUCTION_WIN
+            const artifactNames = auction.artifacts.map(a => a.artifact.name).join(', ');
+            await tx.transaction.create({
+                data: {
+                    amount: finalPrice,
+                    senderId: user.userId,
+                    receiverId: user.userId, // self-deduction record
+                    status: 'COMPLETED',
+                    category: 'AUCTION_WIN',
+                    description: artifactNames || 'Auction artifact',
+                },
+            });
         });
 
         console.log(`[Claim] ✅ User ${user.userId} paid ₹${finalPrice} and claimed ${artifactIds.length} artifact(s) from auction ${auctionId}`);

@@ -11,7 +11,10 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/home') ||
         request.nextUrl.pathname.startsWith('/send') ||
         request.nextUrl.pathname.startsWith('/history') ||
-        request.nextUrl.pathname.startsWith('/profile')
+        request.nextUrl.pathname.startsWith('/profile') ||
+        request.nextUrl.pathname.startsWith('/payment') ||
+        request.nextUrl.pathname.startsWith('/pay') ||
+        request.nextUrl.pathname.startsWith('/transactions')
     ) {
         if (!token) {
             console.log(`[middleware] NO TOKEN on ${request.nextUrl.pathname} — redirecting to /login`);
