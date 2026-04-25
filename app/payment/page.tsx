@@ -2,12 +2,18 @@
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { QRCodeSVG } from 'qrcode.react';
+import dynamic from 'next/dynamic';
 import { Send, ScanLine, RefreshCw, Share2, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Trophy, ChevronRight, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+
+// Load QR library only on client — avoids SSR/browser-global crashes
+const QRCodeSVG = dynamic(
+    () => import('qrcode.react').then(m => m.QRCodeSVG),
+    { ssr: false, loading: () => <div className="w-[200px] h-[200px] bg-gray-200 rounded-xl animate-pulse" /> }
+);
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -234,94 +240,134 @@ function PayModal({ initialUsername, onClose }: { initialUsername: string; onClo
     );
 }
 
-// ─── Scan Modal ───────────────────────────────────────────────────────────────
+// ─── Scan Modal (native — no external library) ────────────────────────────────
 function ScanModal({ onResult, onClose }: { onResult: (username: string) => void; onClose: () => void }) {
     const [err, setErr] = useState<string | null>(null);
     const [ready, setReady] = useState(false);
-    const scannerRef = useRef<any>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const rafRef = useRef<number>(0);
+    const doneRef = useRef(false);
 
-    // Start scanner only after the container div is mounted in the DOM
-    const initScanner = useCallback(async (node: HTMLDivElement) => {
-        if (!node || scannerRef.current) return;
+    const handleText = useCallback((text: string) => {
+        if (doneRef.current) return;
+        doneRef.current = true;
         try {
-            const { Html5Qrcode } = await import('html5-qrcode');
-            const scanner = new Html5Qrcode(node.id);
-            scannerRef.current = scanner;
-            await scanner.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 220, height: 220 } },
-                (text: string) => {
-                    try {
-                        const url = new URL(text);
-                        const pay = url.searchParams.get('pay');
-                        if (pay) { scanner.stop().catch(() => {}); onResult(pay); return; }
-                    } catch {}
-                    scanner.stop().catch(() => {});
-                    onResult(text.trim().replace('@', ''));
-                },
-                () => {}
-            );
-            setReady(true);
-        } catch (e: any) {
-            const msg = e?.message || '';
-            if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
-                setErr('Camera permission denied. Please allow camera access and try again.');
-            } else if (msg.toLowerCase().includes('https')) {
-                setErr('Camera requires a secure (HTTPS) connection.');
-            } else {
-                setErr('Could not start camera. Make sure no other app is using it.');
-            }
-        }
+            const url = new URL(text);
+            const pay = url.searchParams.get('pay');
+            if (pay) { onResult(pay); return; }
+        } catch {}
+        onResult(text.trim().replace('@', ''));
     }, [onResult]);
 
-    // ref callback — fires when the div is inserted into the DOM
-    const divRefCallback = useCallback((node: HTMLDivElement | null) => {
-        if (node) {
-            containerRef.current = node;
-            // Small delay to let Framer Motion finish the mount animation
-            setTimeout(() => initScanner(node), 150);
-        }
-    }, [initScanner]);
-
     useEffect(() => {
-        return () => { scannerRef.current?.stop().catch(() => {}); };
-    }, []);
+        let active = true;
+
+        const start = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                });
+                if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+                streamRef.current = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    await videoRef.current.play();
+                    setReady(true);
+                }
+
+                // BarcodeDetector — supported on Chrome 83+, Safari 17+, Edge 83+
+                if (!('BarcodeDetector' in window)) {
+                    setErr('QR scanning requires Chrome or Safari 17+. Please update your browser, or ask the sender to share their QR code image with you.');
+                    return;
+                }
+
+                const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+
+                const scan = async () => {
+                    if (!active || !videoRef.current || doneRef.current) return;
+                    try {
+                        const codes = await detector.detect(videoRef.current);
+                        if (codes.length > 0) {
+                            handleText(codes[0].rawValue);
+                            return; // stop loop after first result
+                        }
+                    } catch {}
+                    rafRef.current = requestAnimationFrame(scan);
+                };
+                rafRef.current = requestAnimationFrame(scan);
+
+            } catch (e: any) {
+                const msg = String(e?.message || e).toLowerCase();
+                if (msg.includes('permission') || msg.includes('denied') || msg.includes('notallowed')) {
+                    setErr('Camera permission denied. Please allow camera access in your browser settings and try again.');
+                } else if (msg.includes('notfound') || msg.includes('no device')) {
+                    setErr('No camera found on this device.');
+                } else {
+                    setErr('Could not start camera. Make sure no other app is using it, then try again.');
+                }
+            }
+        };
+
+        start();
+
+        return () => {
+            active = false;
+            cancelAnimationFrame(rafRef.current);
+            streamRef.current?.getTracks().forEach(t => t.stop());
+        };
+    }, [handleText]);
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[450] bg-black flex flex-col">
             <div className="flex items-center justify-between px-5 pt-12 pb-4">
                 <h2 className="text-lg font-black text-white uppercase tracking-widest">Scan QR</h2>
-                <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
+                <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95">
                     <X size={18} />
                 </button>
             </div>
+
             <div className="flex-1 flex items-center justify-center px-6">
-                <div className="w-full max-w-sm flex flex-col items-center">
+                <div className="w-full max-w-sm flex flex-col items-center gap-5">
                     {err ? (
-                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl px-5 py-6 text-center">
-                            <AlertCircle size={32} className="text-rose-400 mx-auto mb-3" />
-                            <p className="text-rose-400 font-bold text-sm">{err}</p>
+                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl px-5 py-8 text-center">
+                            <AlertCircle size={36} className="text-rose-400 mx-auto mb-4" />
+                            <p className="text-rose-300 font-bold text-sm leading-relaxed">{err}</p>
                             <button onClick={onClose}
-                                className="mt-5 px-6 py-2.5 bg-white/10 rounded-xl text-white text-sm font-bold active:scale-95 transition-all">
+                                className="mt-6 px-8 py-3 bg-white/10 rounded-xl text-white text-sm font-bold active:scale-95 transition-all">
                                 Close
                             </button>
                         </div>
                     ) : (
                         <>
                             {!ready && (
-                                <div className="mb-4">
-                                    <Loader2 size={28} className="animate-spin text-[#FBBF24] mx-auto" />
-                                    <p className="text-slate-400 text-xs text-center mt-2">Starting camera…</p>
+                                <div className="text-center">
+                                    <Loader2 size={32} className="animate-spin text-[#FBBF24] mx-auto" />
+                                    <p className="text-slate-400 text-xs mt-3">Starting camera…</p>
                                 </div>
                             )}
-                            <div
-                                id="qr-reader-div"
-                                ref={divRefCallback}
-                                className="rounded-2xl overflow-hidden w-full"
-                            />
-                            <p className="text-slate-400 text-[12px] mt-6 font-medium text-center">
+                            <div className="relative w-full aspect-square max-w-[300px] rounded-2xl overflow-hidden bg-black">
+                                <video
+                                    ref={videoRef}
+                                    className="w-full h-full object-cover"
+                                    playsInline
+                                    muted
+                                    autoPlay
+                                />
+                                {/* Viewfinder overlay */}
+                                {ready && (
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div className="w-48 h-48 relative">
+                                            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#FBBF24] rounded-tl-lg" />
+                                            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#FBBF24] rounded-tr-lg" />
+                                            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#FBBF24] rounded-bl-lg" />
+                                            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#FBBF24] rounded-br-lg" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-slate-400 text-[12px] font-medium text-center">
                                 Point at a Bid Wars QR code
                             </p>
                         </>
@@ -331,6 +377,7 @@ function ScanModal({ onResult, onClose }: { onResult: (username: string) => void
         </motion.div>
     );
 }
+
 
 // ─── Autopay Modal (placeholder) ─────────────────────────────────────────────
 function AutopayModal({ onClose }: { onClose: () => void }) {
