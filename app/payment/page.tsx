@@ -147,8 +147,8 @@ function PayModal({ initialUsername, onClose }: { initialUsername: string; onClo
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed inset-0 z-[400] bg-[#090f1f] flex flex-col"
+            transition={{ type: 'tween', ease: 'easeOut', duration: 0.25 }}
+            className="fixed inset-0 z-[400] bg-[#090f1f] flex flex-col will-change-transform"
         >
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-12 pb-5 border-b border-white/5">
@@ -230,7 +230,7 @@ function PayModal({ initialUsername, onClose }: { initialUsername: string; onClo
                 <button
                     onClick={handleSend}
                     disabled={loading || !username.trim() || !amount || parseFloat(amount) <= 0 || status === 'success'}
-                    className="w-full py-4 bg-[#FBBF24] text-slate-900 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(251,191,36,0.25)]"
+                    className="w-full py-4 bg-[#FBBF24] text-slate-900 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20"
                 >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={16} />}
                     {loading ? 'Sending...' : `Send ₹${amount || '0'}`}
@@ -383,8 +383,8 @@ function ScanModal({ onResult, onClose }: { onResult: (username: string) => void
 function AutopayModal({ onClose }: { onClose: () => void }) {
     return (
         <motion.div initial={{ opacity: 0, y: '100%' }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed inset-0 z-[400] bg-[#090f1f] flex flex-col">
+            exit={{ opacity: 0, y: '100%' }} transition={{ type: 'tween', ease: 'easeOut', duration: 0.25 }}
+            className="fixed inset-0 z-[400] bg-[#090f1f] flex flex-col will-change-transform">
             <div className="flex items-center justify-between px-5 pt-12 pb-5 border-b border-white/5">
                 <h2 className="text-lg font-black text-white uppercase tracking-widest">Autopay</h2>
                 <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
